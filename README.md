@@ -1,92 +1,121 @@
 # Todo El Rock (Recargado)
 
+**_TeRRe_** es una herramienta de extracción y preservación del juego [El Rock de Tu Vida](https://web.archive.org/web/20111020150625/http://www.elrockdetuvida.com/website/index.php) en desarrollo.
+
+[toc]
+
+[El Rock de Tu Vida](https://web.archive.org/web/20111020150625/http://www.elrockdetuvida.com/website/index.php) fue un juego de ritmo basado en las sagas de Rock Band o Guitar Hero con musica licenciada Argentina.
+
+Lanzado en el año 2011 para Windows PC por los desarrolladores Next Level y distribuido por Loaded requería de una conexión permanente a internet, por lo que desde que cerraron los servidores ya no se puede jugar… hasta ahora.
+
+Las marcas y productos mencionados son propiedad de sus respectivos dueños. 
+
+## Objetivos
+
+Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del disco de instalación original y exporta a otros juegos de ritmo similares (como [Clone Hero](https://clonehero.net/)) para que las canciones incluidas puedan ser disfrutadas por audiencias modernas.
+
+- [x] Extraer la información de las canciones (metadata)
+
+- [x] Extraer las pistas de audio de los instrumentos (stems)
+
+- [x] Extraer el audio preliminar (preview)
+
+- [x] Extraer la imagen de tapa del disco (album)
+
+- [x] Extraer la imagen de fondo de los artistas (background)
+
+- [x] Extraer el video de fondo de las canciones (video)
+
+- [ ] Extraer las notas de los instrumentos (charts)
+
+## Requisitos 
+
+**_TeRRe_** esta hecho en [Python](https://www.python.org/) y utiliza [FFMPEG](https://www.ffmpeg.org/) para codificar audio y video. 
+
+## Utilización
+
+1) Instalar [Python](https://www.python.org/) y opcionalmente [FFMPEG](https://www.ffmpeg.org/).
+2) Ejecutar el archivo _“terre.py”_
+3) Seleccionar la unidad donde se encuentra el disco original de instalación.
+4) La extracción debería tardar pocos minutos.
+5) Si [FFMPEG](https://www.ffmpeg.org/) se encuentra instalado se puede continuar con la codificación para convertir los archivos para que sean compatibles con [Clone Hero](https://clonehero.net/). NOTA: Esto puede tardar mucho tiempo.
+
+## Archivos de salida
+Una vez finalizada la ejecución del código deberían haber dos directorios nuevos creados, cada una adentro con un directorio para cada cancion:
+
+- _[raw/%artist% – %song%]_: Archivos audiovisuales extraídos del disco de cada una de las canciones encontradas.
+- _[erdtv/%artist% – %song%]_: Archivos audiovisuales convertidos a formato compatible con [Clone Hero](https://clonehero.net/). NOTA: Requiere [FFMPEG](https://www.ffmpeg.org/)
 
 
-## Getting started
+| raw            | erdtv          | Descripción        |
+|----------------|----------------|--------------------|
+| song.ini       | song.ini       | Informacion        |
+| preview.wav    | preview.ogg    | Audio preliminar   |
+| video.asf      | video.webm     | Video de fondo     |
+| background.png | background.png | Imagen de fondo    |
+| album.png      | album.png      | Tapa del disco     |
+| guitar.flac    | guitar.ogg     | Audio guitarra     |
+| rhythm.flac    | rhythm.ogg     | Audio bajo         |
+| drums.flac     | drums.ogg      | Audio bateria      |
+| vocals.flac    | vocals.ogg     | Audio cantante     |
+| song.flac      | song.ogg       | Audio extras       |
+| charts*.cbr     | notes*.mid    | Notas instrumentos |
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Descripción de los archivos y directorios
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+Todos los archivos de las canciones se encuentran en: 
 
-## Add your files
+- _[CD:/install/data/mozart/]_
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis de los formatos disponibles, resumidos a continuación:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/envido32/todoelrock.git
-git branch -M main
-git push -uf origin main
-```
+ [band/artistID.band]
+   0x0010 = Header
+   0x00xx = Artist Name String
+ [disc/albumID.disc]
+   0x0018 = Header
+   0x0100 = Album Name String
+   0x00xx = album.png
+ [song/songID.au]
+   0x0000 = Header
+   0x00xx = guitar.flac
+   0x00xx = rhythm.flac
+   0x00xx = drums.flac
+   0x00xx = vocals.flac
+   0x00xx = song.flac
+ [song/songID.prv]
+   preview.wav
+ [song/songID.vid]
+   video.asf
+ [song/songID.bgf]
+   0x020C = Header
+   0x00xx = background.png
+ [song/songID.cbr]
+   0x001C = Header
+   0x0008 = artistID (HEX)
+   0x0008 = albumID (HEX)
+   0x0004 = Album Year (int)
+   0x0100 = Song Name String
+   0x0A00 = Separator (2.5 KB)
+   0x0600 = Chart SubHeader (8.0 KB)
+   0x00xx = Guitar chart (12bits packages, 0xD007 divisor?)
+   0x00xx = Chart SubHeader (8.0 KB)
+   0x00xx = Rhythm chart (12bits packages, 0xD007 divisor?)
+   0x00xx = Chart SubHeader (8.0 KB)
+   0x00xx = Drums chart (12bits packages, 0xD007 divisor?)
+   0x00xx = Chart SubHeader (8.0 KB)
+   0x00xx = Vocals info (8bits packages)
+   0x00xx = Vocals waves (44bits packages)
+   0x00xx = Lyrics ([string][NUL]+[0xXX XX XX 00]+[0xXX XX XX 00]+[0x00 00 00 00])
+   0x00xx = Ending SubHeader (8.0 KB)
+   ```
 
-## Integrate with your tools
 
-- [ ] [Set up project integrations](https://gitlab.com/envido32/todoelrock/-/settings/integrations)
+## Créditos
 
-## Collaborate with your team
+Análisis inicial de los archivos:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+Desarrollo del código de extracción: Envido32
 
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+_El Rock de Tu Vida, Next Level, Loaded, Rock Band, Guitar Hero, Harmonix, Activision, Clone Hero y todas las marcas y productos mencionados son propiedad de sus respectivos dueños._
