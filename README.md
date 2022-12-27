@@ -59,7 +59,7 @@ Una vez finalizada la ejecución del código deberían haber dos directorios nue
 | drums.flac     | drums.ogg      | Audio bateria      |
 | vocals.flac    | vocals.ogg     | Audio cantante     |
 | song.flac      | song.ogg       | Audio extras       |
-| charts*.cbr     | notes*.mid    | Notas instrumentos |
+| charts*.cbr    | notes*.mid     | Notas instrumentos |
 
 ## Descripción de los archivos y directorios
 
@@ -114,8 +114,8 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
 
 ## Créditos
 
-Análisis inicial de los archivos:
+Análisis inicial de los archivos por [@eldainosor](https://twitter.com/eldainosor)
 
-Desarrollo del código de extracción: Envido32
+Desarrollo del código de extracción [@envido32](https://twitter.com/envido32)
 
 _El Rock de Tu Vida, Next Level, Loaded, Rock Band, Guitar Hero, Harmonix, Activision, Clone Hero y todas las marcas y productos mencionados son propiedad de sus respectivos dueños._
