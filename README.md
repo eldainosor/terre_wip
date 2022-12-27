@@ -8,7 +8,7 @@
 
 Lanzado en el año 2011 para Windows PC por los desarrolladores Next Level y distribuido por Loaded requería de una conexión permanente a internet, por lo que desde que cerraron los servidores ya no se puede jugar… hasta ahora.
 
-Las marcas y productos mencionados son propiedad de sus respectivos dueños. 
+_Las marcas y productos mencionados son propiedad de sus respectivos dueños._ 
 
 ## Objetivos
 
@@ -114,7 +114,7 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
 
 ## Créditos
 
-Análisis inicial de los archivos por [@eldainosor](https://twitter.com/eldainosor)
+Análisis inicial de archivos por [@eldainosor](https://twitter.com/eldainosor)
 
 Desarrollo del código de extracción [@envido32](https://twitter.com/envido32)
 

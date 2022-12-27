@@ -13,8 +13,8 @@ localtime = time.localtime(start_time)
 local = time.strftime("%H:%M:%S", localtime)
 print("Start time: ", local)
 
-#disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
-disc_dir = "E:" # DEBUG
+disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
+#disc_dir = "E:" # DEBUG
 mozart_dir = disc_dir + "\\install\\data\\mozart"
 songs_dir = mozart_dir + "\\song"
 bands_dir = mozart_dir + "\\band"
@@ -25,7 +25,7 @@ raw_dir = os.getcwd() + "\\raw"
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
  
 print("Working dir:\t [", work_dir, "]")
-ffmpeg_file = work_dir + "\\ffmpeg.exe"
+#ffmpeg_file = work_dir + "\\ffmpeg.exe"
 
 # Analize Chart files
 print(" > Analizing chart files... < " )
@@ -58,11 +58,7 @@ try:
 except OSError as error:
     print("[", raw_dir, "] already exists")
     
-try:
-    os.mkdir(output_dir)
-except OSError as error:
-    print("[", output_dir, "] already exists")
-
+# Raw extraction
 for filename in chart_files:
     start_song = time.time()
     local = time.strftime("%H:%M:%S", time.localtime(start_song))
@@ -196,13 +192,8 @@ for filename in chart_files:
         new_file.write(flac_head)
         new_file.write(audio)
         new_file.close()
-        try:
-            print("Compressing ", data_order[i] , " audio file with FFMPEG (Flac to OGG)")
-            cmd = ffmpeg_file + " -y -loglevel -8 -stats -i " + data_order[i] + ".flac -af adelay=3000:all=1 -c:a libvorbis -b:a 320k " + data_order[i] + ".ogg"
-            subprocess.run(cmd)
-        except:
-            print("FFMPEG.exe not found")
 
+    #TODO make CH compatible
     for chart in charts:
         i = charts.index(chart)
         new_file = open("chart_" + data_order[i] + ".cbr", "wb")
@@ -210,47 +201,33 @@ for filename in chart_files:
             new_file.write(chart_head)
         new_file.write(chart)
         new_file.close()
-        #TODO make CH compatible
 
     # Copy preview
     source = songs_dir + "\\" + song_str_id
     dest = new_song_dir
     #print("Copying preview...")
-    shutil.copy(source + ".prv", dest  + "\\preview.wav")
     try:
-        print("Compressing preview audio file with FFMPEG (Wav to OGG)")
-        cmd = ffmpeg_file + " -y -loglevel -8 -stats -i preview.wav -c:a libvorbis -b:a 320k preview.ogg"
-        subprocess.run(cmd)
+        shutil.copyfile(source + ".prv", dest  + "\\preview.wav")
     except:
-        print("FFMPEG.exe not found")
+        print("File [ ", dest,  "\\preview.wav ] already exists")
 
     # Copy video (slow)
     #print("Copying video...")
-    shutil.copy(source + ".vid", dest  + "\\video.asf")
-
     try:
-        print("Compressing video file with FFMPEG (ASF to WEBM)")
-
-        cmd = ffmpeg_file + " -y -loglevel -8 -stats -i video.asf " 
-        #cmd = ffmpeg_file + " -y -stats -i video.asf " # Verbose
-        j = 0
-        for audio_in in data_order:
-            dir_test = new_song_dir + "\\" + audio_in + ".ogg"
-            if os.path.exists(dir_test):
-                j = j + 1
-                cmd = cmd + "-i " + audio_in + ".ogg "
-        cmd = cmd + "-filter_complex amix=inputs=" + str(int(j)) + ":duration=longest -c:v libvpx -crf 10 -b:v 3M -c:a libvorbis video.webm"
-        subprocess.run(cmd)
+        shutil.copyfile(source + ".vid", dest  + "\\video.asf")
     except:
-        print("FFMPEG.exe not found")
+        print("File [ ", dest,  "\\video.asf ] already exists")
 
     # Copy icon
-    # TODO extract from CD
+    # TODO extract from Disk (.ico to .png)
     source = work_dir
     dest = new_song_dir
     #print("Copying icon...")
-    shutil.copy(source + "\\erdtv.png", dest  + "\\erdtv.png")
-    
+    try:
+        shutil.copyfile(source + "\\erdtv.png", dest  + "\\erdtv.png")
+    except:
+        print("File [ ", dest,  "\\erdtv.png ] already exists")
+        
     # Save info
     new_file = open("song.ini", "w")
     new_file.write("[song]")
@@ -285,6 +262,124 @@ for filename in chart_files:
     print("This song took:\t" , elapsed)
     eta_time = time.gmtime((time.time() - start_song) * (n - i))
     print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
+    
+# Convert to Clone Hero (need FFMPEG)
+convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
+#convert = 'Y'   # Debug
+if convert == 'Y':
+    ffmpeg_file = work_dir + "\\ffmpeg.exe"
+    os.chdir(work_dir)
+    try:
+        os.mkdir(output_dir)
+    except OSError as error:
+        print("[", output_dir, "] already exists")
+
+    os.chdir(raw_dir)
+    songs_list = os.listdir(raw_dir)
+    n = len(songs_list)
+
+    for this_song in songs_list:
+        i = songs_list.index(this_song) + 1
+        print(" >> Converting (", int(i) , "/" , int(n) , "): ", this_song) 
+
+        start_song = time.time()
+        local = time.strftime("%H:%M:%S", time.localtime(start_song))
+        print("Song start: ", local)
+
+        source_dir = raw_dir + "\\" + this_song
+        dest_dir = output_dir + "\\" + this_song
+        try:
+            os.mkdir(dest_dir)
+        except OSError as error:
+            print("[", dest_dir, "] already exists")
+
+        # Copy album
+        #print("Copying album...")
+        try:
+            copy_file = "\\album.png"
+            source_file = source_dir + copy_file
+            dest_file = dest_dir + copy_file
+            shutil.copyfile(source_file, dest_file)
+        except:
+            print("File [ ", dest_file, " ] already exists")
+
+        # Copy background
+        #print("Copying background...")
+        try:
+            copy_file = "\\background.png"
+            source_file = source_dir + copy_file
+            dest_file = dest_dir + copy_file
+            shutil.copyfile(source_file, dest_file)
+        except:
+            print("File [ ", dest_file, " ] already exists")
+
+        # Copy icon
+        #print("Copying icon...")
+        try:
+            copy_file = "\\erdtv.png"
+            source_file = source_dir + copy_file
+            dest_file = dest_dir + copy_file
+            shutil.copyfile(source_file, dest_file)
+        except:
+            print("File [ ", dest_file, " ] already exists")
+
+        # Copy metadata
+        #print("Copying metadata...")
+        try:
+            copy_file = "\\song.ini"
+            source_file = source_dir + copy_file
+            dest_file = dest_dir + copy_file
+            shutil.copyfile(source_file, dest_file)
+        except:
+            print("File [ ", dest_file, " ] already exists")
+
+        # Convert Preview
+        try:
+            print("Compressing preview audio file with FFMPEG (Wav to OGG)")
+            copy_file = "\\preview"
+            source_file = source_dir + copy_file + ".wav"
+            dest_file = dest_dir + copy_file + ".ogg"
+            cmd = ffmpeg_file + " -y -loglevel -8 -stats -i \"" + source_file + "\" -c:a libvorbis -b:a 320k \"" + dest_file + "\""
+            subprocess.run(cmd)
+        except:
+            print("FFMPEG.exe not found")
+
+        # Convert steam
+        for instrument in data_order:
+            try:
+                print("Compressing ", instrument , " audio file with FFMPEG (Flac to OGG)")
+                copy_file = "\\" + instrument
+                source_file = source_dir + copy_file + ".flac"
+                dest_file = dest_dir + copy_file + ".ogg"
+                cmd = ffmpeg_file + " -y -loglevel -8 -stats -i \"" + source_file + "\" -af adelay=3000:all=1 -c:a libvorbis -b:a 320k \"" + dest_file + "\""
+                subprocess.run(cmd)
+            except:
+                print("FFMPEG.exe not found")
+
+        # Convert video
+        try:
+            print("Compressing video file with FFMPEG (ASF to WEBM)")
+            copy_file = "\\video"
+            source_file = source_dir + copy_file + ".asf"
+            dest_file = dest_dir + copy_file + ".webm"
+            
+            cmd = ffmpeg_file + " -y -loglevel -8 -stats -i \"" + source_file + "\""
+            #cmd = ffmpeg_file + " -y -stats -i video.asf " # Verbose
+            j = 0
+            for instrument in data_order:
+                audio_in = dest_dir + "\\" + instrument + ".ogg"
+                if os.path.exists(audio_in):
+                    j = j + 1
+                    cmd = cmd + " -i \"" + audio_in + "\""
+            cmd = cmd + " -filter_complex amix=inputs=" + str(int(j)) + ":duration=longest -c:v libvpx -crf 10 -b:v 3M -c:a libvorbis \"" + dest_file + "\""
+            subprocess.run(cmd)
+        except:
+            print("FFMPEG.exe not found")
+                    
+        elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_song))
+        print("This song converted in:\t" , elapsed)
+        eta_time = time.gmtime((time.time() - start_song) * (n - i))
+        print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
 elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
 print("All tasks took: " , elapsed)
