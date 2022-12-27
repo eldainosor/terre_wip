@@ -48,35 +48,35 @@ types:
         size: 0x678
   
       - id: chart_guitar
-        type: chart_inst
+        type: instrument
         size: pointer[0] - 0x800
       
       - id: chart_rhythm
-        type: chart_inst
+        type: instrument
         size: pointer[1] - pointer[0]
 
       - id: chart_drums
-        type: chart_inst
+        type: instrument
         size: pointer[2] - pointer[1]
 
       - id: chart_vocals
-        type: chart_inst
+        type: instrument
         size: pointer[3] - pointer[2]
         
       - id: chart_ending
-        type: chart_inst
+        type: instrument
       
-  chart_inst:
+  instrument:
     seq:
-      - id: intro_inst
+      - id: intro
         type: u8
         repeat: expr
         repeat-expr: 4
       - id: zeros
-        size: 480
-      - id: head_inst
+        size: 0x1E0
+      - id: head
         type: u8
         repeat: expr
         repeat-expr: 873
-      - id: chart_raw
+      - id: raw
         size-eos: true
