@@ -19,36 +19,6 @@ class Cbr(KaitaiStruct):
         self.song_name = Cbr.SongName(self._io, self, self._root)
         self.charts = Cbr.Charts(self._io, self, self._root)
 
-    class Header(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.magic = self._io.read_bytes(4)
-            if not self.magic == b"\x76\x98\xCD\xAB":
-                raise kaitaistruct.ValidationNotEqualError(b"\x76\x98\xCD\xAB", self.magic, self._io, u"/types/header/seq/0")
-            self.flags_1 = self._io.read_u8le()
-            self.song_id = self._io.read_u8le()
-            self.flags_2 = self._io.read_u8le()
-            self.band_id = self._io.read_u8le()
-            self.disc_id = self._io.read_u8le()
-            self.year = self._io.read_u4le()
-
-
-    class SongName(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.song_name = (self._io.read_bytes(256)).decode(u"UTF-16")
-
-
     class Charts(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -64,9 +34,9 @@ class Cbr(KaitaiStruct):
             for i in range(4):
                 self.pointer.append(self._io.read_u8le())
 
-            self.data = []
-            for i in range(6):
-                self.data.append(self._io.read_u8le())
+            self.info = []
+            for i in range(12):
+                self.info.append(self._io.read_bytes(4))
 
             self.zeros = self._io.read_bytes(1656)
             self._raw_chart_guitar = self._io.read_bytes((self.pointer[0] - 2048))
@@ -78,10 +48,84 @@ class Cbr(KaitaiStruct):
             self._raw_chart_drums = self._io.read_bytes((self.pointer[2] - self.pointer[1]))
             _io__raw_chart_drums = KaitaiStream(BytesIO(self._raw_chart_drums))
             self.chart_drums = Cbr.Instrument(_io__raw_chart_drums, self, self._root)
-            self._raw_chart_vocals = self._io.read_bytes((self.pointer[3] - self.pointer[2]))
-            _io__raw_chart_vocals = KaitaiStream(BytesIO(self._raw_chart_vocals))
-            self.chart_vocals = Cbr.Instrument(_io__raw_chart_vocals, self, self._root)
-            self.chart_ending = Cbr.Instrument(self._io, self, self._root)
+            self._raw_chart_voice = self._io.read_bytes((self.pointer[3] - self.pointer[2]))
+            _io__raw_chart_voice = KaitaiStream(BytesIO(self._raw_chart_voice))
+            self.chart_voice = Cbr.Voice(_io__raw_chart_voice, self, self._root)
+            self._raw_end_of_chart = self._io.read_bytes_full()
+            _io__raw_end_of_chart = KaitaiStream(BytesIO(self._raw_end_of_chart))
+            self.end_of_chart = Cbr.Ending(_io__raw_end_of_chart, self, self._root)
+
+
+    class Voice(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.id = self._io.read_bytes(8)
+            self.end_head_pos = self._io.read_u8le()
+            self.size_head_bytes = self._io.read_u4le()
+            self.start_head_pos = self._io.read_u8le()
+            self.size_zero_fill = self._io.read_u4le()
+            self.zeros = self._io.read_bytes(480)
+            self.head = self._io.read_bytes((self.size_head_bytes * 8))
+            self.info = self._io.read_bytes(8)
+            self.start_pitch_pos = self._io.read_u8le()
+            self.pitch_vol = self._io.read_u4le()
+            self.start_lyrics_pos = self._io.read_u8le()
+            self.lyrics_vol = self._io.read_u4le()
+            self.spacer = self._io.read_bytes(96)
+            self.pitch = self._io.read_bytes((self.start_lyrics_pos - self.start_pitch_pos))
+            self.lyrics = self._io.read_bytes_full()
+
+
+    class Header(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.magic = self._io.read_bytes(4)
+            if not self.magic == b"\x76\x98\xCD\xAB":
+                raise kaitaistruct.ValidationNotEqualError(b"\x76\x98\xCD\xAB", self.magic, self._io, u"/types/header/seq/0")
+            self.flags_1 = self._io.read_bytes(8)
+            self.song_id = self._io.read_u8le()
+            self.flags_2 = self._io.read_bytes(8)
+            self.band_id = self._io.read_u8le()
+            self.disc_id = self._io.read_u8le()
+            self.year = self._io.read_u4le()
+
+
+    class Ending(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.id = self._io.read_bytes(8)
+            self.end_head_pos = self._io.read_u8le()
+            self.size_head_bytes = self._io.read_u4le()
+            self.start_head_pos = self._io.read_u8le()
+            self.size_zero_fill = self._io.read_u4le()
+            self.zeros = self._io.read_bytes(480)
+            self.head = self._io.read_bytes((self.size_head_bytes * 8))
+
+
+    class SongName(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.song_name = (self._io.read_bytes(256)).decode(u"UTF-16")
 
 
     class Instrument(KaitaiStruct):
@@ -92,16 +136,22 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.intro = []
-            for i in range(4):
-                self.intro.append(self._io.read_u8le())
-
+            self.id = self._io.read_bytes(8)
+            self.end_head_pos = self._io.read_u8le()
+            self.size_head_bytes = self._io.read_u4le()
+            self.start_head_pos = self._io.read_u8le()
+            self.size_zero_fill = self._io.read_u4le()
             self.zeros = self._io.read_bytes(480)
-            self.head = []
-            for i in range(873):
-                self.head.append(self._io.read_u8le())
+            self.head = self._io.read_bytes((self.size_head_bytes * 8))
+            self.info = self._io.read_bytes(8)
+            self.diff_point = []
+            for i in range(3):
+                self.diff_point.append(self._io.read_u8le())
 
-            self.raw = self._io.read_bytes_full()
+            self.spacer = self._io.read_bytes(96)
+            self.chart_easy = self._io.read_bytes((self.diff_point[1] - self.diff_point[0]))
+            self.chart_med = self._io.read_bytes((self.diff_point[2] - self.diff_point[1]))
+            self.chart_hard = self._io.read_bytes_full()
 
 
 

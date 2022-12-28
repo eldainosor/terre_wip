@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # Python script
+# Made by Envido32
 
 import os, re, shutil
 import subprocess
@@ -25,7 +26,6 @@ raw_dir = os.getcwd() + "\\raw"
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
  
 print("Working dir:\t [", work_dir, "]")
-#ffmpeg_file = work_dir + "\\ffmpeg.exe"
 
 # Analize Chart files
 print(" > Analizing chart files... < " )
@@ -33,7 +33,7 @@ print("Songs dir:\t[", songs_dir ,"]")
 os.chdir(songs_dir)
 
 dir_files = os.listdir(songs_dir)
-#print("Files in dir:\t",  dir_files) #DEBUG
+#print("Files in dir:\t",  dir_files)   #DEBUG
 
 chart_files = list()
 for filename in dir_files:
@@ -50,7 +50,7 @@ if n > 0:
     new_file.write("Artista\tCancion\tAlbum\tAño\tSong ID\tBand ID\tAlbum ID\n")
     new_file.close()
 
-#print("Disk dir:\t", songs_dir) #DEBUG
+#print("Disk dir:\t", songs_dir)    #DEBUG
 
 # Output directories
 try:
@@ -66,7 +66,7 @@ for filename in chart_files:
 
     i = chart_files.index(filename) + 1
     
-    print("Analizing (", int(i) , "/" , int(n) , ")") #DEBUG
+    print("Analizing (", int(i) , "/" , int(n) , ")")   #DEBUG
 
     os.chdir(songs_dir)
     working_file = open(filename, "rb")
@@ -92,7 +92,7 @@ for filename in chart_files:
     year = bytearray(working_file.read(0x04))
     year.reverse()
     year_str = str(int.from_bytes(year))
-    #print(year_str)
+    #print(year_str)    #DEBUG
 
     # Extract Song Name
     song_name = working_file.read(0x0100)
@@ -113,9 +113,6 @@ for filename in chart_files:
     print("Song Name:\t " + song_str)
     
     # Analize Bands
-    #print(" > Searching band... < " )
-    #curr_dir = work_dir + mozart_dir + bands_dir 
-    #print("Bands dir:\t", curr_dir)
     os.chdir(bands_dir)
 
     #dir_files = os.listdir(curr_dir) #DEBUG
@@ -130,15 +127,10 @@ for filename in chart_files:
     working_file.close()
     
     # Analize albums
-    #print(" > Searching album... < " )
-    #curr_dir = work_dir + mozart_dir + albums_dir 
-
-    #print("Album dir:\t", curr_dir)
     os.chdir(albums_dir)
-
     working_file = open(album_str_id + ".disc", "rb")
     album_data = working_file.read(0x0018)
-    #print(band_data)
+    #print(album_data)
     album_name = working_file.read(0x0100)
     album_str = album_name.decode('U16').rstrip('\0')
     print("Album Name:\t " + album_str)
@@ -147,11 +139,7 @@ for filename in chart_files:
     working_file.close()
 
     # Analize Background
-    #print(" > Analizing backgrounds... < " )
-    #curr_dir = work_dir + mozart_dir + songs_dir 
-    #print("Songs dir:\t", curr_dir)
     os.chdir(songs_dir)
-
     working_file = open(song_str_id + ".bgf", "rb")
     background_data = working_file.read(0x020C)
     background_img = working_file.read()
@@ -163,7 +151,6 @@ for filename in chart_files:
     song_data = working_file.read()
     flac_head = "fLaC".encode('U8')
     audio_data = song_data.split(flac_head)
-    #song_head, guitar, rhythm, drums, vocals, song = song_data.split(flac_head)
     working_file.close()
 
     # Output Files
@@ -172,7 +159,6 @@ for filename in chart_files:
     try:
         os.mkdir(new_song_dir)
     except OSError as error:
-        #continue
         print("[", new_song_dir , "] already exists")
     os.chdir(new_song_dir)
 
@@ -220,15 +206,15 @@ for filename in chart_files:
 
     # Copy icon
     # TODO extract from Disk (.ico to .png)
+    #print("Copying icon...")
     source = work_dir
     dest = new_song_dir
-    #print("Copying icon...")
     try:
         shutil.copyfile(source + "\\erdtv.png", dest  + "\\erdtv.png")
     except:
         print("File [ ", dest,  "\\erdtv.png ] already exists")
         
-    # Save info
+    # Save metadata
     new_file = open("song.ini", "w")
     new_file.write("[song]")
     new_file.write("\nartist = " + band_str)
@@ -265,19 +251,23 @@ for filename in chart_files:
     
 # Convert to Clone Hero (need FFMPEG)
 convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-#convert = 'Y'   # Debug
+#convert = 'Y'  #DEBUG
 if convert == 'Y':
     ffmpeg_file = work_dir + "\\ffmpeg.exe"
+
+    # Create output dir
     os.chdir(work_dir)
     try:
         os.mkdir(output_dir)
     except OSError as error:
         print("[", output_dir, "] already exists")
 
+    # Generate lists of songs extracted
     os.chdir(raw_dir)
     songs_list = os.listdir(raw_dir)
     n = len(songs_list)
 
+    # Loof for each song
     for this_song in songs_list:
         i = songs_list.index(this_song) + 1
         print(" >> Converting (", int(i) , "/" , int(n) , "): ", this_song) 
@@ -293,7 +283,7 @@ if convert == 'Y':
         except OSError as error:
             print("[", dest_dir, "] already exists")
 
-        # Copy album
+        # Copy album image
         #print("Copying album...")
         try:
             copy_file = "\\album.png"
@@ -303,7 +293,7 @@ if convert == 'Y':
         except:
             print("File [ ", dest_file, " ] already exists")
 
-        # Copy background
+        # Copy background image
         #print("Copying background...")
         try:
             copy_file = "\\background.png"
@@ -313,7 +303,7 @@ if convert == 'Y':
         except:
             print("File [ ", dest_file, " ] already exists")
 
-        # Copy icon
+        # Copy icon image
         #print("Copying icon...")
         try:
             copy_file = "\\erdtv.png"
@@ -323,7 +313,7 @@ if convert == 'Y':
         except:
             print("File [ ", dest_file, " ] already exists")
 
-        # Copy metadata
+        # Copy metadata file
         #print("Copying metadata...")
         try:
             copy_file = "\\song.ini"
@@ -333,25 +323,38 @@ if convert == 'Y':
         except:
             print("File [ ", dest_file, " ] already exists")
 
-        # Convert Preview
+        # Convert preview audio
         try:
             print("Compressing preview audio file with FFMPEG (Wav to OGG)")
             copy_file = "\\preview"
             source_file = source_dir + copy_file + ".wav"
             dest_file = dest_dir + copy_file + ".ogg"
-            cmd = ffmpeg_file + " -y -loglevel -8 -stats -i \"" + source_file + "\" -c:a libvorbis -b:a 320k \"" + dest_file + "\""
+
+            cmd = ffmpeg_file 
+            cmd = cmd + " -y -loglevel -8 -stats -i " 
+            #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
+            cmd = cmd + "\"" + source_file + "\""
+            cmd = cmd + " -c:a libvorbis -b:a 320k " 
+            cmd = cmd + "\"" + dest_file + "\""
             subprocess.run(cmd)
         except:
             print("FFMPEG.exe not found")
 
-        # Convert steam
+        # Convert stems
         for instrument in data_order:
             try:
                 print("Compressing ", instrument , " audio file with FFMPEG (Flac to OGG)")
                 copy_file = "\\" + instrument
                 source_file = source_dir + copy_file + ".flac"
                 dest_file = dest_dir + copy_file + ".ogg"
-                cmd = ffmpeg_file + " -y -loglevel -8 -stats -i \"" + source_file + "\" -af adelay=3000:all=1 -c:a libvorbis -b:a 320k \"" + dest_file + "\""
+
+                cmd = ffmpeg_file
+                cmd = cmd + " -y -loglevel -8 -stats -i " 
+                #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
+                cmd = cmd + "\"" + source_file + "\""
+                cmd = cmd + " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "     #Skipp 3sec
+                #cmd = cmd + " -c:a libvorbis -b:a 320k " 
+                cmd = cmd + "\"" + dest_file + "\""
                 subprocess.run(cmd)
             except:
                 print("FFMPEG.exe not found")
@@ -363,15 +366,21 @@ if convert == 'Y':
             source_file = source_dir + copy_file + ".asf"
             dest_file = dest_dir + copy_file + ".webm"
             
-            cmd = ffmpeg_file + " -y -loglevel -8 -stats -i \"" + source_file + "\""
-            #cmd = ffmpeg_file + " -y -stats -i video.asf " # Verbose
+            cmd = ffmpeg_file 
+            #cmd = cmd + " -y -loglevel -8 -stats -ss 3000ms -i "   # Intro Skip
+            cmd = cmd + " -y -loglevel -8 -stats -i "
+            #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
+            cmd = cmd + "\"" + source_file + "\""
             j = 0
             for instrument in data_order:
                 audio_in = dest_dir + "\\" + instrument + ".ogg"
                 if os.path.exists(audio_in):
                     j = j + 1
                     cmd = cmd + " -i \"" + audio_in + "\""
-            cmd = cmd + " -filter_complex amix=inputs=" + str(int(j)) + ":duration=longest -c:v libvpx -crf 10 -b:v 3M -c:a libvorbis \"" + dest_file + "\""
+            cmd = cmd + " -filter_complex amix=inputs=" 
+            cmd = cmd + str(int(j)) 
+            cmd = cmd + ":duration=longest -c:v libvpx -crf 10 -b:v 3M -c:a libvorbis "
+            cmd = cmd + "\"" + dest_file + "\""
             subprocess.run(cmd)
         except:
             print("FFMPEG.exe not found")
