@@ -2,13 +2,13 @@ meta:
   id: cbr
   file-extension: cbr
   endian: le
+
 seq:
   - id: header
     type: header
-  - id: song_name
-    type: song_name
   - id: charts
     type: charts
+    
 types:
   header:
     seq:
@@ -26,12 +26,11 @@ types:
         type: u8
       - id: year
         type: u4
-  song_name:
-    seq:
       - id: song_name
         type: str
-        size: 0x100
         encoding: UTF-16
+        size: 0x100
+        
   charts:
     seq:
       - id: magic
@@ -41,6 +40,7 @@ types:
         type: u8
         repeat: expr
         repeat-expr: 4
+        doc: Pointer to the END of each instrument's charts
         
       - id: info
         size: 4
@@ -62,24 +62,21 @@ types:
         type: voice
         size: pointer[3] - pointer[2]
         
-      - id: end_of_chart
-        type: ending
+      - id: end_of_charts
+        type: chart_head
         size-eos: true
         
-  instrument:
+  chart_head:
     seq:
       - id: id
         size: 8
         
       - id: end_head_pos
         type: u8
-
       - id: size_head_bytes
         type: u4
-
       - id: start_head_pos
         type: u8
-        
       - id: size_zero_fill
         type: u4
 
@@ -88,6 +85,11 @@ types:
         
       - id: head
         size: size_head_bytes * 8
+        
+  instrument:
+    seq:
+      - id: header
+        type: chart_head
       
       - id: info
         size: 8
@@ -96,7 +98,9 @@ types:
         type: u8
         repeat: expr
         repeat-expr: 3
-      - id: spacer
+        doc: Pointer to the END of each difficulty chart for this instrument
+        
+      - id: zeros
         size: 96
         
       - id: chart_easy
@@ -110,43 +114,22 @@ types:
         
   voice:
     seq:
-      - id: id
-        size: 8
-        
-      - id: end_head_pos
-        type: u8
-
-      - id: size_head_bytes
-        type: u4
-
-      - id: start_head_pos
-        type: u8
-        
-      - id: size_zero_fill
-        type: u4
-
-      - id: zeros
-        size: 0x1E0
-        
-      - id: head
-        size: size_head_bytes * 8 
+      - id: header
+        type: chart_head
       
       - id: info
         size: 8
 
       - id: start_pitch_pos
         type: u8
-        
       - id: pitch_vol
         type: u4
-        
       - id: start_lyrics_pos
         type: u8
-
       - id: lyrics_vol
         type: u4
       
-      - id: spacer
+      - id: zeros
         size: 96
         
       - id: pitch
@@ -154,26 +137,18 @@ types:
         
       - id: lyrics
         size-eos: true
-        
-  ending:
-    seq:
-      - id: id
-        size: 8
-        
-      - id: end_head_pos
-        type: u8
 
-      - id: size_head_bytes
-        type: u4
+enums:
+  inst_id:
+    0: guitar
+    1: rhythm
+    2: drums
+    3: voice
+    4: song
 
-      - id: start_head_pos
-        type: u8
-        
-      - id: size_zero_fill
-        type: u4
-
-      - id: zeros
-        size: 0x1E0
-        
-      - id: head
-        size: size_head_bytes * 8
+enums:
+  diff_id:
+    0: easy
+    1: med
+    2: hard
+    
