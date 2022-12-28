@@ -84,8 +84,19 @@ types:
         size: 0x1E0
         
       - id: head
-        size: size_head_bytes * 8
-        
+        type: head_body
+        repeat: expr
+        repeat-expr: size_head_bytes
+
+  head_body:
+    seq:
+      - id: value
+        type: u2
+      - id: len
+        type: u2
+      - id: num
+        type: u4
+
   instrument:
     seq:
       - id: header
@@ -111,6 +122,19 @@ types:
 
       - id: chart_hard
         size-eos: true
+        
+  chart_body:
+    seq:
+      - id: notes
+        type: u4
+        repeat: expr
+        repeat-expr: 3
+        
+  chart_array:
+    seq:
+      - id: song
+        type: chart_body
+        repeat: eos
         
   voice:
     seq:
