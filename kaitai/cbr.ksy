@@ -115,20 +115,22 @@ types:
         size: 96
         
       - id: chart_easy
+        type: chart_array
         size: diff_point[1] - diff_point[0]
         
       - id: chart_med
+        type: chart_array
         size: diff_point[2] - diff_point[1]
 
       - id: chart_hard
+        type: chart_array
         size-eos: true
         
   chart_body:
     seq:
       - id: notes
         type: u4
-        repeat: expr
-        repeat-expr: 3
+        doc: TODO Should be 12bytes
         
   chart_array:
     seq:
@@ -156,10 +158,13 @@ types:
       - id: zeros
         size: 96
         
-      - id: pitch
+      - id: pitch_pts
+        type: chart_array
         size: start_lyrics_pos - start_pitch_pos
+        doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
         
       - id: lyrics
+        doc: TODO String+null+12bytes
         size-eos: true
 
 enums:

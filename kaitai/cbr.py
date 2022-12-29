@@ -63,6 +63,22 @@ class Cbr(KaitaiStruct):
             self.end_of_charts = Cbr.ChartHead(_io__raw_end_of_charts, self, self._root)
 
 
+    class ChartArray(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.song = []
+            i = 0
+            while not self._io.is_eof():
+                self.song.append(Cbr.ChartBody(self._io, self, self._root))
+                i += 1
+
+
+
     class Voice(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -78,7 +94,9 @@ class Cbr(KaitaiStruct):
             self.start_lyrics_pos = self._io.read_u8le()
             self.lyrics_vol = self._io.read_u4le()
             self.zeros = self._io.read_bytes(96)
-            self.pitch = self._io.read_bytes((self.start_lyrics_pos - self.start_pitch_pos))
+            self._raw_pitch_pts = self._io.read_bytes((self.start_lyrics_pos - self.start_pitch_pos))
+            _io__raw_pitch_pts = KaitaiStream(BytesIO(self._raw_pitch_pts))
+            self.pitch_pts = Cbr.ChartArray(_io__raw_pitch_pts, self, self._root)
             self.lyrics = self._io.read_bytes_full()
 
 
@@ -96,7 +114,34 @@ class Cbr(KaitaiStruct):
             self.start_head_pos = self._io.read_u8le()
             self.size_zero_fill = self._io.read_u4le()
             self.zeros = self._io.read_bytes(480)
-            self.head = self._io.read_bytes((self.size_head_bytes * 8))
+            self.head = []
+            for i in range(self.size_head_bytes):
+                self.head.append(Cbr.HeadBody(self._io, self, self._root))
+
+
+
+    class ChartBody(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.notes = self._io.read_u4le()
+
+
+    class HeadBody(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.value = self._io.read_u2le()
+            self.len = self._io.read_u2le()
+            self.num = self._io.read_u4le()
 
 
     class Header(KaitaiStruct):
@@ -134,9 +179,15 @@ class Cbr(KaitaiStruct):
                 self.diff_point.append(self._io.read_u8le())
 
             self.zeros = self._io.read_bytes(96)
-            self.chart_easy = self._io.read_bytes((self.diff_point[1] - self.diff_point[0]))
-            self.chart_med = self._io.read_bytes((self.diff_point[2] - self.diff_point[1]))
-            self.chart_hard = self._io.read_bytes_full()
+            self._raw_chart_easy = self._io.read_bytes((self.diff_point[1] - self.diff_point[0]))
+            _io__raw_chart_easy = KaitaiStream(BytesIO(self._raw_chart_easy))
+            self.chart_easy = Cbr.ChartArray(_io__raw_chart_easy, self, self._root)
+            self._raw_chart_med = self._io.read_bytes((self.diff_point[2] - self.diff_point[1]))
+            _io__raw_chart_med = KaitaiStream(BytesIO(self._raw_chart_med))
+            self.chart_med = Cbr.ChartArray(_io__raw_chart_med, self, self._root)
+            self._raw_chart_hard = self._io.read_bytes_full()
+            _io__raw_chart_hard = KaitaiStream(BytesIO(self._raw_chart_hard))
+            self.chart_hard = Cbr.ChartArray(_io__raw_chart_hard, self, self._root)
 
 
 
