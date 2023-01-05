@@ -234,72 +234,68 @@ for filename in chart_files:
         print("File [ ", dest,  "\\erdtv.png ] already exists")
 
     # Save Kaitai Log
+    # COMMON HEADER
     new_file = open("heads.csv", "w")
     
-    new_file.write("[GUITAR]")
-    new_file.write("\n[value]\t")
-    for block in file_cbr.charts.guitar.header.head:
-        new_file.write(str(block.value) + "\t")
-    new_file.write("\n[len]\t")
-    for block in file_cbr.charts.guitar.header.head:
-         new_file.write(str(block.len) + "\t")
-    new_file.write("\n[num]\t")
-    for block in file_cbr.charts.guitar.header.head:
-         new_file.write(str(block.num) + "\t")
-    new_file.write("\n")
+    new_file.write("[GUITAR]\t\t\t[RHYTHM]\t\t\t[DRUMS]\t\t\t[VOICE]\t\t\t[EXTRAS]\t\t\t\n")
+    new_file.write("[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t\n")
 
-    new_file.write("[RHYTHM]")
-    new_file.write("\n[value]\t")
+    new_lines = list()
+    for block in file_cbr.charts.guitar.header.head:
+        new_lines.append(str(block.val) + "\t" + str(block.len) + "\t" + str(block.num) + "\t" )
+    old_lines = new_lines   
+    new_lines = list()
+    i=0
     for block in file_cbr.charts.rhythm.header.head:
-        new_file.write(str(block.value) + "\t")
-    new_file.write("\n[len]\t")
-    for block in file_cbr.charts.rhythm.header.head:
-         new_file.write(str(block.len) + "\t")
-    new_file.write("\n[num]\t")
-    for block in file_cbr.charts.rhythm.header.head:
-         new_file.write(str(block.num) + "\t")
-    new_file.write("\n")
-    
-    new_file.write("[DRUMS]")
-    new_file.write("\n[value]\t")
+        try:
+            new_lines.append(old_lines[i] + str(block.val) + "\t" + str(block.len) + "\t" + str(block.num) + "\t" )
+            i = i + 1
+        except:
+            print("DEBUG i muy grande")
+    old_lines = new_lines   
+    new_lines = list()
+    i=0
     for block in file_cbr.charts.drums.header.head:
-        new_file.write(str(block.value) + "\t")
-    new_file.write("\n[len]\t")
-    for block in file_cbr.charts.drums.header.head:
-         new_file.write(str(block.len) + "\t")
-    new_file.write("\n[num]\t")
-    for block in file_cbr.charts.drums.header.head:
-         new_file.write(str(block.num) + "\t")
-    new_file.write("\n")
+        try:
+            new_lines.append(old_lines[i] + str(block.val) + "\t" + str(block.len) + "\t" + str(block.num) + "\t" )
+            i = i + 1
+        except:
+            print("DEBUG i muy grande")
+    old_lines = new_lines   
+    new_lines = list()
+    i=0
+    for block in file_cbr.charts.voice.header.head:
+        try:
+            new_lines.append(old_lines[i] + str(block.val) + "\t" + str(block.len) + "\t" + str(block.num) + "\t" )
+            i = i + 1
+        except:
+            print("DEBUG i muy grande")
+    old_lines = new_lines   
+    new_lines = list()
+    i=0
+    for block in file_cbr.charts.extras.head:
+        try:
+            new_lines.append(old_lines[i] + str(block.val) + "\t" + str(block.len) + "\t" + str(block.num) + "\t" )
+            i = i + 1
+        except:
+            print("DEBUG i muy grande")
+    old_lines = new_lines     
+    new_lines = list()
+    for line in old_lines:
+        new_lines.append(line + "\n")
+
+    new_file.writelines(new_lines)
+    new_file.close()
+
+    new_file = open("charts.csv", "w")
+    new_file.write("[GUITAR]\t\t\t\t\t\t\t\t\t[RHYTHM]\t\t\t\t\t\t\t\t\t[DRUMS]\t\t\t\t\t\t\t\t\t\n")
+    new_file.write("[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t\n")
+    new_file.write("[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t\n")
     
-    new_file.write("[VOICE]")
-    new_file.write("\n[value]\t")
-    for block in file_cbr.charts.voice.header.head:
-        new_file.write(str(block.value) + "\t")
-    new_file.write("\n[len]\t")
-    for block in file_cbr.charts.voice.header.head:
-         new_file.write(str(block.len) + "\t")
-    new_file.write("\n[num]\t")
-    for block in file_cbr.charts.voice.header.head:
-         new_file.write(str(block.num) + "\t")
-    new_file.write("\n")
     
-    new_file.write("[EXTRAS]")
-    new_file.write("\n[value]\t")
-    for block in file_cbr.charts.extras.head:
-        new_file.write(str(block.value) + "\t")
-    new_file.write("\n[len]\t")
-    for block in file_cbr.charts.extras.head:
-         new_file.write(str(block.len) + "\t")
-    new_file.write("\n[num]\t")
-    for block in file_cbr.charts.extras.head:
-         new_file.write(str(block.num) + "\t")
-    new_file.write("\n")    
     
     new_file.close()
 
-    
-        
     # Save metadata
     new_file = open("song.ini", "w")
     new_file.write("[song]")
@@ -336,8 +332,9 @@ for filename in chart_files:
     print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
     
 # Convert to Clone Hero (need FFMPEG)
-convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
+#convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
 #convert = 'Y'  #DEBUG
+convert = 'N'  #DEBUG
 if convert == 'Y':
     ffmpeg_file = work_dir + "\\ffmpeg.exe"
 

@@ -34,7 +34,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.value = self._io.read_u2le()
+            self.val = self._io.read_u2le()
             self.len = self._io.read_u2le()
             self.num = self._io.read_u4le()
 
@@ -79,12 +79,21 @@ class Cbr(KaitaiStruct):
             self._raw_drums = self._io.read_bytes((self.pointer[2] - self.pointer[1]))
             _io__raw_drums = KaitaiStream(BytesIO(self._raw_drums))
             self.drums = Cbr.Instrument(_io__raw_drums, self, self._root)
-            self._raw_voice = self._io.read_bytes((self.pointer[3] - self.pointer[2]))
-            _io__raw_voice = KaitaiStream(BytesIO(self._raw_voice))
-            self.voice = Cbr.Voice(_io__raw_voice, self, self._root)
-            self._raw_extras = self._io.read_bytes_full()
-            _io__raw_extras = KaitaiStream(BytesIO(self._raw_extras))
-            self.extras = Cbr.Separator(_io__raw_extras, self, self._root)
+            if self.pointer[3] != 0:
+                self._raw_voice = self._io.read_bytes((self.pointer[3] - self.pointer[2]))
+                _io__raw_voice = KaitaiStream(BytesIO(self._raw_voice))
+                self.voice = Cbr.Voice(_io__raw_voice, self, self._root)
+
+            if self.pointer[3] != 0:
+                self._raw_extras = self._io.read_bytes_full()
+                _io__raw_extras = KaitaiStream(BytesIO(self._raw_extras))
+                self.extras = Cbr.Separator(_io__raw_extras, self, self._root)
+
+            if self.pointer[3] == 0:
+                self._raw_voice2 = self._io.read_bytes_full()
+                _io__raw_voice2 = KaitaiStream(BytesIO(self._raw_voice2))
+                self.voice2 = Cbr.Voice(_io__raw_voice2, self, self._root)
+
 
 
     class Separator(KaitaiStruct):

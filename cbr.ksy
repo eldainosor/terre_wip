@@ -60,10 +60,17 @@ types:
         size: ( pointer[2] - pointer[1] )
       - id: voice
         type: voice
-        size: ( pointer[3] - pointer[2] ) 
+        if: pointer[3] != 0
+        size: ( pointer[3] - pointer[2] )
         
       - id: extras
         type: separator
+        if: pointer[3] != 0
+        size-eos: true
+        
+      - id: voice2
+        type: voice
+        if: pointer[3] == 0
         size-eos: true
         
   separator:
@@ -90,7 +97,7 @@ types:
 
   body:
     seq:
-      - id: value
+      - id: val
         type: u2
       - id: len
         type: u2
@@ -118,7 +125,7 @@ types:
         type: array
         size: ( diff_point[1] - diff_point[0] ) 
         
-      - id: normal
+      - id: norm
         type: array
         size: ( diff_point[2] - diff_point[1] ) 
 
@@ -160,7 +167,7 @@ types:
         
       - id: pitch_pts
         type: array
-        size: start_lyrics_pos - start_pitch_pos
+        size: start_lyrics_pos - start_pitch_pos 
         doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
         
       - id: lyrics
@@ -178,6 +185,12 @@ enums:
 enums:
   diff_id:
     0: easy
-    1: normal
+    1: norm
     2: hard
+    
+enums:
+  pos_id:
+    0: lo
+    1: me
+    2: hi
     
