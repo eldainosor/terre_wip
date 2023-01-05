@@ -51,16 +51,16 @@ types:
   
       - id: chart_guitar
         type: instrument
-        size: pointer[0] - 0x800
+        size: ( pointer[0] - 0x800 )
       - id: chart_rhythm
         type: instrument
-        size: pointer[1] - pointer[0]
+        size: ( pointer[1] - pointer[0] )
       - id: chart_drums
         type: instrument
-        size: pointer[2] - pointer[1]
+        size: ( pointer[2] - pointer[1] )
       - id: chart_voice
         type: voice
-        size: pointer[3] - pointer[2]
+        size: ( pointer[3] - pointer[2] ) 
         
       - id: end_of_charts
         type: chart_head
@@ -116,11 +116,11 @@ types:
         
       - id: chart_easy
         type: chart_array
-        size: diff_point[1] - diff_point[0]
+        size: ( diff_point[1] - diff_point[0] ) 
         
       - id: chart_med
         type: chart_array
-        size: diff_point[2] - diff_point[1]
+        size: ( diff_point[2] - diff_point[1] ) 
 
       - id: chart_hard
         type: chart_array
