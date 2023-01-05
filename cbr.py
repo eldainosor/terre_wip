@@ -148,7 +148,7 @@ class Cbr(KaitaiStruct):
             self.song = []
             i = 0
             while not self._io.is_eof():
-                self.song.append(Cbr.Frets(self._io, self, self._root))
+                self.song.append(self._io.read_u4le())
                 i += 1
 
 
@@ -191,9 +191,9 @@ class Cbr(KaitaiStruct):
             self._raw_easy = self._io.read_bytes((self.diff_point[1] - self.diff_point[0]))
             _io__raw_easy = KaitaiStream(BytesIO(self._raw_easy))
             self.easy = Cbr.Array(_io__raw_easy, self, self._root)
-            self._raw_normal = self._io.read_bytes((self.diff_point[2] - self.diff_point[1]))
-            _io__raw_normal = KaitaiStream(BytesIO(self._raw_normal))
-            self.normal = Cbr.Array(_io__raw_normal, self, self._root)
+            self._raw_norm = self._io.read_bytes((self.diff_point[2] - self.diff_point[1]))
+            _io__raw_norm = KaitaiStream(BytesIO(self._raw_norm))
+            self.norm = Cbr.Array(_io__raw_norm, self, self._root)
             self._raw_hard = self._io.read_bytes_full()
             _io__raw_hard = KaitaiStream(BytesIO(self._raw_hard))
             self.hard = Cbr.Array(_io__raw_hard, self, self._root)

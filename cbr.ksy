@@ -123,11 +123,11 @@ types:
         
       - id: easy
         type: array
-        size: ( diff_point[1] - diff_point[0] ) 
+        size: ( diff_point[1] - diff_point[0] )
         
       - id: norm
         type: array
-        size: ( diff_point[2] - diff_point[1] ) 
+        size: ( diff_point[2] - diff_point[1] )
 
       - id: hard
         type: array
@@ -135,15 +135,19 @@ types:
         
   frets:
     seq:
-      - id: notes
+      - id: lo
         type: u4
-        doc: TODO Should be 12bytes
+      - id: me
+        type: u4
+      - id: hi
+        type: u4
         
   array:
     seq:
       - id: song
-        type: frets
+        type: u4
         repeat: eos
+        doc: NOTE should be 12 bytes
         
   voice:
     seq:

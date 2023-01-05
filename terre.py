@@ -240,6 +240,14 @@ for filename in chart_files:
     new_file.write("[GUITAR]\t\t\t[RHYTHM]\t\t\t[DRUMS]\t\t\t[VOICE]\t\t\t[EXTRAS]\t\t\t\n")
     new_file.write("[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t\n")
 
+    '''
+    print("GUITAR header len:" + str(len(file_cbr.charts.guitar.header.head)))
+    print("RHYTHM header len:" + str(len(file_cbr.charts.rhythm.header.head)))
+    print("DRUMS header len:" + str(len(file_cbr.charts.drums.header.head)))
+    print("VOICE header len:" + str(len(file_cbr.charts.voice.header.head)))
+    print("EXTRAS header len:" + str(len(file_cbr.charts.extras.head)))
+    '''
+    
     new_lines = list()
     for block in file_cbr.charts.guitar.header.head:
         new_lines.append(str(block.val) + "\t" + str(block.len) + "\t" + str(block.num) + "\t" )
@@ -287,13 +295,71 @@ for filename in chart_files:
     new_file.writelines(new_lines)
     new_file.close()
 
+    # Instruments charing manual analisis
     new_file = open("charts.csv", "w")
     new_file.write("[GUITAR]\t\t\t\t\t\t\t\t\t[RHYTHM]\t\t\t\t\t\t\t\t\t[DRUMS]\t\t\t\t\t\t\t\t\t\n")
     new_file.write("[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t\n")
     new_file.write("[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t\n")
     
+    print("GUITAR easy len:" + str(int(len(file_cbr.charts.guitar.easy.song)/3)))
+    print("GUITAR norm len:" + str(int(len(file_cbr.charts.guitar.norm.song)/3)))
+    print("GUITAR hard len:" + str(int(len(file_cbr.charts.guitar.hard.song)/3)))
+
+    print("RHYTHM easy len:" + str(int(len(file_cbr.charts.rhythm.easy.song)/3)))
+    print("RHYTHM norm len:" + str(int(len(file_cbr.charts.rhythm.norm.song)/3)))
+    print("RHYTHM hard len:" + str(int(len(file_cbr.charts.rhythm.hard.song)/3)))
+
+    print("DRUMS easy len:" + str(int(len(file_cbr.charts.drums.easy.song)/3)))
+    print("DRUMS norm len:" + str(int(len(file_cbr.charts.drums.norm.song)/3)))
+    print("DRUMS hard len:" + str(int(len(file_cbr.charts.drums.hard.song)/3)))
+
+    new_lines = list()
+    i=0
+    aux_line = ""
+    for block in file_cbr.charts.guitar.easy.song:
+        aux_line = aux_line + str(block) + "\t"
+        i = i + 1
+        if i%3 == 0:
+            #aux_line = aux_line + "\n"
+            new_lines.append(aux_line)
+            aux_line = ""    
+
+    old_lines = new_lines     
+    new_lines = list()
+    i=0
+    aux_line = old_lines[i]
+    for block in file_cbr.charts.guitar.norm.song:
+        aux_line = aux_line + str(block) + "\t"
+        i = i + 1
+        if i%3 == 0:
+            #aux_line = aux_line + "\n"
+            new_lines.append(aux_line)
+            try:
+                aux_line = old_lines[int(i/3)]
+            except:
+                aux_line = "\t\t\t"
     
+    old_lines = new_lines     
+    new_lines = list()
+    i=0
+    aux_line = old_lines[i]
+    for block in file_cbr.charts.guitar.hard.song:
+        aux_line = aux_line + str(block) + "\t"
+        i = i + 1
+        if i%3 == 0:
+            #aux_line = aux_line + "\n"
+            new_lines.append(aux_line)
+            try:
+                aux_line = old_lines[int(i/3)]
+            except:
+                aux_line = "\t\t\t" + "\t\t\t"
     
+    old_lines = new_lines     
+    new_lines = list()
+    for line in old_lines:
+        new_lines.append(line + "\n")
+    
+    new_file.writelines(new_lines)
     new_file.close()
 
     # Save metadata

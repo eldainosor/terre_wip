@@ -1,1 +1,6 @@
 ffmpeg.exe
+__pycache__/band.cpython-311.pyc
+__pycache__/cbr.cpython-311.pyc
+__pycache__/disc.cpython-311.pyc
+songs.csv
+test.py
