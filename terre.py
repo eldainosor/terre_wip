@@ -15,8 +15,8 @@ localtime = time.localtime(start_time)
 local = time.strftime("%H:%M:%S", localtime)
 print("Start time: ", local)
 
-disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
-#disc_dir = "E:" # DEBUG
+#disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
+disc_dir = "E:" # DEBUG
 mozart_dir = disc_dir + "\\install\\data\\mozart"
 songs_dir = mozart_dir + "\\song"
 bands_dir = mozart_dir + "\\band"
@@ -72,9 +72,10 @@ for filename in chart_files:
 
     os.chdir(songs_dir)
     working_file = open(filename, "rb")
-    file_cbr = cbr.Cbr.from_file(filename)
-    print("Nombre = " + file_cbr.header.song_name)  #DEBUF test Kaitai
     song_str_id, ext = os.path.splitext(filename)
+    
+    file_cbr = cbr.Cbr.from_file(filename)
+    #print("Nombre = " + file_cbr.header.song_name)  #DEBUF test Kaitai
 
     chart_data1 = working_file.read(0x001C)
 
@@ -103,14 +104,26 @@ for filename in chart_files:
     song_str = song_name.decode('U16').rstrip('\0')
 
     # Extract Charts
-    working_file.seek(0x0A00)
-    chart_head = working_file.read(0x0600)
-    working_file.seek(0x00)
-    chart_data = working_file.read()
-    charts = chart_data.split(chart_head)
-    print("Charts Detected:\t", len(charts))
-    working_file.close()
+    '''
+    # DEBUD test kaitai charts
+    chart_heads = list()
+    chart_heads.append(file_cbr.charts.guitar.header.head)
+    chart_heads.append(file_cbr.charts.rhythm.header.head)
+    chart_heads.append(file_cbr.charts.drums.header.head)
+    chart_heads.append(file_cbr.charts.voice.header.head)
+    chart_heads.append(file_cbr.charts.extras.head)
 
+    test_head = file_cbr.charts.extras.head
+
+    for head_ver in chart_heads:
+        print("leng: " + str(len(head_ver)))
+        if head_ver == test_head:
+            print("Head equal")
+        else:
+            print("Head diff")
+    '''
+  
+    # Show info
     print("Song ID:\t " + song_str_id)
     print("Band ID:\t " + band_str_id)
     print("Album ID:\t " + album_str_id)
@@ -184,6 +197,7 @@ for filename in chart_files:
         new_file.close()
 
     #TODO make CH compatible
+    '''
     for chart in charts:
         i = charts.index(chart)
         new_file = open("chart_" + data_order[i] + ".cbr", "wb")
@@ -191,6 +205,7 @@ for filename in chart_files:
             new_file.write(chart_head)
         new_file.write(chart)
         new_file.close()
+    '''
 
     # Copy preview
     source = songs_dir + "\\" + song_str_id
@@ -217,6 +232,73 @@ for filename in chart_files:
         shutil.copyfile(source + "\\erdtv.png", dest  + "\\erdtv.png")
     except:
         print("File [ ", dest,  "\\erdtv.png ] already exists")
+
+    # Save Kaitai Log
+    new_file = open("heads.csv", "w")
+    
+    new_file.write("[GUITAR]")
+    new_file.write("\n[value]\t")
+    for block in file_cbr.charts.guitar.header.head:
+        new_file.write(str(block.value) + "\t")
+    new_file.write("\n[len]\t")
+    for block in file_cbr.charts.guitar.header.head:
+         new_file.write(str(block.len) + "\t")
+    new_file.write("\n[num]\t")
+    for block in file_cbr.charts.guitar.header.head:
+         new_file.write(str(block.num) + "\t")
+    new_file.write("\n")
+
+    new_file.write("[RHYTHM]")
+    new_file.write("\n[value]\t")
+    for block in file_cbr.charts.rhythm.header.head:
+        new_file.write(str(block.value) + "\t")
+    new_file.write("\n[len]\t")
+    for block in file_cbr.charts.rhythm.header.head:
+         new_file.write(str(block.len) + "\t")
+    new_file.write("\n[num]\t")
+    for block in file_cbr.charts.rhythm.header.head:
+         new_file.write(str(block.num) + "\t")
+    new_file.write("\n")
+    
+    new_file.write("[DRUMS]")
+    new_file.write("\n[value]\t")
+    for block in file_cbr.charts.drums.header.head:
+        new_file.write(str(block.value) + "\t")
+    new_file.write("\n[len]\t")
+    for block in file_cbr.charts.drums.header.head:
+         new_file.write(str(block.len) + "\t")
+    new_file.write("\n[num]\t")
+    for block in file_cbr.charts.drums.header.head:
+         new_file.write(str(block.num) + "\t")
+    new_file.write("\n")
+    
+    new_file.write("[VOICE]")
+    new_file.write("\n[value]\t")
+    for block in file_cbr.charts.voice.header.head:
+        new_file.write(str(block.value) + "\t")
+    new_file.write("\n[len]\t")
+    for block in file_cbr.charts.voice.header.head:
+         new_file.write(str(block.len) + "\t")
+    new_file.write("\n[num]\t")
+    for block in file_cbr.charts.voice.header.head:
+         new_file.write(str(block.num) + "\t")
+    new_file.write("\n")
+    
+    new_file.write("[EXTRAS]")
+    new_file.write("\n[value]\t")
+    for block in file_cbr.charts.extras.head:
+        new_file.write(str(block.value) + "\t")
+    new_file.write("\n[len]\t")
+    for block in file_cbr.charts.extras.head:
+         new_file.write(str(block.len) + "\t")
+    new_file.write("\n[num]\t")
+    for block in file_cbr.charts.extras.head:
+         new_file.write(str(block.num) + "\t")
+    new_file.write("\n")    
+    
+    new_file.close()
+
+    
         
     # Save metadata
     new_file = open("song.ini", "w")
@@ -243,8 +325,8 @@ for filename in chart_files:
     new_file.write(song_str + "\t")
     new_file.write(album_str + "\t")
     new_file.write(year_str + "\t")
-    new_file.write(band_str_id + "\t")
     new_file.write(song_str_id + "\t")
+    new_file.write(band_str_id + "\t")
     new_file.write(album_str_id + "\n")
     new_file.close()
 

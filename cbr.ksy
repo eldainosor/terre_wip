@@ -49,46 +49,46 @@ types:
       - id: zeros
         size: 0x678
   
-      - id: chart_guitar
+      - id: guitar
         type: instrument
         size: ( pointer[0] - 0x800 )
-      - id: chart_rhythm
+      - id: rhythm
         type: instrument
         size: ( pointer[1] - pointer[0] )
-      - id: chart_drums
+      - id: drums
         type: instrument
         size: ( pointer[2] - pointer[1] )
-      - id: chart_voice
+      - id: voice
         type: voice
         size: ( pointer[3] - pointer[2] ) 
         
-      - id: end_of_charts
-        type: chart_head
+      - id: extras
+        type: separator
         size-eos: true
         
-  chart_head:
+  separator:
     seq:
       - id: id
         size: 8
         
-      - id: end_head_pos
+      - id: end_pos
         type: u8
-      - id: size_head_bytes
+      - id: size_bytes
         type: u4
-      - id: start_head_pos
+      - id: start_pos
         type: u8
-      - id: size_zero_fill
+      - id: fill
         type: u4
 
       - id: zeros
         size: 0x1E0
         
       - id: head
-        type: head_body
+        type: body
         repeat: expr
-        repeat-expr: size_head_bytes
+        repeat-expr: size_bytes
 
-  head_body:
+  body:
     seq:
       - id: value
         type: u2
@@ -100,7 +100,7 @@ types:
   instrument:
     seq:
       - id: header
-        type: chart_head
+        type: separator
       
       - id: info
         size: 8
@@ -114,34 +114,34 @@ types:
       - id: zeros
         size: 96
         
-      - id: chart_easy
-        type: chart_array
+      - id: easy
+        type: array
         size: ( diff_point[1] - diff_point[0] ) 
         
-      - id: chart_normal
-        type: chart_array
+      - id: normal
+        type: array
         size: ( diff_point[2] - diff_point[1] ) 
 
-      - id: chart_hard
-        type: chart_array
+      - id: hard
+        type: array
         size-eos: true
         
-  chart_body:
+  frets:
     seq:
       - id: notes
         type: u4
         doc: TODO Should be 12bytes
         
-  chart_array:
+  array:
     seq:
       - id: song
-        type: chart_body
+        type: frets
         repeat: eos
         
   voice:
     seq:
       - id: header
-        type: chart_head
+        type: separator
       
       - id: info
         size: 8
@@ -159,7 +159,7 @@ types:
         size: 96
         
       - id: pitch_pts
-        type: chart_array
+        type: array
         size: start_lyrics_pos - start_pitch_pos
         doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
         
