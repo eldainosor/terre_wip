@@ -5,6 +5,7 @@
 import os, re, shutil
 import subprocess
 import time
+import cbr, disc, band
 
 start_time = time.time()
 
@@ -24,6 +25,7 @@ work_dir = os.getcwd()
 output_dir = os.getcwd() + "\\erdtv"
 raw_dir = os.getcwd() + "\\raw"
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
+diff_order = ["easy", "normal", "hard"]
  
 print("Working dir:\t [", work_dir, "]")
 
@@ -70,6 +72,8 @@ for filename in chart_files:
 
     os.chdir(songs_dir)
     working_file = open(filename, "rb")
+    file_cbr = cbr.Cbr.from_file(filename)
+    print("Nombre = " + file_cbr.header.song_name)  #DEBUF test Kaitai
     song_str_id, ext = os.path.splitext(filename)
 
     chart_data1 = working_file.read(0x001C)

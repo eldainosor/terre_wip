@@ -118,7 +118,7 @@ types:
         type: chart_array
         size: ( diff_point[1] - diff_point[0] ) 
         
-      - id: chart_med
+      - id: chart_normal
         type: chart_array
         size: ( diff_point[2] - diff_point[1] ) 
 
@@ -178,6 +178,6 @@ enums:
 enums:
   diff_id:
     0: easy
-    1: med
+    1: normal
     2: hard
     
