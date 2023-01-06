@@ -15,8 +15,8 @@ localtime = time.localtime(start_time)
 local = time.strftime("%H:%M:%S", localtime)
 print("Start time: ", local)
 
-#disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
-disc_dir = "E:" # DEBUG
+disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
+#disc_dir = "E:" # DEBUG
 mozart_dir = disc_dir + "\\install\\data\\mozart"
 songs_dir = mozart_dir + "\\song"
 bands_dir = mozart_dir + "\\band"
@@ -235,18 +235,17 @@ for filename in chart_files:
 
     # Save Kaitai Log
     # COMMON HEADER
+    '''
     new_file = open("heads.csv", "w")
     
     new_file.write("[GUITAR]\t\t\t[RHYTHM]\t\t\t[DRUMS]\t\t\t[VOICE]\t\t\t[EXTRAS]\t\t\t\n")
     new_file.write("[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t\n")
 
-    '''
     print("GUITAR header len:" + str(len(file_cbr.charts.guitar.header.head)))
     print("RHYTHM header len:" + str(len(file_cbr.charts.rhythm.header.head)))
     print("DRUMS header len:" + str(len(file_cbr.charts.drums.header.head)))
     print("VOICE header len:" + str(len(file_cbr.charts.voice.header.head)))
     print("EXTRAS header len:" + str(len(file_cbr.charts.extras.head)))
-    '''
     
     new_lines = list()
     for block in file_cbr.charts.guitar.header.head:
@@ -362,6 +361,8 @@ for filename in chart_files:
     new_file.writelines(new_lines)
     new_file.close()
 
+    '''
+
     # Save metadata
     new_file = open("song.ini", "w")
     new_file.write("[song]")
@@ -398,9 +399,9 @@ for filename in chart_files:
     print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
     
 # Convert to Clone Hero (need FFMPEG)
-#convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
+convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
 #convert = 'Y'  #DEBUG
-convert = 'N'  #DEBUG
+#convert = 'N'  #DEBUG
 if convert == 'Y':
     ffmpeg_file = work_dir + "\\ffmpeg.exe"
 
