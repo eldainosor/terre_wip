@@ -118,4 +118,6 @@ Análisis inicial de archivos por [@eldainosor](https://twitter.com/eldainosor)
 
 Desarrollo del código de extracción [@envido32](https://twitter.com/envido32)
 
+Y a toda la increible comunidad de juegos de ritmo por su trabajo constante.
+
 _El Rock de Tu Vida, Next Level, Loaded, Rock Band, Guitar Hero, Harmonix, Activision, Clone Hero y todas las marcas y productos mencionados son propiedad de sus respectivos dueños._
