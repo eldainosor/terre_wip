@@ -118,7 +118,7 @@ All song files can be found in
    ```
 
   
-## Créditos
+## Credits
 
 Initial file analisis by [@eldainosor](https://twitter.com/eldainosor)
 
