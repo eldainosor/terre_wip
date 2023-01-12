@@ -191,10 +191,10 @@ enums:
     0: easy
     1: norm
     2: hard
+    3: expe
     
 enums:
   pos_id:
     0: lo
     1: me
     2: hi
-    
