@@ -4,13 +4,13 @@ meta:
   endian: le
 
 seq:
-  - id: hdr
-    type: header
+  - id: info
+    type: meta_data
   - id: tracks
     type: track
     
 types:
-  header:
+  meta_data:
     seq:
       - id: magic
         contents: [0x76, 0x98, 0xCD, 0xAB]
@@ -36,7 +36,7 @@ types:
       - id: magic
         contents: [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
       
-      - id: pointers
+      - id: trk_pts
         type: u8
         repeat: expr
         repeat-expr: 217
@@ -44,31 +44,31 @@ types:
 
       - id: guitar
         type: instrument
-        size: ( pointers[0] - 0x800 )
+        size: ( trk_pts[0] - 0x800 )
       - id: rhythm
         type: instrument
-        size: ( pointers[1] - pointers[0] )
+        size: ( trk_pts[1] - trk_pts[0] )
       - id: drums
         type: instrument
-        size: ( pointers[2] - pointers[1] )
+        size: ( trk_pts[2] - trk_pts[1] )
       - id: voice
         type: voice
-        if: pointers[3] != 0
-        size: ( pointers[3] - pointers[2] )
+        if: trk_pts[3] != 0
+        size: ( trk_pts[3] - trk_pts[2] )
         
       - id: extras
         type: separator
-        if: pointers[3] != 0
+        if: trk_pts[3] != 0
         size-eos: true
         
       - id: voice2
         type: voice
-        if: pointers[3] == 0
+        if: trk_pts[3] == 0
         size-eos: true
         
   separator:
     seq:
-      - id: id
+      - id: channel
         type: u8
         
       - id: end_pos
@@ -77,34 +77,34 @@ types:
         type: u4
       - id: start_pos
         type: u8
-      - id: fill
-        type: u4
+      
+      - id: bpm
+        type: u4        
+      
+      - id: zeros60
+        type: u8
         repeat: expr
-        repeat-expr: 121
+        repeat-expr: 60
         
-      - id: head
-        type: body
+      - id: events
+        type: event
         repeat: expr
         repeat-expr: size_bytes
 
-  body:
+  event:
     seq:
       - id: val
-        type: u2
-      - id: len
-        type: u2
-      - id: num
-        type: u4
-
+        size: 8
+        
   instrument:
     seq:
       - id: header
         type: separator
       
-      - id: info
-        type: u8
+      - id: magic
+        contents: [0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00]
 
-      - id: diff_point
+      - id: diff_pts
         type: u8
         repeat: expr
         repeat-expr: 15
@@ -112,11 +112,11 @@ types:
         
       - id: easy
         type: array
-        size: ( diff_point[1] - diff_point[0] )
+        size: ( diff_pts[1] - diff_pts[0] )
         
       - id: norm
         type: array
-        size: ( diff_point[2] - diff_point[1] )
+        size: ( diff_pts[2] - diff_pts[1] )
 
       - id: hard
         type: array
@@ -124,17 +124,13 @@ types:
         
   frets:
     seq:
-      - id: lo
-        type: u4
-      - id: me
-        type: u4
-      - id: hi
-        type: u4
+      - id: fret
+        size: 4
         
   array:
     seq:
       - id: song
-        type: u4
+        type: frets
         repeat: eos
         doc: NOTE should be 12 bytes
         
@@ -155,7 +151,7 @@ types:
       - id: lyrics_vol
         type: u4
       
-      - id: zeros
+      - id: zeros12
         type: u8
         repeat: expr
         repeat-expr: 12
