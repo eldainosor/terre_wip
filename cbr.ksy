@@ -4,10 +4,10 @@ meta:
   endian: le
 
 seq:
-  - id: header
+  - id: hdr
     type: header
-  - id: charts
-    type: charts
+  - id: tracks
+    type: track
     
 types:
   header:
@@ -15,11 +15,11 @@ types:
       - id: magic
         contents: [0x76, 0x98, 0xCD, 0xAB]
       - id: flags_1
-        size: 8
+        type: u8
       - id: song_id
         type: u8
       - id: flags_2
-        size: 8
+        type: u8
       - id: band_id
         type: u8
       - id: disc_id
@@ -31,52 +31,45 @@ types:
         encoding: UTF-16
         size: 0x100
         
-  charts:
+  track:
     seq:
       - id: magic
         contents: [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
       
-      - id: pointer
+      - id: pointers
         type: u8
         repeat: expr
-        repeat-expr: 4
-        doc: Pointer to the END of each instrument's charts
-        
-      - id: info
-        size: 4
-        repeat: expr
-        repeat-expr: 12
-      - id: zeros
-        size: 0x678
-  
+        repeat-expr: 217
+        doc: pointers to the END of each instrument's tracks
+
       - id: guitar
         type: instrument
-        size: ( pointer[0] - 0x800 )
+        size: ( pointers[0] - 0x800 )
       - id: rhythm
         type: instrument
-        size: ( pointer[1] - pointer[0] )
+        size: ( pointers[1] - pointers[0] )
       - id: drums
         type: instrument
-        size: ( pointer[2] - pointer[1] )
+        size: ( pointers[2] - pointers[1] )
       - id: voice
         type: voice
-        if: pointer[3] != 0
-        size: ( pointer[3] - pointer[2] )
+        if: pointers[3] != 0
+        size: ( pointers[3] - pointers[2] )
         
       - id: extras
         type: separator
-        if: pointer[3] != 0
+        if: pointers[3] != 0
         size-eos: true
         
       - id: voice2
         type: voice
-        if: pointer[3] == 0
+        if: pointers[3] == 0
         size-eos: true
         
   separator:
     seq:
       - id: id
-        size: 8
+        type: u8
         
       - id: end_pos
         type: u8
@@ -86,9 +79,8 @@ types:
         type: u8
       - id: fill
         type: u4
-
-      - id: zeros
-        size: 0x1E0
+        repeat: expr
+        repeat-expr: 121
         
       - id: head
         type: body
@@ -110,16 +102,13 @@ types:
         type: separator
       
       - id: info
-        size: 8
+        type: u8
 
       - id: diff_point
         type: u8
         repeat: expr
-        repeat-expr: 3
-        doc: Pointer to the END of each difficulty chart for this instrument
-        
-      - id: zeros
-        size: 96
+        repeat-expr: 15
+        doc: pointers to the END of each difficulty chart for this instrument
         
       - id: easy
         type: array
@@ -155,11 +144,11 @@ types:
         type: separator
       
       - id: info
-        size: 8
-
-      - id: start_pitch_pos
         type: u8
-      - id: pitch_vol
+
+      - id: start_wave_pos
+        type: u8
+      - id: wave_vol
         type: u4
       - id: start_lyrics_pos
         type: u8
@@ -167,11 +156,13 @@ types:
         type: u4
       
       - id: zeros
-        size: 96
+        type: u8
+        repeat: expr
+        repeat-expr: 12
         
-      - id: pitch_pts
+      - id: wave_pts
         type: array
-        size: start_lyrics_pos - start_pitch_pos 
+        size: start_lyrics_pos - start_wave_pos 
         doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
         
       - id: lyrics
@@ -191,10 +182,10 @@ enums:
     0: easy
     1: norm
     2: hard
-    3: expe
     
 enums:
   pos_id:
     0: lo
     1: me
     2: hi
+    
