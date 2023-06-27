@@ -28,8 +28,8 @@ types:
         type: u4
       - id: song_name
         type: str
+        size: 256
         encoding: UTF-16
-        size: 0x100
         
   track:
     seq:
@@ -39,23 +39,40 @@ types:
       - id: trk_pts
         type: u8
         repeat: expr
-        repeat-expr: 217
+        repeat-expr: 5
         doc: pointers to the END of each instrument's tracks
-
+      
+      - id: diff_level
+        type: u2
+        repeat: expr
+        repeat-expr: 6
+      
+      - id: trk_info
+        type: u4
+        repeat: expr
+        repeat-expr: 6
+        
+      - id: trk_vol
+        terminator: 0
+        size: 1660
+        
       - id: guitar
         type: instrument
+        if: trk_pts[0] != 0
         size: ( trk_pts[0] - 0x800 )
       - id: rhythm
         type: instrument
+        if: trk_pts[1] != 0
         size: ( trk_pts[1] - trk_pts[0] )
       - id: drums
         type: instrument
+        if: trk_pts[2] != 0
         size: ( trk_pts[2] - trk_pts[1] )
-      - id: voice
+        
+      - id: voice1
         type: voice
         if: trk_pts[3] != 0
         size: ( trk_pts[3] - trk_pts[2] )
-        
       - id: extras
         type: separator
         if: trk_pts[3] != 0
@@ -68,8 +85,12 @@ types:
         
   separator:
     seq:
+      - id: instrument_id
+        type: u4
+        enum: inst_id
+
       - id: channel
-        type: u8
+        type: u4
         
       - id: end_pos
         type: u8
@@ -77,14 +98,10 @@ types:
         type: u4
       - id: start_pos
         type: u8
-      
+             
       - id: bpm
-        type: u4        
-      
-      - id: zeros60
-        type: u8
-        repeat: expr
-        repeat-expr: 60
+        terminator: 0
+        size: 484
         
       - id: events
         type: event
@@ -122,15 +139,15 @@ types:
         type: array
         size-eos: true
         
-  frets:
+  notes:
     seq:
-      - id: fret
+      - id: note
         size: 4
         
   array:
     seq:
       - id: song
-        type: frets
+        type: notes
         repeat: eos
         doc: NOTE should be 12 bytes
         
@@ -149,12 +166,8 @@ types:
       - id: start_lyrics_pos
         type: u8
       - id: lyrics_vol
-        type: u4
-      
-      - id: zeros12
-        type: u8
-        repeat: expr
-        repeat-expr: 12
+        terminator: 0
+        size: 100
         
       - id: wave_pts
         type: array
