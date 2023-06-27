@@ -59,31 +59,31 @@ types:
       - id: guitar
         type: instrument
         if: trk_pts[0] != 0
-        size: ( trk_pts[0] - 0x800 )
+        size: trk_pts[0] - 0x800
       - id: rhythm
         type: instrument
         if: trk_pts[1] != 0
-        size: ( trk_pts[1] - trk_pts[0] )
+        size: trk_pts[1] - trk_pts[0]
       - id: drums
         type: instrument
         if: trk_pts[2] != 0
-        size: ( trk_pts[2] - trk_pts[1] )
+        size: trk_pts[2] - trk_pts[1]
         
-      - id: voice1
+      - id: vocals_with_extras
         type: voice
         if: trk_pts[3] != 0
-        size: ( trk_pts[3] - trk_pts[2] )
+        size:  trk_pts[3] - trk_pts[2]
       - id: extras
-        type: separator
+        type: header
         if: trk_pts[3] != 0
-        size-eos: true
         
-      - id: voice2
+      - id: vocals_no_extras
         type: voice
         if: trk_pts[3] == 0
         size-eos: true
+      
         
-  separator:
+  header:
     seq:
       - id: instrument_id
         type: u4
@@ -115,8 +115,8 @@ types:
         
   instrument:
     seq:
-      - id: header
-        type: separator
+      - id: hdr
+        type: header
       
       - id: magic
         contents: [0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00]
@@ -129,20 +129,15 @@ types:
         
       - id: easy
         type: array
-        size: ( diff_pts[1] - diff_pts[0] )
+        size: diff_pts[1] - diff_pts[0]
         
       - id: norm
         type: array
-        size: ( diff_pts[2] - diff_pts[1] )
+        size: diff_pts[2] - diff_pts[1]
 
       - id: hard
         type: array
         size-eos: true
-        
-  notes:
-    seq:
-      - id: note
-        size: 4
         
   array:
     seq:
@@ -150,11 +145,16 @@ types:
         type: notes
         repeat: eos
         doc: NOTE should be 12 bytes
-        
+  
+  notes:
+    seq:
+      - id: note
+        size: 4
+  
   voice:
     seq:
-      - id: header
-        type: separator
+      - id: hdr
+        type: header
       
       - id: info
         type: u8

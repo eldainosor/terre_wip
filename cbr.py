@@ -26,17 +26,6 @@ class Cbr(KaitaiStruct):
         self.info = Cbr.MetaData(self._io, self, self._root)
         self.tracks = Cbr.Track(self._io, self, self._root)
 
-    class Frets(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.fret = self._io.read_bytes(4)
-
-
     class Event(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -46,29 +35,6 @@ class Cbr(KaitaiStruct):
 
         def _read(self):
             self.val = self._io.read_bytes(8)
-
-
-    class Separator(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.channel = self._io.read_u8le()
-            self.end_pos = self._io.read_u8le()
-            self.size_bytes = self._io.read_u4le()
-            self.start_pos = self._io.read_u8le()
-            self.bpm = self._io.read_u4le()
-            self.zeros60 = []
-            for i in range(60):
-                self.zeros60.append(self._io.read_u8le())
-
-            self.events = []
-            for i in range(self.size_bytes):
-                self.events.append(Cbr.Event(self._io, self, self._root))
-
 
 
     class Track(KaitaiStruct):
@@ -83,32 +49,45 @@ class Cbr(KaitaiStruct):
             if not self.magic == b"\x00\x08\x00\x00\x00\x00\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00\x08\x00\x00\x00\x00\x00\x00", self.magic, self._io, u"/types/track/seq/0")
             self.trk_pts = []
-            for i in range(217):
+            for i in range(5):
                 self.trk_pts.append(self._io.read_u8le())
 
-            self._raw_guitar = self._io.read_bytes((self.trk_pts[0] - 2048))
-            _io__raw_guitar = KaitaiStream(BytesIO(self._raw_guitar))
-            self.guitar = Cbr.Instrument(_io__raw_guitar, self, self._root)
-            self._raw_rhythm = self._io.read_bytes((self.trk_pts[1] - self.trk_pts[0]))
-            _io__raw_rhythm = KaitaiStream(BytesIO(self._raw_rhythm))
-            self.rhythm = Cbr.Instrument(_io__raw_rhythm, self, self._root)
-            self._raw_drums = self._io.read_bytes((self.trk_pts[2] - self.trk_pts[1]))
-            _io__raw_drums = KaitaiStream(BytesIO(self._raw_drums))
-            self.drums = Cbr.Instrument(_io__raw_drums, self, self._root)
-            if self.trk_pts[3] != 0:
-                self._raw_voice = self._io.read_bytes((self.trk_pts[3] - self.trk_pts[2]))
-                _io__raw_voice = KaitaiStream(BytesIO(self._raw_voice))
-                self.voice = Cbr.Voice(_io__raw_voice, self, self._root)
+            self.diff_level = []
+            for i in range(6):
+                self.diff_level.append(self._io.read_u2le())
+
+            self.trk_info = []
+            for i in range(6):
+                self.trk_info.append(self._io.read_u4le())
+
+            self.trk_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(1660), 0, False)
+            if self.trk_pts[0] != 0:
+                self._raw_guitar = self._io.read_bytes((self.trk_pts[0] - 2048))
+                _io__raw_guitar = KaitaiStream(BytesIO(self._raw_guitar))
+                self.guitar = Cbr.Instrument(_io__raw_guitar, self, self._root)
+
+            if self.trk_pts[1] != 0:
+                self._raw_rhythm = self._io.read_bytes((self.trk_pts[1] - self.trk_pts[0]))
+                _io__raw_rhythm = KaitaiStream(BytesIO(self._raw_rhythm))
+                self.rhythm = Cbr.Instrument(_io__raw_rhythm, self, self._root)
+
+            if self.trk_pts[2] != 0:
+                self._raw_drums = self._io.read_bytes((self.trk_pts[2] - self.trk_pts[1]))
+                _io__raw_drums = KaitaiStream(BytesIO(self._raw_drums))
+                self.drums = Cbr.Instrument(_io__raw_drums, self, self._root)
 
             if self.trk_pts[3] != 0:
-                self._raw_extras = self._io.read_bytes_full()
-                _io__raw_extras = KaitaiStream(BytesIO(self._raw_extras))
-                self.extras = Cbr.Separator(_io__raw_extras, self, self._root)
+                self._raw_vocals_with_extras = self._io.read_bytes((self.trk_pts[3] - self.trk_pts[2]))
+                _io__raw_vocals_with_extras = KaitaiStream(BytesIO(self._raw_vocals_with_extras))
+                self.vocals_with_extras = Cbr.Voice(_io__raw_vocals_with_extras, self, self._root)
+
+            if self.trk_pts[3] != 0:
+                self.extras = Cbr.Header(self._io, self, self._root)
 
             if self.trk_pts[3] == 0:
-                self._raw_voice2 = self._io.read_bytes_full()
-                _io__raw_voice2 = KaitaiStream(BytesIO(self._raw_voice2))
-                self.voice2 = Cbr.Voice(_io__raw_voice2, self, self._root)
+                self._raw_vocals_no_extras = self._io.read_bytes_full()
+                _io__raw_vocals_no_extras = KaitaiStream(BytesIO(self._raw_vocals_no_extras))
+                self.vocals_no_extras = Cbr.Voice(_io__raw_vocals_no_extras, self, self._root)
 
 
 
@@ -120,16 +99,12 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.header = Cbr.Separator(self._io, self, self._root)
+            self.hdr = Cbr.Header(self._io, self, self._root)
             self.info = self._io.read_u8le()
             self.start_wave_pos = self._io.read_u8le()
             self.wave_vol = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
-            self.lyrics_vol = self._io.read_u4le()
-            self.zeros12 = []
-            for i in range(12):
-                self.zeros12.append(self._io.read_u8le())
-
+            self.lyrics_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(100), 0, False)
             self._raw_wave_pts = self._io.read_bytes((self.start_lyrics_pos - self.start_wave_pos))
             _io__raw_wave_pts = KaitaiStream(BytesIO(self._raw_wave_pts))
             self.wave_pts = Cbr.Array(_io__raw_wave_pts, self, self._root)
@@ -147,9 +122,40 @@ class Cbr(KaitaiStruct):
             self.song = []
             i = 0
             while not self._io.is_eof():
-                self.song.append(Cbr.Frets(self._io, self, self._root))
+                self.song.append(Cbr.Notes(self._io, self, self._root))
                 i += 1
 
+
+
+    class Header(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.instrument_id = KaitaiStream.resolve_enum(Cbr.InstId, self._io.read_u4le())
+            self.channel = self._io.read_u4le()
+            self.end_pos = self._io.read_u8le()
+            self.size_bytes = self._io.read_u4le()
+            self.start_pos = self._io.read_u8le()
+            self.bpm = KaitaiStream.bytes_terminate(self._io.read_bytes(484), 0, False)
+            self.events = []
+            for i in range(self.size_bytes):
+                self.events.append(Cbr.Event(self._io, self, self._root))
+
+
+
+    class Notes(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.note = self._io.read_bytes(4)
 
 
     class MetaData(KaitaiStruct):
@@ -180,7 +186,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.header = Cbr.Separator(self._io, self, self._root)
+            self.hdr = Cbr.Header(self._io, self, self._root)
             self.magic = self._io.read_bytes(8)
             if not self.magic == b"\x02\x00\x00\x00\x03\x00\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00\x03\x00\x00\x00", self.magic, self._io, u"/types/instrument/seq/1")
