@@ -175,8 +175,20 @@ types:
         doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
         
       - id: lyrics
-        doc: TODO String+null+12bytes
-        size-eos: true
+        type: verse
+        repeat: eos
+        
+  verse:
+    seq:
+      - id: start
+        type: u4
+      - id: lenght
+        type: u4
+      - id: verse_id
+        type: u4
+      - id: text
+        type: strz
+        encoding: ASCII
 
 enums:
   inst_id:
