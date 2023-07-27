@@ -17,7 +17,8 @@ print("Start time: ", local)
 
 #disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
 disc_dir = "E:" # DEBUG
-mozart_dir = disc_dir + "\\install\\data\\mozart"
+#mozart_dir = disc_dir + "\\install\\data\\mozart"
+mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"
 songs_dir = mozart_dir + "\\song"
 bands_dir = mozart_dir + "\\band"
 albums_dir = mozart_dir + "\\disc"
@@ -49,7 +50,7 @@ if n > 0:
     print("Songs found in dir:\t",  n)
     os.chdir(work_dir)
     new_file = open("songs.csv", "w")
-    new_file.write("Artista\tCancion\tAlbum\tAño\tSong ID\tBand ID\tAlbum ID\n")
+    new_file.write("Artista\tCancion\tAlbum\tAño\tSong ID\tBand ID\tAlbum ID\tDif:G\tDif:R\tDif:D\tDif:V\tDif:B\n")
     new_file.close()
 
 #print("Disk dir:\t", songs_dir)    #DEBUG
@@ -58,7 +59,7 @@ if n > 0:
 try:
     os.mkdir(raw_dir)
 except OSError as error:
-    print("[", raw_dir, "] already exists")
+    print("Output dir:\t[", raw_dir, "] already exists")
     
 # Raw extraction
 for filename in chart_files:
@@ -72,36 +73,36 @@ for filename in chart_files:
 
     os.chdir(songs_dir)
     working_file = open(filename, "rb")
-    song_str_id, ext = os.path.splitext(filename)
-    
-    file_cbr = cbr.Cbr.from_file(filename)
-    #print("Nombre = " + file_cbr.header.song_name)  #DEBUF test Kaitai
+    file_str_id, ext = os.path.splitext(filename)
+    print("File ID = " + file_str_id)  #DEBUG test Kaitai
 
-    chart_data1 = working_file.read(0x001C)
+    # Read CBR file
+    file_cbr = cbr.Cbr.from_file(filename)
+    
+    # Extract Song ID
+    song_id = file_cbr.info.song_id
+    print("Song ID = " + str(hex(song_id)).upper().lstrip('0X'))  #DEBUG test Kaitai
+    song_str_id = str(hex(song_id)).upper().lstrip('0X')
 
     # Extract Band ID
-    band_id = bytearray(working_file.read(0x08))
-    band_id.reverse()
-    band_str_id = band_id.hex()
-    band_str_id = band_str_id.upper()
-    band_str_id = band_str_id.lstrip('0')
+    band_id = file_cbr.info.band_id
+    print("Band ID = " + str(hex(band_id)).upper().lstrip('0X'))  #DEBUG test Kaitai
+    band_str_id = str(hex(band_id)).upper().lstrip('0X')
     
     # Extract Album ID
-    album_id = bytearray(working_file.read(0x08))
-    album_id.reverse()
-    album_str_id = album_id.hex()
-    album_str_id = album_str_id.upper()
-    album_str_id = album_str_id.lstrip('0')
+    album_id = file_cbr.info.disc_id
+    print("Disc ID = " + str(hex(album_id)).upper().lstrip('0X'))  #DEBUG test Kaitai
+    album_str_id = str(hex(album_id)).upper().lstrip('0X')
 
     # Extract Year
-    year = bytearray(working_file.read(0x04))
-    year.reverse()
-    year_str = str(int.from_bytes(year))
-    #print(year_str)    #DEBUG
-
+    year = file_cbr.info.year
+    print("Year = " + str(year))  #DEBUG test Kaitai
+    
     # Extract Song Name
-    song_name = working_file.read(0x0100)
-    song_str = song_name.decode('U16').rstrip('\0')
+    song_name = file_cbr.info.song_name
+    print("Name = " + file_cbr.info.song_name)  #DEBUG test Kaitai
+    
+    chart_data1 = working_file.read(0x001C) #TODO: Delete 
 
     # Extract Charts
     '''
@@ -122,13 +123,7 @@ for filename in chart_files:
         else:
             print("Head diff")
     '''
-  
-    # Show info
-    print("Song ID:\t " + song_str_id)
-    print("Band ID:\t " + band_str_id)
-    print("Album ID:\t " + album_str_id)
-    print("Song Name:\t " + song_str)
-    
+   
     # Analize Bands
     os.chdir(bands_dir)
 
