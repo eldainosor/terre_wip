@@ -6,7 +6,9 @@ seq:
   - id: header
     type: header
   - id: band_name
-    type: band_name
+    type: str
+    size: 0x7F0
+    encoding: UTF-16
 types:
   header:
     seq:
@@ -15,11 +17,5 @@ types:
       - id: version
         type: u4
       - id: band_id
-        type: u8
-  band_name:
-    seq:
-      - id: band_name
-        type: str
-        size: 0x7F0
-        encoding: UTF-8
-  
+        type: u8 
+        

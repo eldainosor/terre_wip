@@ -16,7 +16,7 @@ class Band(KaitaiStruct):
 
     def _read(self):
         self.header = Band.Header(self._io, self, self._root)
-        self.band_name = Band.BandName(self._io, self, self._root)
+        self.band_name = (self._io.read_bytes(2032)).decode(u"UTF-16")
 
     class Header(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
@@ -31,17 +31,6 @@ class Band(KaitaiStruct):
                 raise kaitaistruct.ValidationNotEqualError(b"\x0D\xBA\x0D\xBA", self.magic, self._io, u"/types/header/seq/0")
             self.version = self._io.read_u4le()
             self.band_id = self._io.read_u8le()
-
-
-    class BandName(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.band_name = (self._io.read_bytes(2032)).decode(u"UTF-16")
 
 
 

@@ -72,27 +72,27 @@ for filename in chart_files:
     print("Analizing (", int(k) , "/" , int(n) , ")")   #DEBUG
 
     os.chdir(songs_dir)
-    working_file = open(filename, "rb")
-    file_str_id, ext = os.path.splitext(filename)
-    print("File ID = " + file_str_id)  #DEBUG test Kaitai
+    #working_file = open(filename, "rb")
+    #file_id, ext = os.path.splitext(filename)
+    #print("File ID = " + file_id)  #DEBUG test Kaitai
 
     # Read CBR file
     file_cbr = cbr.Cbr.from_file(filename)
     
     # Extract Song ID
     song_id = file_cbr.info.song_id
-    print("Song ID = " + str(hex(song_id)).upper().lstrip('0X'))  #DEBUG test Kaitai
-    song_str_id = str(hex(song_id)).upper().lstrip('0X')
+    song_id = str(hex(song_id)).upper().lstrip('0X') 
+    print("Song ID = " + song_id)  #DEBUG test Kaitai
 
     # Extract Band ID
     band_id = file_cbr.info.band_id
-    print("Band ID = " + str(hex(band_id)).upper().lstrip('0X'))  #DEBUG test Kaitai
-    band_str_id = str(hex(band_id)).upper().lstrip('0X')
+    band_id = str(hex(band_id)).upper().lstrip('0X')
+    print("Band ID = " + band_id)  #DEBUG test Kaitai
     
     # Extract Album ID
     album_id = file_cbr.info.disc_id
-    print("Disc ID = " + str(hex(album_id)).upper().lstrip('0X'))  #DEBUG test Kaitai
-    album_str_id = str(hex(album_id)).upper().lstrip('0X')
+    album_id = str(hex(album_id)).upper().lstrip('0X')
+    print("Disc ID = " + album_id)  #DEBUG test Kaitai
 
     # Extract Year
     year = file_cbr.info.year
@@ -103,12 +103,17 @@ for filename in chart_files:
     print("Name = " + file_cbr.info.song_name)  #DEBUG test Kaitai
 
     # Extract Difficulty
-    difficulty = file_cbr.tracks.diff_level
-    
+    difficulties = file_cbr.tracks.diff_level
     band_diff = int(0)
-    for instrument in difficulty:
+    for instrument in difficulties:
         band_diff += instrument
-    difficulty[4] = int(band_diff / 4)
+    difficulties[4] = int(band_diff / 4)
+
+    print("Diff. Guitar =\t" + str(difficulties[0]))  #DEBUG test Kaitai
+    print("Diff. Rythm =\t" + str(difficulties[1]))  #DEBUG test Kaitai
+    print("Diff. Drums =\t" + str(difficulties[2]))  #DEBUG test Kaitai
+    print("Diff. Vocal =\t" + str(difficulties[3]))  #DEBUG test Kaitai
+    print("Diff. Band =\t" + str(difficulties[4]))  #DEBUG test Kaitai
 
     # Extract Charts
     '''
@@ -136,17 +141,14 @@ for filename in chart_files:
     #dir_files = os.listdir(curr_dir) #DEBUG
     #print("Files in dir:", dir_files) #DEBUG
 
-    working_file = open(band_str_id + ".band", "rb")
-    band_data = working_file.read(0x0010)
-    #print(band_data)
-    band_name = working_file.read()
-    band_str = band_name.decode('U16').rstrip('\0')
-    print("Band Name:\t " + band_str)
-    working_file.close()
+    # Read Band file
+    file_band = band.Band.from_file(band_id + ".band")
+    band_name = file_band.band_name
+    print("Band = " + band_name)
     
     # Analize albums
     os.chdir(albums_dir)
-    working_file = open(album_str_id + ".disc", "rb")
+    working_file = open(album_id + ".disc", "rb")
     album_data = working_file.read(0x0018)
     #print(album_data)
     album_name = working_file.read(0x0100)
@@ -158,21 +160,21 @@ for filename in chart_files:
 
     # Analize Background
     os.chdir(songs_dir)
-    working_file = open(song_str_id + ".bgf", "rb")
+    working_file = open(song_id + ".bgf", "rb")
     background_data = working_file.read(0x020C)
     background_img = working_file.read()
     working_file.close()
 
     # Analize Stems
     #print(" > Searching band... < " )
-    working_file = open(song_str_id + ".au", "rb")
+    working_file = open(song_id + ".au", "rb")
     song_data = working_file.read()
     flac_head = "fLaC".encode('U8')
     audio_data = song_data.split(flac_head)
     working_file.close()
 
     # Output Files
-    new_song_dir = raw_dir + "\\" + band_str + " - " + song_str
+    new_song_dir = raw_dir + "\\" + band_name + " - " + song_str
 
     try:
         os.mkdir(new_song_dir)
@@ -209,7 +211,7 @@ for filename in chart_files:
     '''
 
     # Copy preview
-    source = songs_dir + "\\" + song_str_id
+    source = songs_dir + "\\" + song_id
     dest = new_song_dir
     #print("Copying preview...")
     try:
@@ -529,7 +531,7 @@ for filename in chart_files:
     # Save metadata
     new_file = open("song.ini", "w")
     new_file.write("[song]")
-    new_file.write("\nartist = " + band_str)
+    new_file.write("\nartist = " + band_name)
     new_file.write("\nname = " + song_str)
     new_file.write("\nalbum = " + album_str)
     new_file.write("\nyear = " + str(year))
@@ -547,13 +549,13 @@ for filename in chart_files:
     # Save to log
     os.chdir(work_dir)
     new_file = open("songs.csv", "a")
-    new_file.write(band_str + "\t")
+    new_file.write(band_name + "\t")
     new_file.write(song_str + "\t")
     new_file.write(album_str + "\t")
     new_file.write(str(year) + "\t")
-    new_file.write(song_str_id + "\t")
-    new_file.write(band_str_id + "\t")
-    new_file.write(album_str_id + "\n")
+    new_file.write(song_id + "\t")
+    new_file.write(band_id + "\t")
+    new_file.write(album_id + "\n")
     new_file.close()
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_song))
