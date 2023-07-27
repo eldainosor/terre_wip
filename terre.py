@@ -99,10 +99,16 @@ for filename in chart_files:
     print("Year = " + str(year))  #DEBUG test Kaitai
     
     # Extract Song Name
-    song_name = file_cbr.info.song_name
+    song_str = file_cbr.info.song_name
     print("Name = " + file_cbr.info.song_name)  #DEBUG test Kaitai
+
+    # Extract Difficulty
+    difficulty = file_cbr.tracks.diff_level
     
-    chart_data1 = working_file.read(0x001C) #TODO: Delete 
+    band_diff = int(0)
+    for instrument in difficulty:
+        band_diff += instrument
+    difficulty[4] = int(band_diff / 4)
 
     # Extract Charts
     '''
@@ -526,7 +532,7 @@ for filename in chart_files:
     new_file.write("\nartist = " + band_str)
     new_file.write("\nname = " + song_str)
     new_file.write("\nalbum = " + album_str)
-    new_file.write("\nyear = " + year_str)
+    new_file.write("\nyear = " + str(year))
     new_file.write("\nicon = erdtv")
     new_file.write("\ngenre = Rock Argentino")
     new_file.write("\ncharter = Next Level")
@@ -544,7 +550,7 @@ for filename in chart_files:
     new_file.write(band_str + "\t")
     new_file.write(song_str + "\t")
     new_file.write(album_str + "\t")
-    new_file.write(year_str + "\t")
+    new_file.write(str(year) + "\t")
     new_file.write(song_str_id + "\t")
     new_file.write(band_str_id + "\t")
     new_file.write(album_str_id + "\n")
