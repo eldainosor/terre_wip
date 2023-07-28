@@ -572,8 +572,8 @@ for filename in chart_files:
     
 # Convert to Clone Hero (need FFMPEG)
 #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-#convert = 'Y'  #DEBUG
-convert = 'N'  #DEBUG
+convert = 'Y'  #DEBUG
+#convert = 'N'  #DEBUG
 if convert == 'Y':
     ffmpeg_file = work_dir + "\\ffmpeg.exe"
 
@@ -717,7 +717,7 @@ if convert == 'Y':
         total_tm = time.time() - start_time
         total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
         print("Total time took:\t" , total)
-        eta_time = time.gmtime((total_tm / k ) * (n - k))
+        eta_time = time.gmtime((total_tm / i ) * (n - i))
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
 total_tm = time.time() - start_time
