@@ -21,7 +21,7 @@ disc_dir = "E:" # DEBUG
 mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"
 songs_dir = mozart_dir + "\\song"
 bands_dir = mozart_dir + "\\band"
-albums_dir = mozart_dir + "\\disc"
+discs_dir = mozart_dir + "\\disc"
 work_dir = os.getcwd()
 output_dir = os.getcwd() + "\\erdtv"
 raw_dir = os.getcwd() + "\\raw"
@@ -50,7 +50,7 @@ if n > 0:
     print("Songs found in dir:\t",  n)
     os.chdir(work_dir)
     new_file = open("songs.csv", "w")
-    new_file.write("Artista\tCancion\tAlbum\tAño\tSong ID\tBand ID\tAlbum ID\tDif:G\tDif:R\tDif:D\tDif:V\tDif:B\n")
+    new_file.write("Artista\tCancion\tDisco\tAño\tSong ID\tBand ID\tDisc ID\tDif:G\tDif:R\tDif:D\tDif:V\tDif:B\n")
     new_file.close()
 
 #print("Disk dir:\t", songs_dir)    #DEBUG
@@ -89,18 +89,18 @@ for filename in chart_files:
     band_id = str(hex(band_id)).upper().lstrip('0X')
     print("Band ID = " + band_id)  #DEBUG test Kaitai
     
-    # Extract Album ID
-    album_id = file_cbr.info.disc_id
-    album_id = str(hex(album_id)).upper().lstrip('0X')
-    print("Disc ID = " + album_id)  #DEBUG test Kaitai
+    # Extract Disc ID
+    disc_id = file_cbr.info.disc_id
+    disc_id = str(hex(disc_id)).upper().lstrip('0X')
+    print("Disc ID = " + disc_id)  #DEBUG test Kaitai
 
     # Extract Year
     year = file_cbr.info.year
     print("Year = " + str(year))  #DEBUG test Kaitai
     
     # Extract Song Name
-    song_str = file_cbr.info.song_name
-    print("Name = " + file_cbr.info.song_name)  #DEBUG test Kaitai
+    song_name = str(file_cbr.info.song_name).rstrip('\x00')
+    print("Song = " + file_cbr.info.song_name)  #DEBUG test Kaitai
 
     # Extract Difficulty
     difficulties = file_cbr.tracks.diff_level
@@ -143,20 +143,15 @@ for filename in chart_files:
 
     # Read Band file
     file_band = band.Band.from_file(band_id + ".band")
-    band_name = file_band.band_name
+    band_name = str(file_band.band_name).rstrip('\x00')
     print("Band = " + band_name)
     
-    # Analize albums
-    os.chdir(albums_dir)
-    working_file = open(album_id + ".disc", "rb")
-    album_data = working_file.read(0x0018)
-    #print(album_data)
-    album_name = working_file.read(0x0100)
-    album_str = album_name.decode('U16').rstrip('\0')
-    print("Album Name:\t " + album_str)
-    album_data2 = working_file.read(0x06E8)
-    album_img = working_file.read()
-    working_file.close()
+    # Analize discs
+    os.chdir(discs_dir)
+    file_disc = disc.Disc.from_file(disc_id + ".disc")
+    disc_name = str(file_disc.disc_name).rstrip('\x00')
+    print("Disc = " + disc_name)
+    disc_img = file_disc.image.png
 
     # Analize Background
     os.chdir(songs_dir)
@@ -174,7 +169,7 @@ for filename in chart_files:
     working_file.close()
 
     # Output Files
-    new_song_dir = raw_dir + "\\" + band_name + " - " + song_str
+    new_song_dir = raw_dir + "\\" + band_name + " - " + song_name
 
     try:
         os.mkdir(new_song_dir)
@@ -187,7 +182,7 @@ for filename in chart_files:
     new_file.close()
     
     new_file = open("album.png", "wb")
-    new_file.write(album_img)
+    new_file.write(disc_img)
     new_file.close()
 
     # Save steams
@@ -238,21 +233,20 @@ for filename in chart_files:
 
     # Save Kaitai Log
     # COMMON HEADER
-#    '''
+    '''
     new_file = open("heads.csv", "w")
     
     new_file.write("[GUITAR]\t\t\t[RHYTHM]\t\t\t[DRUMS]\t\t\t[VOICE]\t\t\t[EXTRAS]\t\t\t\n")
     new_file.write("[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t[val]\t[len]\t[num]\t\n")
 
-    '''
     print("GUITAR header len:" + str(len(file_cbr.charts.guitar.header.head)))
     print("RHYTHM header len:" + str(len(file_cbr.charts.rhythm.header.head)))
     print("DRUMS header len:" + str(len(file_cbr.charts.drums.header.head)))
     print("VOICE header len:" + str(len(file_cbr.charts.voice.header.head)))
     print("EXTRAS header len:" + str(len(file_cbr.charts.extras.head)))
-    '''
 
-    head_lens = [ len(file_cbr.charts.guitar.header.head),  len(file_cbr.charts.rhythm.header.head),  len(file_cbr.charts.drums.header.head),  len(file_cbr.charts.voice.header.head),  len(file_cbr.charts.extras.head) ]
+
+    head_lens = [ len(file_cbr.tracks.guitar.hdr.events),  len(file_cbr.tracks.rhythm.hdr.events),  len(file_cbr.tracks.drums.hdr.events),  len(file_cbr.tracks.vocals_with_extras.hdr.events),  len(file_cbr.tracks.extras.events) ]
     largest_number = head_lens[0]
     for number in head_lens:
         if number > largest_number:
@@ -348,7 +342,6 @@ for filename in chart_files:
     
     #print("BIGGER diff len:" + str(largest_number))  # DEBUG
     
-    '''
     print("GUITAR easy len:" + str(int(len(file_cbr.charts.guitar.easy.song)/3)))
     print("GUITAR norm len:" + str(int(len(file_cbr.charts.guitar.norm.song)/3)))
     print("GUITAR hard len:" + str(int(len(file_cbr.charts.guitar.hard.song)/3)))
@@ -360,7 +353,6 @@ for filename in chart_files:
     print("DRUMS easy len:" + str(int(len(file_cbr.charts.drums.easy.song)/3)))
     print("DRUMS norm len:" + str(int(len(file_cbr.charts.drums.norm.song)/3)))
     print("DRUMS hard len:" + str(int(len(file_cbr.charts.drums.hard.song)/3)))
-    '''
 
     guitar_easy_lines = list()
     i=0
@@ -526,15 +518,20 @@ for filename in chart_files:
 
     new_file.writelines(all_lines)
     new_file.close()
-#    '''
+    '''
 
     # Save metadata
     new_file = open("song.ini", "w")
     new_file.write("[song]")
     new_file.write("\nartist = " + band_name)
-    new_file.write("\nname = " + song_str)
-    new_file.write("\nalbum = " + album_str)
+    new_file.write("\nname = " + song_name)
+    new_file.write("\nalbum = " + disc_name)
     new_file.write("\nyear = " + str(year))
+    new_file.write("\ndiff_guitar = " + str(difficulties[0]))
+    new_file.write("\ndiff_bass = " + str(difficulties[1]))
+    new_file.write("\ndiff_vocals = " + str(difficulties[2]))
+    new_file.write("\ndiff_drums = " + str(difficulties[3]))
+    new_file.write("\ndiff_band = " + str(difficulties[4]))
     new_file.write("\nicon = erdtv")
     new_file.write("\ngenre = Rock Argentino")
     new_file.write("\ncharter = Next Level")
@@ -550,12 +547,17 @@ for filename in chart_files:
     os.chdir(work_dir)
     new_file = open("songs.csv", "a")
     new_file.write(band_name + "\t")
-    new_file.write(song_str + "\t")
-    new_file.write(album_str + "\t")
+    new_file.write(song_name + "\t")
+    new_file.write(disc_name + "\t")
     new_file.write(str(year) + "\t")
     new_file.write(song_id + "\t")
     new_file.write(band_id + "\t")
-    new_file.write(album_id + "\n")
+    new_file.write(disc_id + "\t")
+    new_file.write(str(difficulties[0]) + "\t") # Guitar
+    new_file.write(str(difficulties[1]) + "\t") # Rythm
+    new_file.write(str(difficulties[2]) + "\t") # Drums
+    new_file.write(str(difficulties[3]) + "\t") # Vocal
+    new_file.write(str(difficulties[4]) + "\n") # Band
     new_file.close()
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_song))

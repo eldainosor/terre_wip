@@ -16,7 +16,7 @@ class Disc(KaitaiStruct):
 
     def _read(self):
         self.header = Disc.Header(self._io, self, self._root)
-        self.disc_name = Disc.DiscName(self._io, self, self._root)
+        self.disc_name = (self._io.read_bytes(256)).decode(u"UTF-16")
         self.image = Disc.Image(self._io, self, self._root)
 
     class Header(KaitaiStruct):
@@ -33,17 +33,6 @@ class Disc(KaitaiStruct):
             self.version = self._io.read_u4le()
             self.disc_id = self._io.read_u8le()
             self.band_id = self._io.read_u8le()
-
-
-    class DiscName(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.disc_name = (self._io.read_bytes(256)).decode(u"UTF-16")
 
 
     class Image(KaitaiStruct):
