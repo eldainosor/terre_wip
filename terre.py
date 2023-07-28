@@ -30,8 +30,8 @@ diff_order = ["easy", "normal", "hard"]
  
 print("Working dir:\t [", work_dir, "]")
 
-# Analize Chart files
-print(" > Analizing chart files... < " )
+# Analize files
+print(" > Analizing files... < " )
 print("Songs dir:\t[", songs_dir ,"]")
 os.chdir(songs_dir)
 
@@ -80,18 +80,18 @@ for filename in chart_files:
     file_cbr = cbr.Cbr.from_file(filename)
     
     # Extract Song ID
-    song_id = file_cbr.info.song_id
-    song_id = str(hex(song_id)).upper().lstrip('0X') 
+    song_id = file_cbr.info.song_id     # Int vble
+    song_id = str(hex(song_id)).upper().lstrip('0X')    # String formating
     print("Song ID = " + song_id)  #DEBUG test Kaitai
 
     # Extract Band ID
-    band_id = file_cbr.info.band_id
-    band_id = str(hex(band_id)).upper().lstrip('0X')
+    band_id = file_cbr.info.band_id     # Int vble
+    band_id = str(hex(band_id)).upper().lstrip('0X')    # String formating
     print("Band ID = " + band_id)  #DEBUG test Kaitai
     
     # Extract Disc ID
-    disc_id = file_cbr.info.disc_id
-    disc_id = str(hex(disc_id)).upper().lstrip('0X')
+    disc_id = file_cbr.info.disc_id     # Int vble
+    disc_id = str(hex(disc_id)).upper().lstrip('0X')    # String formating
     print("Disc ID = " + disc_id)  #DEBUG test Kaitai
 
     # Extract Year
@@ -560,9 +560,14 @@ for filename in chart_files:
     new_file.write(str(difficulties[4]) + "\n") # Band
     new_file.close()
 
-    elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_song))
+    # Show time and ETA
+    elapsed_tm = time.time() - start_song
+    elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
     print("This song took:\t" , elapsed)
-    eta_time = time.gmtime((time.time() - start_song) * (n - k))
+    total_tm = time.time() - start_time
+    total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
+    print("Total time took:\t" , total)
+    eta_time = time.gmtime((total_tm / k ) * (n - k))
     print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
     
 # Convert to Clone Hero (need FFMPEG)
@@ -653,6 +658,7 @@ if convert == 'Y':
             cmd = cmd + "\"" + source_file + "\""
             cmd = cmd + " -c:a libvorbis -b:a 320k " 
             cmd = cmd + "\"" + dest_file + "\""
+            #print("Command: " + cmd)    # DEBUG
             subprocess.run(cmd)
         except:
             print("FFMPEG.exe not found")
@@ -672,11 +678,12 @@ if convert == 'Y':
                 cmd = cmd + " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "     #Skipp 3sec
                 #cmd = cmd + " -c:a libvorbis -b:a 320k " 
                 cmd = cmd + "\"" + dest_file + "\""
+                #print("Command: " + cmd)    # DEBUG
                 subprocess.run(cmd)
             except:
                 print("FFMPEG.exe not found")
 
-        # Convert video
+        # Convert video (VERY slow)
         try:
             print("Compressing video file with FFMPEG (ASF to WEBM)")
             copy_file = "\\video"
@@ -685,7 +692,7 @@ if convert == 'Y':
             
             cmd = ffmpeg_file 
             #cmd = cmd + " -y -loglevel -8 -stats -ss 3000ms -i "   # Intro Skip
-            cmd = cmd + " -y -loglevel -8 -stats -i "
+            cmd = cmd + " -y -loglevel -8 -stats -hwaccel auto -i "
             #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
             cmd = cmd + "\"" + source_file + "\""
             j = 0
@@ -696,16 +703,23 @@ if convert == 'Y':
                     cmd = cmd + " -i \"" + audio_in + "\""
             cmd = cmd + " -filter_complex amix=inputs=" 
             cmd = cmd + str(int(j)) 
-            cmd = cmd + ":duration=longest -c:v libvpx -crf 10 -b:v 3M -c:a libvorbis "
+            cmd = cmd + ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
             cmd = cmd + "\"" + dest_file + "\""
+            print("Command: " + cmd)    # DEBUG
             subprocess.run(cmd)
         except:
             print("FFMPEG.exe not found")
-                    
-        elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_song))
-        print("This song converted in:\t" , elapsed)
-        eta_time = time.gmtime((time.time() - start_song) * (n - k))
+
+        # Show time and ETA
+        elapsed_tm = time.time() - start_song
+        elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
+        print("This song took:\t" , elapsed)
+        total_tm = time.time() - start_time
+        total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
+        print("Total time took:\t" , total)
+        eta_time = time.gmtime((total_tm / k ) * (n - k))
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
-elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
-print("All tasks took: " , elapsed)
+total_tm = time.time() - start_time
+total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
+print("All tasks took: " , total)
