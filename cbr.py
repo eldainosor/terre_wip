@@ -34,7 +34,9 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.val = self._io.read_bytes(8)
+            self.val = self._io.read_u2le()
+            self.cont = self._io.read_u2le()
+            self.pos = self._io.read_u4le()
 
 
     class Track(KaitaiStruct):
@@ -127,6 +129,25 @@ class Cbr(KaitaiStruct):
 
 
 
+    class Verse(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.start = self._io.read_u2le()
+            self.line_in = self._io.read_u2le()
+            self.end = self._io.read_u2le()
+            self.line_out = self._io.read_u2le()
+            self.verse_type2 = self._io.read_u2le()
+            self.verse_type3 = self._io.read_u2le()
+            if self.start < self.end:
+                self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+
+
+
     class Header(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -155,7 +176,8 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.note = self._io.read_bytes(4)
+            self.foo = self._io.read_u2le()
+            self.bar = self._io.read_u2le()
 
 
     class MetaData(KaitaiStruct):

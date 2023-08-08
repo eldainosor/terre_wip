@@ -2,6 +2,8 @@ meta:
   id: cbr
   file-extension: cbr
   endian: le
+  imports:
+    - /common/vlq_base128_be
 
 seq:
   - id: info
@@ -111,7 +113,13 @@ types:
   event:
     seq:
       - id: val
-        size: 8
+        type: u2
+      
+      - id: cont
+        type: u2
+        
+      - id: pos
+        type: u4
         
   instrument:
     seq:
@@ -148,8 +156,10 @@ types:
   
   notes:
     seq:
-      - id: note
-        size: 4
+      - id: foo
+        type: u2
+      - id: bar
+        type: u2
   
   voice:
     seq:
@@ -175,19 +185,25 @@ types:
         doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
         
       - id: lyrics
-        type: verse
-        repeat: eos
-        
+        size-eos: true
+
   verse:
     seq:
       - id: start
-        type: u4
-      - id: lenght
-        type: u4
-      - id: verse_id
-        type: u4
+        type: u2
+      - id: line_in
+        type: u2
+      - id: end
+        type: u2
+      - id: line_out
+        type: u2
+      - id: verse_type2
+        type: u2
+      - id: verse_type3
+        type: u2
       - id: text
         type: strz
+        if: start < end
         encoding: ASCII
 
 enums:
