@@ -159,7 +159,9 @@ types:
       - id: foo
         type: u2
       - id: bar
-        type: u2
+        type: u1
+      - id: nulo
+        type: u1
   
   voice:
     seq:

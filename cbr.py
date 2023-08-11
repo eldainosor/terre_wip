@@ -177,7 +177,8 @@ class Cbr(KaitaiStruct):
 
         def _read(self):
             self.foo = self._io.read_u2le()
-            self.bar = self._io.read_u2le()
+            self.bar = self._io.read_u1()
+            self.nulo = self._io.read_u1()
 
 
     class MetaData(KaitaiStruct):
