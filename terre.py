@@ -27,7 +27,7 @@ output_dir = os.getcwd() + "\\erdtv"
 raw_dir = os.getcwd() + "\\raw"
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "extras"]
-diff_order = ["easy", "normal", "hard"]
+diff_order = ["easy", "norm", "hard"]
  
 print("Working dir:\t [", work_dir, "]")
 
@@ -39,12 +39,12 @@ os.chdir(songs_dir)
 dir_files = os.listdir(songs_dir)
 #print("Files in dir:\t",  dir_files)   #DEBUG
 
-chart_files = list()
+cbr_files = list()
 for filename in dir_files:
     if re.search("\.cbr$", filename):
-        chart_files.append(filename)
+        cbr_files.append(filename)
 
-n = len(chart_files)
+n = len(cbr_files)
 
 # Create log file
 if n > 0:
@@ -63,12 +63,12 @@ except OSError as error:
     print("Output dir:\t[", raw_dir, "] already exists")
     
 # Raw extraction
-for filename in chart_files:
+for filename in cbr_files:
     start_song = time.time()
     local = time.strftime("%H:%M:%S", time.localtime(start_song))
     print("Song start: ", local)
 
-    k = chart_files.index(filename) + 1
+    k = cbr_files.index(filename) + 1
     
     print("Analizing (", int(k) , "/" , int(n) , ")")   #DEBUG
 
@@ -115,26 +115,6 @@ for filename in chart_files:
     print("Diff. Drums =\t" + str(difficulties[2]))  #DEBUG test Kaitai
     print("Diff. Vocal =\t" + str(difficulties[3]))  #DEBUG test Kaitai
     print("Diff. Band =\t" + str(difficulties[4]))  #DEBUG test Kaitai
-
-    # Extract Charts
-    '''
-    # DEBUG test kaitai charts
-    chart_heads = list()
-    chart_heads.append(file_cbr.tracks.guitar.hdr)
-    chart_heads.append(file_cbr.tracks.rhythm.hdr)
-    chart_heads.append(file_cbr.tracks.drums.hdr)
-    chart_heads.append(file_cbr.tracks.voice.hdr)
-    chart_heads.append(file_cbr.tracks.extras.head)
-
-    test_head = file_cbr.tracks.extras.head
-
-    for head_ver in chart_heads:
-        print("leng: " + str(len(head_ver)))
-        if head_ver == test_head:
-            print("Head equal")
-        else:
-            print("Head diff")
-    '''
    
     # Analize Bands
     os.chdir(bands_dir)
@@ -195,17 +175,6 @@ for filename in chart_files:
         new_file.write(audio)
         new_file.close()
 
-    #TODO make CH compatible
-    '''
-    for chart in charts:
-        i = charts.index(chart)
-        new_file = open("chart_" + data_order[i] + ".cbr", "wb")
-        if i > 0:
-            new_file.write(chart_head)
-        new_file.write(chart)
-        new_file.close()
-    '''
-
     # Copy preview
     source = songs_dir + "\\" + song_id
     dest = new_song_dir
@@ -235,7 +204,7 @@ for filename in chart_files:
     # Save Kaitai Log
     # COMMON HEADER
 
-    #event_files = list()
+    head_lens = list()
     for this_inst in inst_order:
         i = inst_order.index(this_inst)
         event_files = open("events_" + this_inst + ".csv", "w")
@@ -250,28 +219,26 @@ for filename in chart_files:
             case "drums":
                 inst_event = file_cbr.tracks.drums.hdr.events
             case "vocals":
-                if file_cbr.tracks.vocals_with_extras.hdr.events:
+                try:                    
                     inst_event = file_cbr.tracks.vocals_with_extras.hdr.events
-                else:
+                except:
                     inst_event = file_cbr.tracks.vocals_no_extras.hdr.events
             case "extras":
-                inst_event = file_cbr.tracks.extras.events
+                try:    
+                    inst_event = file_cbr.tracks.extras.events
+                except:
+                    inst_event = list()
             case _:
-                inst_event = 0
+                inst_event = list()
 
+        head_lens.append(len(inst_event))
+        print(this_inst + " header len: " + str(int(len(inst_event))))
         for block in inst_event:
-            line = str(block.val) + "\t" + str(block.cont) + "\t" + str(block.pos) + "\t\n"
+            line = str(block.val) + "\t" + str(block.cont) + "\t" + str(block.pos) + "\t\n" 
             event_files.write(line)
 
         event_files.close()
 
-    print("GUITAR header len:" + str(len(file_cbr.tracks.guitar.hdr.events)))
-    print("RHYTHM header len:" + str(len(file_cbr.tracks.rhythm.hdr.events)))
-    print("DRUMS header len:" + str(len(file_cbr.tracks.drums.hdr.events)))
-    print("VOICE header len:" + str(len(file_cbr.tracks.vocals_with_extras.hdr.events)))
-    print("EXTRAS header len:" + str(len(file_cbr.tracks.extras.events)))
-
-    head_lens = [ len(file_cbr.tracks.guitar.hdr.events),  len(file_cbr.tracks.rhythm.hdr.events),  len(file_cbr.tracks.drums.hdr.events),  len(file_cbr.tracks.vocals_with_extras.hdr.events),  len(file_cbr.tracks.extras.events) ]
     largest_number = head_lens[0]
     for number in head_lens:
         if number > largest_number:
@@ -280,209 +247,65 @@ for filename in chart_files:
     print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
     # Instruments charing manual analisis
-    new_file = open("charts.csv", "w")
-    new_file.write("[GUITAR]\t\t\t\t\t\t\t\t\t[RHYTHM]\t\t\t\t\t\t\t\t\t[DRUMS]\t\t\t\t\t\t\t\t\t\n")
-    new_file.write("[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t[easy]\t\t\t[norm]\t\t\t[hard]\t\t\t\n")
-    new_file.write("[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t[lo]\t[me]\t[hi]\t\n")
+    notes_len = list()
+    for this_inst in inst_order:
+        for this_diff in diff_order:
+            i = inst_order.index(this_inst)
+            chart_files = open("charts_" + this_inst + "_" + this_diff + ".csv", "w")
+            chart_files.write("[" + this_inst + "]\t["+ this_diff + "]\t\n")
+            chart_files.write("[foo]\t[bar]\t\n")
+            
+            match this_inst:
+                case "guitar":
+                    notes_inst = file_cbr.tracks.guitar
+                case "rhythm":
+                    notes_inst = file_cbr.tracks.rhythm
+                case "drums":
+                    notes_inst = file_cbr.tracks.drums
+                case "vocals":
+                    try:
+                        notes_inst = file_cbr.tracks.vocals_with_extras
+                    except: 
+                        notes_inst = file_cbr.tracks.vocals_no_extras
+                case _:
+                    notes_inst = list()
+                
+            if notes_inst:
+                match this_diff:
+                    case "easy":
+                        try:
+                            notes = notes_inst.easy.song
+                        except:
+                            notes = list()
+                    case "norm":
+                        try:
+                            notes = notes_inst.norm.song
+                        except:
+                            notes = list()
+                    case "hard":
+                        try:
+                            notes = notes_inst.hard.song
+                        except:
+                            notes = list()
+                    case _:
+                        notes = 0
+                notes_len.append(len(notes))
 
-    chart_lens = list()
-    chart_lens.append(len(file_cbr.tracks.guitar.easy.song))
-    chart_lens.append(len(file_cbr.tracks.guitar.norm.song))
-    chart_lens.append(len(file_cbr.tracks.guitar.hard.song))
+                print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
+                for block in notes:
+                    line = str(block.foo) + "\t" + str(block.bar) + "\t\n"
+                    if block.nulo:
+                        print(">> NO NULE FRET FOUND <<") # DEBUG
+                    chart_files.write(line)
 
-    chart_lens.append(len(file_cbr.tracks.rhythm.easy.song))
-    chart_lens.append(len(file_cbr.tracks.rhythm.norm.song))
-    chart_lens.append(len(file_cbr.tracks.rhythm.hard.song))
+            chart_files.close()
 
-    chart_lens.append(len(file_cbr.tracks.drums.easy.song))
-    chart_lens.append(len(file_cbr.tracks.drums.norm.song))
-    chart_lens.append(len(file_cbr.tracks.drums.hard.song))
-
-    largest_number = 0
-    largest_number = chart_lens[0]
-    for number in chart_lens:
+    largest_number = notes_len[0]
+    for number in notes_len:
         if number > largest_number:
             largest_number = number
     
     print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
-    
-    print("GUITAR easy len:" + str(int(len(file_cbr.tracks.guitar.easy.song))))
-    print("GUITAR norm len:" + str(int(len(file_cbr.tracks.guitar.norm.song))))
-    print("GUITAR hard len:" + str(int(len(file_cbr.tracks.guitar.hard.song))))
-
-    print("RHYTHM easy len:" + str(int(len(file_cbr.tracks.rhythm.easy.song))))
-    print("RHYTHM norm len:" + str(int(len(file_cbr.tracks.rhythm.norm.song))))
-    print("RHYTHM hard len:" + str(int(len(file_cbr.tracks.rhythm.hard.song))))
-
-    print("DRUMS easy len:" + str(int(len(file_cbr.tracks.drums.easy.song))))
-    print("DRUMS norm len:" + str(int(len(file_cbr.tracks.drums.norm.song))))
-    print("DRUMS hard len:" + str(int(len(file_cbr.tracks.drums.hard.song))))
-
-    guitar_easy_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.guitar.easy.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            guitar_easy_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.guitar.easy.song)
-    add_diff /= 3
-    while add_diff:
-        #guitar_easy_lines.append("ge\tge\tge\t")    # DEBUG
-        guitar_easy_lines.append("\t\t\t")
-        add_diff-=1
-
-    guitar_norm_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.guitar.norm.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            guitar_norm_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.guitar.norm.song)
-    add_diff /= 3
-    while add_diff:
-        #guitar_norm_lines.append("gn\tgn\tgn\t")    # DEBUG
-        guitar_norm_lines.append("\t\t\t")
-        add_diff-=1
-
-    guitar_hard_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.guitar.hard.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            guitar_hard_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.guitar.hard.song)
-    add_diff /= 3
-    while add_diff:
-        #guitar_hard_lines.append("gh\tgh\tgh\t")    # DEBUG
-        guitar_hard_lines.append("\t\t\t")
-        add_diff-=1
-
-    rhythm_easy_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.rhythm.easy.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            rhythm_easy_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.rhythm.easy.song)
-    add_diff /= 3
-    while add_diff:
-        #rhythm_easy_lines.append("re\tre\tre\t")    # DEBUG
-        rhythm_easy_lines.append("\t\t\t")
-        add_diff-=1
-
-    rhythm_norm_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.rhythm.norm.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            rhythm_norm_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.rhythm.norm.song)
-    add_diff /= 3
-    while add_diff:
-        #rhythm_norm_lines.append("rn\trn\trn\t")    # DEBUG
-        rhythm_norm_lines.append("\t\t\t")
-        add_diff-=1
-
-    rhythm_hard_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.rhythm.hard.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            rhythm_hard_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.rhythm.hard.song)
-    add_diff /= 3
-    while add_diff:
-        #rhythm_hard_lines.append("rh\trh\trh\t")    # DEBUG
-        rhythm_hard_lines.append("\t\t\t")
-        add_diff-=1
-
-    drums_easy_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.drums.easy.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            drums_easy_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.drums.easy.song)
-    add_diff /= 3
-    while add_diff:
-        #drums_easy_lines.append("de\tde\tde\t")    # DEBUG
-        drums_easy_lines.append("\t\t\t")
-        add_diff-=1
-
-    drums_norm_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.drums.norm.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            drums_norm_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.drums.norm.song)
-    add_diff /= 3
-    while add_diff:
-        #drums_norm_lines.append("dn\tdn\tdn\t")    # DEBUG
-        drums_norm_lines.append("\t\t\t")
-        add_diff-=1
-
-    drums_hard_lines = list()
-    i=0
-    aux_line = ""
-    for block in file_cbr.tracks.drums.hard.song:
-        aux_line = aux_line + str(block) + "\t"
-        i+=1
-        if i%3 == 0:
-            drums_hard_lines.append(aux_line)
-            aux_line = ""    
-    
-    add_diff = largest_number - len(file_cbr.tracks.drums.hard.song)
-    add_diff /= 3
-    while add_diff:
-        #drums_hard_lines.append("dh\tdh\tdh\t")    # DEBUG
-        drums_hard_lines.append("\t\t\t")
-        add_diff-=1
-
-    all_lines = list()
-    i=0
-    for line in guitar_easy_lines:
-        try:
-            all_lines.append(guitar_easy_lines[i] + guitar_norm_lines[i] + guitar_hard_lines[i] + rhythm_easy_lines[i] + rhythm_norm_lines[i] + rhythm_hard_lines[i] + drums_easy_lines[i] + drums_norm_lines[i] + drums_hard_lines[i] + "\n" )
-        except:
-            print("DEBUG i muy grande") # DEBUG
-        i+=1
-
-    new_file.writelines(all_lines)
-    new_file.close()
-    
 
     # Save metadata
     new_file = open("song.ini", "w")

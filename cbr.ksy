@@ -181,7 +181,7 @@ types:
         terminator: 0
         size: 100
         
-      - id: wave_pts
+      - id: norm
         type: array
         size: start_lyrics_pos - start_wave_pos 
         doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes

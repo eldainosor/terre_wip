@@ -107,9 +107,9 @@ class Cbr(KaitaiStruct):
             self.wave_vol = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
             self.lyrics_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(100), 0, False)
-            self._raw_wave_pts = self._io.read_bytes((self.start_lyrics_pos - self.start_wave_pos))
-            _io__raw_wave_pts = KaitaiStream(BytesIO(self._raw_wave_pts))
-            self.wave_pts = Cbr.Array(_io__raw_wave_pts, self, self._root)
+            self._raw_norm = self._io.read_bytes((self.start_lyrics_pos - self.start_wave_pos))
+            _io__raw_norm = KaitaiStream(BytesIO(self._raw_norm))
+            self.norm = Cbr.Array(_io__raw_norm, self, self._root)
             self.lyrics = self._io.read_bytes_full()
 
 

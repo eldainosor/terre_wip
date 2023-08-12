@@ -647,3 +647,563 @@ erdtv/Viejas Locas - Roca & giro/song.ini
 erdtv/Viejas Locas - Roca & giro/song.ogg
 erdtv/Viejas Locas - Roca & giro/video.webm
 erdtv/Viejas Locas - Roca & giro/vocals.ogg
+raw/Arbol - Soy Vos/charts_drums_easy.csv
+raw/Arbol - Soy Vos/charts_drums_hard.csv
+raw/Arbol - Soy Vos/charts_drums_norm.csv
+raw/Arbol - Soy Vos/charts_extras_easy.csv
+raw/Arbol - Soy Vos/charts_extras_hard.csv
+raw/Arbol - Soy Vos/charts_extras_norm.csv
+raw/Arbol - Soy Vos/charts_guitar_easy.csv
+raw/Arbol - Soy Vos/charts_guitar_hard.csv
+raw/Arbol - Soy Vos/charts_guitar_norm.csv
+raw/Arbol - Soy Vos/charts_rhythm_easy.csv
+raw/Arbol - Soy Vos/charts_rhythm_hard.csv
+raw/Arbol - Soy Vos/charts_rhythm_norm.csv
+raw/Arbol - Soy Vos/charts_vocals_easy.csv
+raw/Arbol - Soy Vos/charts_vocals_hard.csv
+raw/Arbol - Soy Vos/charts_vocals_norm.csv
+raw/Arbol - Soy Vos/events_drums.csv
+raw/Arbol - Soy Vos/events_extras.csv
+raw/Arbol - Soy Vos/events_guitar.csv
+raw/Arbol - Soy Vos/events_rhythm.csv
+raw/Arbol - Soy Vos/events_vocals.csv
+raw/El Otro Yo - Locomotora/charts_drums_easy.csv
+raw/El Otro Yo - Locomotora/charts_drums_hard.csv
+raw/El Otro Yo - Locomotora/charts_drums_norm.csv
+raw/El Otro Yo - Locomotora/charts_extras_easy.csv
+raw/El Otro Yo - Locomotora/charts_extras_hard.csv
+raw/El Otro Yo - Locomotora/charts_extras_norm.csv
+raw/El Otro Yo - Locomotora/charts_guitar_easy.csv
+raw/El Otro Yo - Locomotora/charts_guitar_hard.csv
+raw/El Otro Yo - Locomotora/charts_guitar_norm.csv
+raw/El Otro Yo - Locomotora/charts_rhythm_easy.csv
+raw/El Otro Yo - Locomotora/charts_rhythm_hard.csv
+raw/El Otro Yo - Locomotora/charts_rhythm_norm.csv
+raw/El Otro Yo - Locomotora/charts_vocals_easy.csv
+raw/El Otro Yo - Locomotora/charts_vocals_hard.csv
+raw/El Otro Yo - Locomotora/charts_vocals_norm.csv
+raw/El Otro Yo - Locomotora/events_drums.csv
+raw/El Otro Yo - Locomotora/events_extras.csv
+raw/El Otro Yo - Locomotora/events_guitar.csv
+raw/El Otro Yo - Locomotora/events_rhythm.csv
+raw/El Otro Yo - Locomotora/events_vocals.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_drums_easy.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_drums_hard.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_drums_norm.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_extras_easy.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_extras_hard.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_extras_norm.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_guitar_easy.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_guitar_hard.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_guitar_norm.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_rhythm_easy.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_rhythm_hard.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_rhythm_norm.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_vocals_easy.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_vocals_hard.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/charts_vocals_norm.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/events_drums.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/events_extras.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/events_guitar.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/events_rhythm.csv
+raw/Ella es tan Cargosa - Ni siquiera entre tus brazos/events_vocals.csv
+raw/Estelares - aire/charts_drums_easy.csv
+raw/Estelares - aire/charts_drums_hard.csv
+raw/Estelares - aire/charts_drums_norm.csv
+raw/Estelares - aire/charts_extras_easy.csv
+raw/Estelares - aire/charts_extras_hard.csv
+raw/Estelares - aire/charts_extras_norm.csv
+raw/Estelares - aire/charts_guitar_easy.csv
+raw/Estelares - aire/charts_guitar_hard.csv
+raw/Estelares - aire/charts_guitar_norm.csv
+raw/Estelares - aire/charts_rhythm_easy.csv
+raw/Estelares - aire/charts_rhythm_hard.csv
+raw/Estelares - aire/charts_rhythm_norm.csv
+raw/Estelares - aire/charts_vocals_easy.csv
+raw/Estelares - aire/charts_vocals_hard.csv
+raw/Estelares - aire/charts_vocals_norm.csv
+raw/Estelares - aire/events_drums.csv
+raw/Estelares - aire/events_extras.csv
+raw/Estelares - aire/events_guitar.csv
+raw/Estelares - aire/events_rhythm.csv
+raw/Estelares - aire/events_vocals.csv
+raw/Guasones - Reyes de la Noche/charts_drums_easy.csv
+raw/Guasones - Reyes de la Noche/charts_drums_hard.csv
+raw/Guasones - Reyes de la Noche/charts_drums_norm.csv
+raw/Guasones - Reyes de la Noche/charts_extras_easy.csv
+raw/Guasones - Reyes de la Noche/charts_extras_hard.csv
+raw/Guasones - Reyes de la Noche/charts_extras_norm.csv
+raw/Guasones - Reyes de la Noche/charts_guitar_easy.csv
+raw/Guasones - Reyes de la Noche/charts_guitar_hard.csv
+raw/Guasones - Reyes de la Noche/charts_guitar_norm.csv
+raw/Guasones - Reyes de la Noche/charts_rhythm_easy.csv
+raw/Guasones - Reyes de la Noche/charts_rhythm_hard.csv
+raw/Guasones - Reyes de la Noche/charts_rhythm_norm.csv
+raw/Guasones - Reyes de la Noche/charts_vocals_easy.csv
+raw/Guasones - Reyes de la Noche/charts_vocals_hard.csv
+raw/Guasones - Reyes de la Noche/charts_vocals_norm.csv
+raw/Guasones - Reyes de la Noche/events_drums.csv
+raw/Guasones - Reyes de la Noche/events_extras.csv
+raw/Guasones - Reyes de la Noche/events_guitar.csv
+raw/Guasones - Reyes de la Noche/events_rhythm.csv
+raw/Guasones - Reyes de la Noche/events_vocals.csv
+raw/Intoxicados - Casi Sin Pensar/charts_drums_easy.csv
+raw/Intoxicados - Casi Sin Pensar/charts_drums_hard.csv
+raw/Intoxicados - Casi Sin Pensar/charts_drums_norm.csv
+raw/Intoxicados - Casi Sin Pensar/charts_extras_easy.csv
+raw/Intoxicados - Casi Sin Pensar/charts_extras_hard.csv
+raw/Intoxicados - Casi Sin Pensar/charts_extras_norm.csv
+raw/Intoxicados - Casi Sin Pensar/charts_guitar_easy.csv
+raw/Intoxicados - Casi Sin Pensar/charts_guitar_hard.csv
+raw/Intoxicados - Casi Sin Pensar/charts_guitar_norm.csv
+raw/Intoxicados - Casi Sin Pensar/charts_rhythm_easy.csv
+raw/Intoxicados - Casi Sin Pensar/charts_rhythm_hard.csv
+raw/Intoxicados - Casi Sin Pensar/charts_rhythm_norm.csv
+raw/Intoxicados - Casi Sin Pensar/charts_vocals_easy.csv
+raw/Intoxicados - Casi Sin Pensar/charts_vocals_hard.csv
+raw/Intoxicados - Casi Sin Pensar/charts_vocals_norm.csv
+raw/Intoxicados - Casi Sin Pensar/events_drums.csv
+raw/Intoxicados - Casi Sin Pensar/events_extras.csv
+raw/Intoxicados - Casi Sin Pensar/events_guitar.csv
+raw/Intoxicados - Casi Sin Pensar/events_rhythm.csv
+raw/Intoxicados - Casi Sin Pensar/events_vocals.csv
+raw/Intoxicados - Pila Pila/charts_drums_easy.csv
+raw/Intoxicados - Pila Pila/charts_drums_hard.csv
+raw/Intoxicados - Pila Pila/charts_drums_norm.csv
+raw/Intoxicados - Pila Pila/charts_extras_easy.csv
+raw/Intoxicados - Pila Pila/charts_extras_hard.csv
+raw/Intoxicados - Pila Pila/charts_extras_norm.csv
+raw/Intoxicados - Pila Pila/charts_guitar_easy.csv
+raw/Intoxicados - Pila Pila/charts_guitar_hard.csv
+raw/Intoxicados - Pila Pila/charts_guitar_norm.csv
+raw/Intoxicados - Pila Pila/charts_rhythm_easy.csv
+raw/Intoxicados - Pila Pila/charts_rhythm_hard.csv
+raw/Intoxicados - Pila Pila/charts_rhythm_norm.csv
+raw/Intoxicados - Pila Pila/charts_vocals_easy.csv
+raw/Intoxicados - Pila Pila/charts_vocals_hard.csv
+raw/Intoxicados - Pila Pila/charts_vocals_norm.csv
+raw/Intoxicados - Pila Pila/events_drums.csv
+raw/Intoxicados - Pila Pila/events_extras.csv
+raw/Intoxicados - Pila Pila/events_guitar.csv
+raw/Intoxicados - Pila Pila/events_rhythm.csv
+raw/Intoxicados - Pila Pila/events_vocals.csv
+raw/Kapanga - Bisabuelo/charts_drums_easy.csv
+raw/Kapanga - Bisabuelo/charts_drums_hard.csv
+raw/Kapanga - Bisabuelo/charts_drums_norm.csv
+raw/Kapanga - Bisabuelo/charts_extras_easy.csv
+raw/Kapanga - Bisabuelo/charts_extras_hard.csv
+raw/Kapanga - Bisabuelo/charts_extras_norm.csv
+raw/Kapanga - Bisabuelo/charts_guitar_easy.csv
+raw/Kapanga - Bisabuelo/charts_guitar_hard.csv
+raw/Kapanga - Bisabuelo/charts_guitar_norm.csv
+raw/Kapanga - Bisabuelo/charts_rhythm_easy.csv
+raw/Kapanga - Bisabuelo/charts_rhythm_hard.csv
+raw/Kapanga - Bisabuelo/charts_rhythm_norm.csv
+raw/Kapanga - Bisabuelo/charts_vocals_easy.csv
+raw/Kapanga - Bisabuelo/charts_vocals_hard.csv
+raw/Kapanga - Bisabuelo/charts_vocals_norm.csv
+raw/Kapanga - Bisabuelo/events_drums.csv
+raw/Kapanga - Bisabuelo/events_extras.csv
+raw/Kapanga - Bisabuelo/events_guitar.csv
+raw/Kapanga - Bisabuelo/events_rhythm.csv
+raw/Kapanga - Bisabuelo/events_vocals.csv
+raw/Kapanga - Fumar/charts_drums_easy.csv
+raw/Kapanga - Fumar/charts_drums_hard.csv
+raw/Kapanga - Fumar/charts_drums_norm.csv
+raw/Kapanga - Fumar/charts_extras_easy.csv
+raw/Kapanga - Fumar/charts_extras_hard.csv
+raw/Kapanga - Fumar/charts_extras_norm.csv
+raw/Kapanga - Fumar/charts_guitar_easy.csv
+raw/Kapanga - Fumar/charts_guitar_hard.csv
+raw/Kapanga - Fumar/charts_guitar_norm.csv
+raw/Kapanga - Fumar/charts_rhythm_easy.csv
+raw/Kapanga - Fumar/charts_rhythm_hard.csv
+raw/Kapanga - Fumar/charts_rhythm_norm.csv
+raw/Kapanga - Fumar/charts_vocals_easy.csv
+raw/Kapanga - Fumar/charts_vocals_hard.csv
+raw/Kapanga - Fumar/charts_vocals_norm.csv
+raw/Kapanga - Fumar/events_drums.csv
+raw/Kapanga - Fumar/events_extras.csv
+raw/Kapanga - Fumar/events_guitar.csv
+raw/Kapanga - Fumar/events_rhythm.csv
+raw/Kapanga - Fumar/events_vocals.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_drums_easy.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_drums_hard.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_drums_norm.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_extras_easy.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_extras_hard.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_extras_norm.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_guitar_easy.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_guitar_hard.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_guitar_norm.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_rhythm_easy.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_rhythm_hard.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_rhythm_norm.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_vocals_easy.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_vocals_hard.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/charts_vocals_norm.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/events_drums.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/events_extras.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/events_guitar.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/events_rhythm.csv
+raw/Las Pelotas - Bombachitas Rosas (Vivo)/events_vocals.csv
+raw/Las Pelotas - Será (Vivo)/charts_drums_easy.csv
+raw/Las Pelotas - Será (Vivo)/charts_drums_hard.csv
+raw/Las Pelotas - Será (Vivo)/charts_drums_norm.csv
+raw/Las Pelotas - Será (Vivo)/charts_extras_easy.csv
+raw/Las Pelotas - Será (Vivo)/charts_extras_hard.csv
+raw/Las Pelotas - Será (Vivo)/charts_extras_norm.csv
+raw/Las Pelotas - Será (Vivo)/charts_guitar_easy.csv
+raw/Las Pelotas - Será (Vivo)/charts_guitar_hard.csv
+raw/Las Pelotas - Será (Vivo)/charts_guitar_norm.csv
+raw/Las Pelotas - Será (Vivo)/charts_rhythm_easy.csv
+raw/Las Pelotas - Será (Vivo)/charts_rhythm_hard.csv
+raw/Las Pelotas - Será (Vivo)/charts_rhythm_norm.csv
+raw/Las Pelotas - Será (Vivo)/charts_vocals_easy.csv
+raw/Las Pelotas - Será (Vivo)/charts_vocals_hard.csv
+raw/Las Pelotas - Será (Vivo)/charts_vocals_norm.csv
+raw/Las Pelotas - Será (Vivo)/events_drums.csv
+raw/Las Pelotas - Será (Vivo)/events_extras.csv
+raw/Las Pelotas - Será (Vivo)/events_guitar.csv
+raw/Las Pelotas - Será (Vivo)/events_rhythm.csv
+raw/Las Pelotas - Será (Vivo)/events_vocals.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_drums_easy.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_drums_hard.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_drums_norm.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_extras_easy.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_extras_hard.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_extras_norm.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_guitar_easy.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_guitar_hard.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_guitar_norm.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_rhythm_easy.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_rhythm_hard.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_rhythm_norm.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_vocals_easy.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_vocals_hard.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/charts_vocals_norm.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/events_drums.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/events_extras.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/events_guitar.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/events_rhythm.csv
+raw/Los Autenticos Decadentes - Sigue tu Camino/events_vocals.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_drums_easy.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_drums_hard.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_drums_norm.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_extras_easy.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_extras_hard.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_extras_norm.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_guitar_easy.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_guitar_hard.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_guitar_norm.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_rhythm_easy.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_rhythm_hard.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_rhythm_norm.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_vocals_easy.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_vocals_hard.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/charts_vocals_norm.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/events_drums.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/events_extras.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/events_guitar.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/events_rhythm.csv
+raw/Los Autenticos Decadentes - Un Osito de Peluche de Taiwán/events_vocals.csv
+raw/Los Cafres - Casi q' me pierdo/charts_drums_easy.csv
+raw/Los Cafres - Casi q' me pierdo/charts_drums_hard.csv
+raw/Los Cafres - Casi q' me pierdo/charts_drums_norm.csv
+raw/Los Cafres - Casi q' me pierdo/charts_extras_easy.csv
+raw/Los Cafres - Casi q' me pierdo/charts_extras_hard.csv
+raw/Los Cafres - Casi q' me pierdo/charts_extras_norm.csv
+raw/Los Cafres - Casi q' me pierdo/charts_guitar_easy.csv
+raw/Los Cafres - Casi q' me pierdo/charts_guitar_hard.csv
+raw/Los Cafres - Casi q' me pierdo/charts_guitar_norm.csv
+raw/Los Cafres - Casi q' me pierdo/charts_rhythm_easy.csv
+raw/Los Cafres - Casi q' me pierdo/charts_rhythm_hard.csv
+raw/Los Cafres - Casi q' me pierdo/charts_rhythm_norm.csv
+raw/Los Cafres - Casi q' me pierdo/charts_vocals_easy.csv
+raw/Los Cafres - Casi q' me pierdo/charts_vocals_hard.csv
+raw/Los Cafres - Casi q' me pierdo/charts_vocals_norm.csv
+raw/Los Cafres - Casi q' me pierdo/events_drums.csv
+raw/Los Cafres - Casi q' me pierdo/events_extras.csv
+raw/Los Cafres - Casi q' me pierdo/events_guitar.csv
+raw/Los Cafres - Casi q' me pierdo/events_rhythm.csv
+raw/Los Cafres - Casi q' me pierdo/events_vocals.csv
+raw/Los Cafres - Si el Amor se Cae/charts_drums_easy.csv
+raw/Los Cafres - Si el Amor se Cae/charts_drums_hard.csv
+raw/Los Cafres - Si el Amor se Cae/charts_drums_norm.csv
+raw/Los Cafres - Si el Amor se Cae/charts_extras_easy.csv
+raw/Los Cafres - Si el Amor se Cae/charts_extras_hard.csv
+raw/Los Cafres - Si el Amor se Cae/charts_extras_norm.csv
+raw/Los Cafres - Si el Amor se Cae/charts_guitar_easy.csv
+raw/Los Cafres - Si el Amor se Cae/charts_guitar_hard.csv
+raw/Los Cafres - Si el Amor se Cae/charts_guitar_norm.csv
+raw/Los Cafres - Si el Amor se Cae/charts_rhythm_easy.csv
+raw/Los Cafres - Si el Amor se Cae/charts_rhythm_hard.csv
+raw/Los Cafres - Si el Amor se Cae/charts_rhythm_norm.csv
+raw/Los Cafres - Si el Amor se Cae/charts_vocals_easy.csv
+raw/Los Cafres - Si el Amor se Cae/charts_vocals_hard.csv
+raw/Los Cafres - Si el Amor se Cae/charts_vocals_norm.csv
+raw/Los Cafres - Si el Amor se Cae/events_drums.csv
+raw/Los Cafres - Si el Amor se Cae/events_extras.csv
+raw/Los Cafres - Si el Amor se Cae/events_guitar.csv
+raw/Los Cafres - Si el Amor se Cae/events_rhythm.csv
+raw/Los Cafres - Si el Amor se Cae/events_vocals.csv
+raw/Los Pericos - Lindo Día/charts_drums_easy.csv
+raw/Los Pericos - Lindo Día/charts_drums_hard.csv
+raw/Los Pericos - Lindo Día/charts_drums_norm.csv
+raw/Los Pericos - Lindo Día/charts_extras_easy.csv
+raw/Los Pericos - Lindo Día/charts_extras_hard.csv
+raw/Los Pericos - Lindo Día/charts_extras_norm.csv
+raw/Los Pericos - Lindo Día/charts_guitar_easy.csv
+raw/Los Pericos - Lindo Día/charts_guitar_hard.csv
+raw/Los Pericos - Lindo Día/charts_guitar_norm.csv
+raw/Los Pericos - Lindo Día/charts_rhythm_easy.csv
+raw/Los Pericos - Lindo Día/charts_rhythm_hard.csv
+raw/Los Pericos - Lindo Día/charts_rhythm_norm.csv
+raw/Los Pericos - Lindo Día/charts_vocals_easy.csv
+raw/Los Pericos - Lindo Día/charts_vocals_hard.csv
+raw/Los Pericos - Lindo Día/charts_vocals_norm.csv
+raw/Los Pericos - Lindo Día/events_drums.csv
+raw/Los Pericos - Lindo Día/events_extras.csv
+raw/Los Pericos - Lindo Día/events_guitar.csv
+raw/Los Pericos - Lindo Día/events_rhythm.csv
+raw/Los Pericos - Lindo Día/events_vocals.csv
+raw/Los Tipitos - Campanas en la noche/charts_drums_easy.csv
+raw/Los Tipitos - Campanas en la noche/charts_drums_hard.csv
+raw/Los Tipitos - Campanas en la noche/charts_drums_norm.csv
+raw/Los Tipitos - Campanas en la noche/charts_extras_easy.csv
+raw/Los Tipitos - Campanas en la noche/charts_extras_hard.csv
+raw/Los Tipitos - Campanas en la noche/charts_extras_norm.csv
+raw/Los Tipitos - Campanas en la noche/charts_guitar_easy.csv
+raw/Los Tipitos - Campanas en la noche/charts_guitar_hard.csv
+raw/Los Tipitos - Campanas en la noche/charts_guitar_norm.csv
+raw/Los Tipitos - Campanas en la noche/charts_rhythm_easy.csv
+raw/Los Tipitos - Campanas en la noche/charts_rhythm_hard.csv
+raw/Los Tipitos - Campanas en la noche/charts_rhythm_norm.csv
+raw/Los Tipitos - Campanas en la noche/charts_vocals_easy.csv
+raw/Los Tipitos - Campanas en la noche/charts_vocals_hard.csv
+raw/Los Tipitos - Campanas en la noche/charts_vocals_norm.csv
+raw/Los Tipitos - Campanas en la noche/events_drums.csv
+raw/Los Tipitos - Campanas en la noche/events_extras.csv
+raw/Los Tipitos - Campanas en la noche/events_guitar.csv
+raw/Los Tipitos - Campanas en la noche/events_rhythm.csv
+raw/Los Tipitos - Campanas en la noche/events_vocals.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_drums_easy.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_drums_hard.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_drums_norm.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_extras_easy.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_extras_hard.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_extras_norm.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_guitar_easy.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_guitar_hard.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_guitar_norm.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_rhythm_easy.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_rhythm_hard.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_rhythm_norm.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_vocals_easy.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_vocals_hard.csv
+raw/Mancha de Rolando - Arde la Ciudad/charts_vocals_norm.csv
+raw/Mancha de Rolando - Arde la Ciudad/events_drums.csv
+raw/Mancha de Rolando - Arde la Ciudad/events_extras.csv
+raw/Mancha de Rolando - Arde la Ciudad/events_guitar.csv
+raw/Mancha de Rolando - Arde la Ciudad/events_rhythm.csv
+raw/Mancha de Rolando - Arde la Ciudad/events_vocals.csv
+raw/Massacre - La reina de marte/charts_drums_easy.csv
+raw/Massacre - La reina de marte/charts_drums_hard.csv
+raw/Massacre - La reina de marte/charts_drums_norm.csv
+raw/Massacre - La reina de marte/charts_extras_easy.csv
+raw/Massacre - La reina de marte/charts_extras_hard.csv
+raw/Massacre - La reina de marte/charts_extras_norm.csv
+raw/Massacre - La reina de marte/charts_guitar_easy.csv
+raw/Massacre - La reina de marte/charts_guitar_hard.csv
+raw/Massacre - La reina de marte/charts_guitar_norm.csv
+raw/Massacre - La reina de marte/charts_rhythm_easy.csv
+raw/Massacre - La reina de marte/charts_rhythm_hard.csv
+raw/Massacre - La reina de marte/charts_rhythm_norm.csv
+raw/Massacre - La reina de marte/charts_vocals_easy.csv
+raw/Massacre - La reina de marte/charts_vocals_hard.csv
+raw/Massacre - La reina de marte/charts_vocals_norm.csv
+raw/Massacre - La reina de marte/events_drums.csv
+raw/Massacre - La reina de marte/events_extras.csv
+raw/Massacre - La reina de marte/events_guitar.csv
+raw/Massacre - La reina de marte/events_rhythm.csv
+raw/Massacre - La reina de marte/events_vocals.csv
+raw/Massacre - Tanto Amor/charts_drums_easy.csv
+raw/Massacre - Tanto Amor/charts_drums_hard.csv
+raw/Massacre - Tanto Amor/charts_drums_norm.csv
+raw/Massacre - Tanto Amor/charts_extras_easy.csv
+raw/Massacre - Tanto Amor/charts_extras_hard.csv
+raw/Massacre - Tanto Amor/charts_extras_norm.csv
+raw/Massacre - Tanto Amor/charts_guitar_easy.csv
+raw/Massacre - Tanto Amor/charts_guitar_hard.csv
+raw/Massacre - Tanto Amor/charts_guitar_norm.csv
+raw/Massacre - Tanto Amor/charts_rhythm_easy.csv
+raw/Massacre - Tanto Amor/charts_rhythm_hard.csv
+raw/Massacre - Tanto Amor/charts_rhythm_norm.csv
+raw/Massacre - Tanto Amor/charts_vocals_easy.csv
+raw/Massacre - Tanto Amor/charts_vocals_hard.csv
+raw/Massacre - Tanto Amor/charts_vocals_norm.csv
+raw/Massacre - Tanto Amor/events_drums.csv
+raw/Massacre - Tanto Amor/events_extras.csv
+raw/Massacre - Tanto Amor/events_guitar.csv
+raw/Massacre - Tanto Amor/events_rhythm.csv
+raw/Massacre - Tanto Amor/events_vocals.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_drums_easy.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_drums_hard.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_drums_norm.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_extras_easy.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_extras_hard.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_extras_norm.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_guitar_easy.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_guitar_hard.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_guitar_norm.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_rhythm_easy.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_rhythm_hard.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_rhythm_norm.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_vocals_easy.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_vocals_hard.csv
+raw/No Te Va Gustar - Cero a La Izquierda/charts_vocals_norm.csv
+raw/No Te Va Gustar - Cero a La Izquierda/events_drums.csv
+raw/No Te Va Gustar - Cero a La Izquierda/events_extras.csv
+raw/No Te Va Gustar - Cero a La Izquierda/events_guitar.csv
+raw/No Te Va Gustar - Cero a La Izquierda/events_rhythm.csv
+raw/No Te Va Gustar - Cero a La Izquierda/events_vocals.csv
+raw/No Te Va Gustar - Chau/charts_drums_easy.csv
+raw/No Te Va Gustar - Chau/charts_drums_hard.csv
+raw/No Te Va Gustar - Chau/charts_drums_norm.csv
+raw/No Te Va Gustar - Chau/charts_extras_easy.csv
+raw/No Te Va Gustar - Chau/charts_extras_hard.csv
+raw/No Te Va Gustar - Chau/charts_extras_norm.csv
+raw/No Te Va Gustar - Chau/charts_guitar_easy.csv
+raw/No Te Va Gustar - Chau/charts_guitar_hard.csv
+raw/No Te Va Gustar - Chau/charts_guitar_norm.csv
+raw/No Te Va Gustar - Chau/charts_rhythm_easy.csv
+raw/No Te Va Gustar - Chau/charts_rhythm_hard.csv
+raw/No Te Va Gustar - Chau/charts_rhythm_norm.csv
+raw/No Te Va Gustar - Chau/charts_vocals_easy.csv
+raw/No Te Va Gustar - Chau/charts_vocals_hard.csv
+raw/No Te Va Gustar - Chau/charts_vocals_norm.csv
+raw/No Te Va Gustar - Chau/events_drums.csv
+raw/No Te Va Gustar - Chau/events_extras.csv
+raw/No Te Va Gustar - Chau/events_guitar.csv
+raw/No Te Va Gustar - Chau/events_rhythm.csv
+raw/No Te Va Gustar - Chau/events_vocals.csv
+raw/Oconnor - Yo Caníbal/charts_drums_easy.csv
+raw/Oconnor - Yo Caníbal/charts_drums_hard.csv
+raw/Oconnor - Yo Caníbal/charts_drums_norm.csv
+raw/Oconnor - Yo Caníbal/charts_extras_easy.csv
+raw/Oconnor - Yo Caníbal/charts_extras_hard.csv
+raw/Oconnor - Yo Caníbal/charts_extras_norm.csv
+raw/Oconnor - Yo Caníbal/charts_guitar_easy.csv
+raw/Oconnor - Yo Caníbal/charts_guitar_hard.csv
+raw/Oconnor - Yo Caníbal/charts_guitar_norm.csv
+raw/Oconnor - Yo Caníbal/charts_rhythm_easy.csv
+raw/Oconnor - Yo Caníbal/charts_rhythm_hard.csv
+raw/Oconnor - Yo Caníbal/charts_rhythm_norm.csv
+raw/Oconnor - Yo Caníbal/charts_vocals_easy.csv
+raw/Oconnor - Yo Caníbal/charts_vocals_hard.csv
+raw/Oconnor - Yo Caníbal/charts_vocals_norm.csv
+raw/Oconnor - Yo Caníbal/events_drums.csv
+raw/Oconnor - Yo Caníbal/events_extras.csv
+raw/Oconnor - Yo Caníbal/events_guitar.csv
+raw/Oconnor - Yo Caníbal/events_rhythm.csv
+raw/Oconnor - Yo Caníbal/events_vocals.csv
+raw/Rata Blanca - El Reino Olvidado/charts_drums_easy.csv
+raw/Rata Blanca - El Reino Olvidado/charts_drums_hard.csv
+raw/Rata Blanca - El Reino Olvidado/charts_drums_norm.csv
+raw/Rata Blanca - El Reino Olvidado/charts_extras_easy.csv
+raw/Rata Blanca - El Reino Olvidado/charts_extras_hard.csv
+raw/Rata Blanca - El Reino Olvidado/charts_extras_norm.csv
+raw/Rata Blanca - El Reino Olvidado/charts_guitar_easy.csv
+raw/Rata Blanca - El Reino Olvidado/charts_guitar_hard.csv
+raw/Rata Blanca - El Reino Olvidado/charts_guitar_norm.csv
+raw/Rata Blanca - El Reino Olvidado/charts_rhythm_easy.csv
+raw/Rata Blanca - El Reino Olvidado/charts_rhythm_hard.csv
+raw/Rata Blanca - El Reino Olvidado/charts_rhythm_norm.csv
+raw/Rata Blanca - El Reino Olvidado/charts_vocals_easy.csv
+raw/Rata Blanca - El Reino Olvidado/charts_vocals_hard.csv
+raw/Rata Blanca - El Reino Olvidado/charts_vocals_norm.csv
+raw/Rata Blanca - El Reino Olvidado/events_drums.csv
+raw/Rata Blanca - El Reino Olvidado/events_extras.csv
+raw/Rata Blanca - El Reino Olvidado/events_guitar.csv
+raw/Rata Blanca - El Reino Olvidado/events_rhythm.csv
+raw/Rata Blanca - El Reino Olvidado/events_vocals.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_drums_easy.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_drums_hard.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_drums_norm.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_extras_easy.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_extras_hard.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_extras_norm.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_guitar_easy.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_guitar_hard.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_guitar_norm.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_rhythm_easy.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_rhythm_hard.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_rhythm_norm.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_vocals_easy.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_vocals_hard.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/charts_vocals_norm.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/events_drums.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/events_extras.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/events_guitar.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/events_rhythm.csv
+raw/Rata Blanca - La Leyenda del Hada y el Mago/events_vocals.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_drums_easy.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_drums_hard.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_drums_norm.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_extras_easy.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_extras_hard.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_extras_norm.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_guitar_easy.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_guitar_hard.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_guitar_norm.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_rhythm_easy.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_rhythm_hard.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_rhythm_norm.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_vocals_easy.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_vocals_hard.csv
+raw/Ratones Paranoicos - Sigue Girando/charts_vocals_norm.csv
+raw/Ratones Paranoicos - Sigue Girando/events_drums.csv
+raw/Ratones Paranoicos - Sigue Girando/events_extras.csv
+raw/Ratones Paranoicos - Sigue Girando/events_guitar.csv
+raw/Ratones Paranoicos - Sigue Girando/events_rhythm.csv
+raw/Ratones Paranoicos - Sigue Girando/events_vocals.csv
+raw/Turf - Pasos Al Costado/charts_drums_easy.csv
+raw/Turf - Pasos Al Costado/charts_drums_hard.csv
+raw/Turf - Pasos Al Costado/charts_drums_norm.csv
+raw/Turf - Pasos Al Costado/charts_extras_easy.csv
+raw/Turf - Pasos Al Costado/charts_extras_hard.csv
+raw/Turf - Pasos Al Costado/charts_extras_norm.csv
+raw/Turf - Pasos Al Costado/charts_guitar_easy.csv
+raw/Turf - Pasos Al Costado/charts_guitar_hard.csv
+raw/Turf - Pasos Al Costado/charts_guitar_norm.csv
+raw/Turf - Pasos Al Costado/charts_rhythm_easy.csv
+raw/Turf - Pasos Al Costado/charts_rhythm_hard.csv
+raw/Turf - Pasos Al Costado/charts_rhythm_norm.csv
+raw/Turf - Pasos Al Costado/charts_vocals_easy.csv
+raw/Turf - Pasos Al Costado/charts_vocals_hard.csv
+raw/Turf - Pasos Al Costado/charts_vocals_norm.csv
+raw/Turf - Pasos Al Costado/events_drums.csv
+raw/Turf - Pasos Al Costado/events_extras.csv
+raw/Turf - Pasos Al Costado/events_guitar.csv
+raw/Turf - Pasos Al Costado/events_rhythm.csv
+raw/Turf - Pasos Al Costado/events_vocals.csv
+raw/Viejas Locas - Roca & giro/charts_drums_easy.csv
+raw/Viejas Locas - Roca & giro/charts_drums_hard.csv
+raw/Viejas Locas - Roca & giro/charts_drums_norm.csv
+raw/Viejas Locas - Roca & giro/charts_extras_easy.csv
+raw/Viejas Locas - Roca & giro/charts_extras_hard.csv
+raw/Viejas Locas - Roca & giro/charts_extras_norm.csv
+raw/Viejas Locas - Roca & giro/charts_guitar_easy.csv
+raw/Viejas Locas - Roca & giro/charts_guitar_hard.csv
+raw/Viejas Locas - Roca & giro/charts_guitar_norm.csv
+raw/Viejas Locas - Roca & giro/charts_rhythm_easy.csv
+raw/Viejas Locas - Roca & giro/charts_rhythm_hard.csv
+raw/Viejas Locas - Roca & giro/charts_rhythm_norm.csv
+raw/Viejas Locas - Roca & giro/charts_vocals_easy.csv
+raw/Viejas Locas - Roca & giro/charts_vocals_hard.csv
+raw/Viejas Locas - Roca & giro/charts_vocals_norm.csv
+raw/Viejas Locas - Roca & giro/events_drums.csv
+raw/Viejas Locas - Roca & giro/events_extras.csv
+raw/Viejas Locas - Roca & giro/events_guitar.csv
+raw/Viejas Locas - Roca & giro/events_rhythm.csv
+raw/Viejas Locas - Roca & giro/events_vocals.csv
