@@ -6,6 +6,11 @@ import os, re, shutil
 import subprocess
 import time
 import cbr, disc, band
+import csv
+
+# TODO: use functions for ease of use
+# def func_name(vble1,vble2):
+# if __name__ = "__main__":
 
 start_time = time.time()
 
@@ -39,7 +44,7 @@ os.chdir(songs_dir)
 dir_files = os.listdir(songs_dir)
 #print("Files in dir:\t",  dir_files)   #DEBUG
 
-cbr_files = list()
+cbr_files = []
 for filename in dir_files:
     if re.search("\.cbr$", filename):
         cbr_files.append(filename)
@@ -50,8 +55,23 @@ n = len(cbr_files)
 if n > 0:
     print("Songs found in dir:\t",  n)
     os.chdir(work_dir)
-    new_file = open("songs.csv", "w")
-    new_file.write("Artista\tCancion\tDisco\tAño\tSong ID\tBand ID\tDisc ID\tDif:G\tDif:R\tDif:D\tDif:V\tDif:B\n")
+    csv_name = "songs.csv"
+    new_file = open(csv_name, "w", newline="")
+    csv_writer = csv.writer(new_file)
+    data_in = []
+    data_in.append("Artista")
+    data_in.append("Cancion")
+    data_in.append("Disco")
+    data_in.append("Año")
+    data_in.append("Song ID")
+    data_in.append("Band ID")
+    data_in.append("Disc ID")
+    data_in.append("Dif:G")
+    data_in.append("Dif:R")
+    data_in.append("Dif:D")
+    data_in.append("Dif:V")
+    data_in.append("Dif:B")
+    csv_writer.writerow(data_in)
     new_file.close()
 
 #print("Disk dir:\t", songs_dir)    #DEBUG
@@ -207,37 +227,44 @@ for filename in cbr_files:
     head_lens = list()
     for this_inst in inst_order:
         i = inst_order.index(this_inst)
-        event_files = open("events_" + this_inst + ".csv", "w")
-        event_files.write("[" + this_inst + "]\t\t\t\n")
-        event_files.write("[val]\t[cont]\t[pos]\t\n")
+        csv_name = "events_" + this_inst + ".csv"
+        event_files = open(csv_name, "w", newline="")
+        csv_writer = csv.writer(event_files)
+        data_in = ["val","cont","pos"]
+        csv_writer.writerow(data_in)
         
         match this_inst:
             case "guitar":
-                inst_event = file_cbr.tracks.guitar.hdr.events
+                inst_events = file_cbr.tracks.guitar.hdr.events
             case "rhythm":
-                inst_event = file_cbr.tracks.rhythm.hdr.events
+                inst_events = file_cbr.tracks.rhythm.hdr.events
             case "drums":
-                inst_event = file_cbr.tracks.drums.hdr.events
+                inst_events = file_cbr.tracks.drums.hdr.events
             case "vocals":
                 try:                    
-                    inst_event = file_cbr.tracks.vocals_with_extras.hdr.events
+                    inst_events = file_cbr.tracks.vocals_with_extras.hdr.events
                 except:
-                    inst_event = file_cbr.tracks.vocals_no_extras.hdr.events
+                    inst_events = file_cbr.tracks.vocals_no_extras.hdr.events
             case "extras":
                 try:    
-                    inst_event = file_cbr.tracks.extras.events
+                    inst_events = file_cbr.tracks.extras.events
                 except:
-                    inst_event = list()
+                    inst_events = []
             case _:
-                inst_event = list()
+                inst_events = []
 
-        head_lens.append(len(inst_event))
-        print(this_inst + " header len: " + str(int(len(inst_event))))
-        for block in inst_event:
-            line = str(block.val) + "\t" + str(block.cont) + "\t" + str(block.pos) + "\t\n" 
-            event_files.write(line)
+        head_lens.append(len(inst_events))
+        print(this_inst + " header len: " + str(int(len(inst_events))))
+        
+        csv_rows = []
+        for block in inst_events:
+            data_in = [ block.val , block.cont , block.pos ]
+            csv_rows.append(data_in)
 
+        csv_writer.writerows(csv_rows)
         event_files.close()
+
+    # TODO: Compare event files
 
     largest_number = head_lens[0]
     for number in head_lens:
@@ -247,13 +274,15 @@ for filename in cbr_files:
     print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
     # Instruments charing manual analisis
-    notes_len = list()
+    notes_len = []
     for this_inst in inst_order:
         for this_diff in diff_order:
             i = inst_order.index(this_inst)
-            chart_files = open("charts_" + this_inst + "_" + this_diff + ".csv", "w")
-            chart_files.write("[" + this_inst + "]\t["+ this_diff + "]\t\n")
-            chart_files.write("[foo]\t[bar]\t\n")
+            csv_name = "charts_" + this_inst + "_" + this_diff + ".csv"
+            chart_files = open(csv_name, "w", newline="")
+            csv_writer = csv.writer(chart_files)
+            data_in = ["foo","bar"]
+            csv_writer.writerow(data_in)
             
             match this_inst:
                 case "guitar":
@@ -268,7 +297,7 @@ for filename in cbr_files:
                     except: 
                         notes_inst = file_cbr.tracks.vocals_no_extras
                 case _:
-                    notes_inst = list()
+                    notes_inst = []
                 
             if notes_inst:
                 match this_diff:
@@ -276,28 +305,31 @@ for filename in cbr_files:
                         try:
                             notes = notes_inst.easy.song
                         except:
-                            notes = list()
+                            notes = []
                     case "norm":
                         try:
                             notes = notes_inst.norm.song
                         except:
-                            notes = list()
+                            notes = []
                     case "hard":
                         try:
                             notes = notes_inst.hard.song
                         except:
-                            notes = list()
+                            notes = []
                     case _:
-                        notes = 0
+                        notes = []
                 notes_len.append(len(notes))
 
                 print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
+                
+                csv_rows = []
                 for block in notes:
-                    line = str(block.foo) + "\t" + str(block.bar) + "\t\n"
+                    data_in = [ block.foo , block.bar ]
+                    csv_rows.append(data_in)
                     if block.nulo:
-                        print(">> NO NULE FRET FOUND <<") # DEBUG
-                    chart_files.write(line)
-
+                        print(">> ERROR! No NULL fret found in: " + band_name + " - " + song_name + ": " + this_inst + " " + this_diff) # DEBUG
+            
+            csv_writer.writerows(csv_rows)
             chart_files.close()
 
     largest_number = notes_len[0]
@@ -332,19 +364,24 @@ for filename in cbr_files:
 
     # Save to log
     os.chdir(work_dir)
-    new_file = open("songs.csv", "a")
-    new_file.write(band_name + "\t")
-    new_file.write(song_name + "\t")
-    new_file.write(disc_name + "\t")
-    new_file.write(str(year) + "\t")
-    new_file.write(song_id + "\t")
-    new_file.write(band_id + "\t")
-    new_file.write(disc_id + "\t")
-    new_file.write(str(difficulties[0]) + "\t") # Guitar
-    new_file.write(str(difficulties[1]) + "\t") # Rythm
-    new_file.write(str(difficulties[2]) + "\t") # Drums
-    new_file.write(str(difficulties[3]) + "\t") # Vocal
-    new_file.write(str(difficulties[4]) + "\n") # Band
+    csv_name = "songs.csv"
+    new_file = open(csv_name, "a", newline="")
+    csv_writer = csv.writer(new_file)
+    data_in = []
+    data_in.append(band_name)
+    data_in.append(song_name)
+    data_in.append(disc_name)
+    data_in.append(year)
+    data_in.append(song_id)
+    data_in.append(band_id)
+    data_in.append(disc_id)
+    data_in.append(difficulties[0]) # Guitar
+    data_in.append(difficulties[1]) # Rhythm
+    data_in.append(difficulties[2]) # Drums
+    data_in.append(difficulties[3]) # Vocal
+    data_in.append(difficulties[4]) # Band
+
+    csv_writer.writerow(data_in)
     new_file.close()
 
     # Show time and ETA
