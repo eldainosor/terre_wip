@@ -6,7 +6,7 @@ import os, re, shutil
 import subprocess
 import time
 import cbr, disc, band
-import csv
+import csv, configparser
 
 # TODO: use functions for ease of use
 # def func_name(vble1,vble2):
@@ -58,19 +58,20 @@ if n > 0:
     csv_name = "songs.csv"
     new_file = open(csv_name, "w", newline="")
     csv_writer = csv.writer(new_file)
-    data_in = []
-    data_in.append("Artista")
-    data_in.append("Cancion")
-    data_in.append("Disco")
-    data_in.append("Año")
-    data_in.append("Song ID")
-    data_in.append("Band ID")
-    data_in.append("Disc ID")
-    data_in.append("Dif:G")
-    data_in.append("Dif:R")
-    data_in.append("Dif:D")
-    data_in.append("Dif:V")
-    data_in.append("Dif:B")
+    data_in = [ "Artista",
+                "Canción",
+                "Disco",
+                "Año",
+                "Song ID",
+                "Band ID",
+                "Disc ID",
+                "Dif:G",
+                "Dif:R",
+                "Dif:D",
+                "Dif:V",
+                "Dif:B"
+    ]
+    
     csv_writer.writerow(data_in)
     new_file.close()
 
@@ -230,7 +231,7 @@ for filename in cbr_files:
         csv_name = "events_" + this_inst + ".csv"
         event_files = open(csv_name, "w", newline="")
         csv_writer = csv.writer(event_files)
-        data_in = ["val","cont","pos"]
+        data_in = [ "val", "cont", "pos" ]
         csv_writer.writerow(data_in)
         
         match this_inst:
@@ -258,7 +259,7 @@ for filename in cbr_files:
         
         csv_rows = []
         for block in inst_events:
-            data_in = [ block.val , block.cont , block.pos ]
+            data_in = [ block.val, block.cont, block.pos ]
             csv_rows.append(data_in)
 
         csv_writer.writerows(csv_rows)
@@ -281,7 +282,7 @@ for filename in cbr_files:
             csv_name = "charts_" + this_inst + "_" + this_diff + ".csv"
             chart_files = open(csv_name, "w", newline="")
             csv_writer = csv.writer(chart_files)
-            data_in = ["foo","bar"]
+            data_in = [ "foo", "bar" ]
             csv_writer.writerow(data_in)
             
             match this_inst:
@@ -324,7 +325,7 @@ for filename in cbr_files:
                 
                 csv_rows = []
                 for block in notes:
-                    data_in = [ block.foo , block.bar ]
+                    data_in = [ block.foo, block.bar ]
                     csv_rows.append(data_in)
                     if block.nulo:
                         print(">> ERROR! No NULL fret found in: " + band_name + " - " + song_name + ": " + this_inst + " " + this_diff) # DEBUG
@@ -340,26 +341,29 @@ for filename in cbr_files:
     print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
 
     # Save metadata
+    config = configparser.ConfigParser()
+    config.add_section("song")
+
+    config.set("song", "artist", band_name)
+    config.set("song", "name", song_name)
+    config.set("song", "album", disc_name)
+    config.set("song", "year", str(year))
+    config.set("song", "diff_guitar", str(difficulties[0]))
+    config.set("song", "diff_bass", str(difficulties[1]))
+    config.set("song", "diff_drums", str(difficulties[2]))
+    config.set("song", "diff_vocals", str(difficulties[3]))
+    config.set("song", "diff_band", str(difficulties[4]))
+    config.set("song", "icon", "erdtv")
+    config.set("song", "genre", "Rock Argentino")
+    config.set("song", "charter", "Next Level")
+    config.set("song", "banner_link_a", "http://www.elrockdetuvida.com/website/index.php")
+    config.set("song", "link_name_a", "Homepage")
+    config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
+    config.set("song", ";video_start_time" , "3000")
+    config.set("song", "delay", "3000")
+
     new_file = open("song.ini", "w")
-    new_file.write("[song]")
-    new_file.write("\nartist = " + band_name)
-    new_file.write("\nname = " + song_name)
-    new_file.write("\nalbum = " + disc_name)
-    new_file.write("\nyear = " + str(year))
-    new_file.write("\ndiff_guitar = " + str(difficulties[0]))
-    new_file.write("\ndiff_bass = " + str(difficulties[1]))
-    new_file.write("\ndiff_vocals = " + str(difficulties[2]))
-    new_file.write("\ndiff_drums = " + str(difficulties[3]))
-    new_file.write("\ndiff_band = " + str(difficulties[4]))
-    new_file.write("\nicon = erdtv")
-    new_file.write("\ngenre = Rock Argentino")
-    new_file.write("\ncharter = Next Level")
-    new_file.write("\nbanner_link_a = http://www.elrockdetuvida.com/website/index.php")
-    new_file.write("\nlink_name_a = Homepage")
-    new_file.write("\nloading_phrase = Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-    new_file.write("\n;video_start_time=3000")
-    new_file.write("\ndelay=3000")
-    new_file.write("\n")
+    config.write(new_file)
     new_file.close()
 
     # Save to log
@@ -367,19 +371,19 @@ for filename in cbr_files:
     csv_name = "songs.csv"
     new_file = open(csv_name, "a", newline="")
     csv_writer = csv.writer(new_file)
-    data_in = []
-    data_in.append(band_name)
-    data_in.append(song_name)
-    data_in.append(disc_name)
-    data_in.append(year)
-    data_in.append(song_id)
-    data_in.append(band_id)
-    data_in.append(disc_id)
-    data_in.append(difficulties[0]) # Guitar
-    data_in.append(difficulties[1]) # Rhythm
-    data_in.append(difficulties[2]) # Drums
-    data_in.append(difficulties[3]) # Vocal
-    data_in.append(difficulties[4]) # Band
+    data_in =  [band_name,
+                song_name,
+                disc_name,
+                year,
+                song_id,
+                band_id,
+                disc_id,
+                difficulties[0], # Guitar
+                difficulties[1], # Rhythm
+                difficulties[2], # Drums
+                difficulties[3], # Vocal
+                difficulties[4] # Band
+    ]
 
     csv_writer.writerow(data_in)
     new_file.close()
