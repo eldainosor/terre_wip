@@ -8,14 +8,14 @@ import time
 import cbr, disc, band
 import csv, configparser
 
-# TODO: use functions for ease of use
-# def func_name(vble1,vble2):
+# Config Constants 
+data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
+inst_order = ["guitar", "rhythm", "drums", "vocals", "extras"]
+diff_order = ["easy", "norm", "hard"]
 
 def ExtractEvents(file_cbr: cbr.Cbr):
-    inst_order = [ "guitar", "rhythm", "drums", "vocals", "extras" ]
     head_lens = []
     for this_inst in inst_order:
-        # i = inst_order.index(this_inst)
         file_name = "events_" + this_inst + ".csv"
         event_file = open(file_name, "w", newline="")
         csv_writer = csv.writer(event_file)
@@ -62,6 +62,70 @@ def ExtractEvents(file_cbr: cbr.Cbr):
     
     print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
+def ExtractCharts(file_cbr: cbr.Cbr):
+    notes_len = []
+    for this_inst in inst_order:
+        for this_diff in diff_order:
+            file_name = "charts_" + this_inst + "_" + this_diff + ".csv"
+            chart_file = open(file_name, "w", newline="")
+            csv_writer = csv.writer(chart_file)
+            data_in = [ "foo", "bar" ]
+            csv_writer.writerow(data_in)
+            
+            match this_inst:
+                case "guitar":
+                    notes_inst = file_cbr.tracks.guitar
+                case "rhythm":
+                    notes_inst = file_cbr.tracks.rhythm
+                case "drums":
+                    notes_inst = file_cbr.tracks.drums
+                case "vocals":
+                    try:
+                        notes_inst = file_cbr.tracks.vocals_with_extras
+                    except: 
+                        notes_inst = file_cbr.tracks.vocals_no_extras
+                case _:
+                    notes_inst = []
+                
+            if notes_inst:
+                match this_diff:
+                    case "easy":
+                        try:
+                            notes = notes_inst.easy.song
+                        except:
+                            notes = []
+                    case "norm":
+                            notes = notes_inst.norm.song                        
+                    case "hard":
+                        try:
+                            notes = notes_inst.hard.song
+                        except:
+                            notes = []
+                    case _:
+                        notes = []
+                notes_len.append(len(notes))
+
+                # TODO: analize notes_inst.lyrics for vocals
+
+                print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
+                
+                csv_rows = []
+                for block in notes:
+                    data_in = [ block.foo, block.bar ]
+                    csv_rows.append(data_in)
+                    if block.nulo:
+                        print(">> ERROR! No NULL fret found in: " + band_name + " - " + song_name + ": " + this_inst + " " + this_diff) # DEBUG
+            
+            csv_writer.writerows(csv_rows)
+            chart_file.close()
+
+    largest_number = notes_len[0]
+    for number in notes_len:
+        if number > largest_number:
+            largest_number = number
+    
+    print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
+
 if __name__ == "__main__":
 
     start_time = time.time()
@@ -82,9 +146,6 @@ if __name__ == "__main__":
     work_dir = os.getcwd()
     output_dir = os.getcwd() + "\\erdtv"
     raw_dir = os.getcwd() + "\\raw"
-    data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
-    inst_order = ["guitar", "rhythm", "drums", "vocals", "extras"]
-    diff_order = ["easy", "norm", "hard"]
     
     print("Working dir:\t [", work_dir, "]")
 
@@ -94,7 +155,7 @@ if __name__ == "__main__":
     os.chdir(songs_dir)
 
     dir_files = os.listdir(songs_dir)
-    #print("Files in dir:\t",  dir_files)   #DEBUG
+    #print("Files in dir:\t",  dir_files)   # DEBUG
 
     cbr_files = []
     for filename in dir_files:
@@ -127,7 +188,7 @@ if __name__ == "__main__":
         csv_writer.writerow(data_in)
         new_file.close()
 
-    #print("Disk dir:\t", songs_dir)    #DEBUG
+    #print("Disk dir:\t", songs_dir)    # DEBUG
 
     # Output directories
     try:
@@ -143,12 +204,12 @@ if __name__ == "__main__":
 
         k = cbr_files.index(filename) + 1
         
-        print("Analizing (", int(k) , "/" , int(n) , ")")   #DEBUG
+        print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
         os.chdir(songs_dir)
         #working_file = open(filename, "rb")
         #file_id, ext = os.path.splitext(filename)
-        #print("File ID = " + file_id)  #DEBUG test Kaitai
+        #print("File ID = " + file_id)  # DEBUG test Kaitai
 
         # Read CBR file
         file_cbr = cbr.Cbr.from_file(filename)
@@ -156,25 +217,25 @@ if __name__ == "__main__":
         # Extract Song ID
         song_id = file_cbr.info.song_id     # Int vble
         song_id = str(hex(song_id)).upper().lstrip('0X')    # String formating
-        print("Song ID = " + song_id)  #DEBUG test Kaitai
+        print("Song ID = " + song_id)  # DEBUG test Kaitai
 
         # Extract Band ID
         band_id = file_cbr.info.band_id     # Int vble
         band_id = str(hex(band_id)).upper().lstrip('0X')    # String formating
-        print("Band ID = " + band_id)  #DEBUG test Kaitai
+        print("Band ID = " + band_id)  # DEBUG test Kaitai
         
         # Extract Disc ID
         disc_id = file_cbr.info.disc_id     # Int vble
         disc_id = str(hex(disc_id)).upper().lstrip('0X')    # String formating
-        print("Disc ID = " + disc_id)  #DEBUG test Kaitai
+        print("Disc ID = " + disc_id)  # DEBUG test Kaitai
 
         # Extract Year
         year = file_cbr.info.year
-        print("Year = " + str(year))  #DEBUG test Kaitai
+        print("Year = " + str(year))  # DEBUG test Kaitai
         
         # Extract Song Name
         song_name = str(file_cbr.info.song_name).rstrip('\x00')
-        print("Song = " + file_cbr.info.song_name)  #DEBUG test Kaitai
+        print("Song = " + file_cbr.info.song_name)  # DEBUG test Kaitai
 
         # Extract Difficulty
         difficulties = file_cbr.tracks.diff_level
@@ -183,17 +244,17 @@ if __name__ == "__main__":
             band_diff += instrument
         difficulties[4] = int(band_diff / 4)
 
-        print("Diff. Guitar =\t" + str(difficulties[0]))  #DEBUG test Kaitai
-        print("Diff. Rythm =\t" + str(difficulties[1]))  #DEBUG test Kaitai
-        print("Diff. Drums =\t" + str(difficulties[2]))  #DEBUG test Kaitai
-        print("Diff. Vocal =\t" + str(difficulties[3]))  #DEBUG test Kaitai
-        print("Diff. Band =\t" + str(difficulties[4]))  #DEBUG test Kaitai
+        print("Diff. Guitar =\t" + str(difficulties[0]))  # DEBUG test Kaitai
+        print("Diff. Rythm =\t" + str(difficulties[1]))  # DEBUG test Kaitai
+        print("Diff. Drums =\t" + str(difficulties[2]))  # DEBUG test Kaitai
+        print("Diff. Vocal =\t" + str(difficulties[3]))  # DEBUG test Kaitai
+        print("Diff. Band =\t" + str(difficulties[4]))  # DEBUG test Kaitai
     
         # Analize Bands
         os.chdir(bands_dir)
 
-        #dir_files = os.listdir(curr_dir) #DEBUG
-        #print("Files in dir:", dir_files) #DEBUG
+        #dir_files = os.listdir(curr_dir) # DEBUG
+        #print("Files in dir:", dir_files) # DEBUG
 
         # Read Band file
         file_band = band.Band.from_file(band_id + ".band")
@@ -278,72 +339,7 @@ if __name__ == "__main__":
         # COMMON HEADER
 
         ExtractEvents(file_cbr)
-
-        # Instruments charing manual analisis
-        notes_len = []
-        for this_inst in inst_order:
-            for this_diff in diff_order:
-                i = inst_order.index(this_inst)
-                csv_name = "charts_" + this_inst + "_" + this_diff + ".csv"
-                chart_files = open(csv_name, "w", newline="")
-                csv_writer = csv.writer(chart_files)
-                data_in = [ "foo", "bar" ]
-                csv_writer.writerow(data_in)
-                
-                match this_inst:
-                    case "guitar":
-                        notes_inst = file_cbr.tracks.guitar
-                    case "rhythm":
-                        notes_inst = file_cbr.tracks.rhythm
-                    case "drums":
-                        notes_inst = file_cbr.tracks.drums
-                    case "vocals":
-                        try:
-                            notes_inst = file_cbr.tracks.vocals_with_extras
-                        except: 
-                            notes_inst = file_cbr.tracks.vocals_no_extras
-                    case _:
-                        notes_inst = []
-                    
-                if notes_inst:
-                    match this_diff:
-                        case "easy":
-                            try:
-                                notes = notes_inst.easy.song
-                            except:
-                                notes = []
-                        case "norm":
-                            try:
-                                notes = notes_inst.norm.song
-                            except:
-                                notes = []
-                        case "hard":
-                            try:
-                                notes = notes_inst.hard.song
-                            except:
-                                notes = []
-                        case _:
-                            notes = []
-                    notes_len.append(len(notes))
-
-                    print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
-                    
-                    csv_rows = []
-                    for block in notes:
-                        data_in = [ block.foo, block.bar ]
-                        csv_rows.append(data_in)
-                        if block.nulo:
-                            print(">> ERROR! No NULL fret found in: " + band_name + " - " + song_name + ": " + this_inst + " " + this_diff) # DEBUG
-                
-                csv_writer.writerows(csv_rows)
-                chart_files.close()
-
-        largest_number = notes_len[0]
-        for number in notes_len:
-            if number > largest_number:
-                largest_number = number
-        
-        print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
+        ExtractCharts(file_cbr)
 
         # Save metadata
         config = configparser.ConfigParser()
@@ -365,7 +361,7 @@ if __name__ == "__main__":
         config.set("song", "link_name_a", "Homepage")
         config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
         config.set("song", ";video_start_time" , "3000")
-        config.set("song", "delay", "3000")
+        config.set("song", "delay", "3000") # Verify beats or secs
 
         new_file = open("song.ini", "w")
         config.write(new_file)
@@ -403,10 +399,10 @@ if __name__ == "__main__":
         eta_time = time.gmtime((total_tm / k ) * (n - k))
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
-    # Convert to Clone Hero (need FFMPEG)
+    # Convert to Clone Hero (needs FFMPEG)
     #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    #convert = 'Y'  #DEBUG
-    convert = 'N'  #DEBUG
+    #convert = 'Y'  # DEBUG
+    convert = 'N'  # DEBUG
     if convert == 'Y':
         ffmpeg_file = work_dir + "\\ffmpeg.exe"
 
@@ -487,7 +483,7 @@ if __name__ == "__main__":
 
                 cmd = ffmpeg_file 
                 cmd = cmd + " -y -loglevel -8 -stats -i " 
-                #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
+                #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd = cmd + "\"" + source_file + "\""
                 cmd = cmd + " -c:a libvorbis -b:a 320k " 
                 cmd = cmd + "\"" + dest_file + "\""
@@ -506,7 +502,7 @@ if __name__ == "__main__":
 
                     cmd = ffmpeg_file
                     cmd = cmd + " -y -loglevel -8 -stats -i " 
-                    #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
+                    #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
                     cmd = cmd + "\"" + source_file + "\""
                     cmd = cmd + " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "     #Skipp 3sec
                     #cmd = cmd + " -c:a libvorbis -b:a 320k " 
@@ -526,7 +522,7 @@ if __name__ == "__main__":
                 cmd = ffmpeg_file 
                 #cmd = cmd + " -y -loglevel -8 -stats -ss 3000ms -i "   # Intro Skip
                 cmd = cmd + " -y -loglevel -8 -stats -hwaccel auto -i "
-                #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
+                #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd = cmd + "\"" + source_file + "\""
                 j = 0
                 for instrument in data_order:
