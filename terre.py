@@ -11,6 +11,57 @@ import csv, configparser
 # TODO: use functions for ease of use
 # def func_name(vble1,vble2):
 
+def ExtractEvents(file_cbr: cbr.Cbr):
+    inst_order = [ "guitar", "rhythm", "drums", "vocals", "extras" ]
+    head_lens = []
+    for this_inst in inst_order:
+        # i = inst_order.index(this_inst)
+        file_name = "events_" + this_inst + ".csv"
+        event_file = open(file_name, "w", newline="")
+        csv_writer = csv.writer(event_file)
+        data_in = [ "val", "cont", "pos" ]
+        csv_writer.writerow(data_in)
+        
+        match this_inst:
+            case "guitar":
+                inst_events = file_cbr.tracks.guitar.hdr.events
+            case "rhythm":
+                inst_events = file_cbr.tracks.rhythm.hdr.events
+            case "drums":
+                inst_events = file_cbr.tracks.drums.hdr.events
+            case "vocals":
+                try:                    
+                    inst_events = file_cbr.tracks.vocals_with_extras.hdr.events
+                except:
+                    inst_events = file_cbr.tracks.vocals_no_extras.hdr.events
+            case "extras":
+                try:    
+                    inst_events = file_cbr.tracks.extras.events
+                except:
+                    inst_events = []
+            case _:
+                inst_events = []
+
+        head_lens.append(len(inst_events))
+        print(this_inst + " header len: " + str(int(len(inst_events))))
+        
+        csv_rows = []
+        for block in inst_events:
+            data_in = [ block.val, block.cont, block.pos ]
+            csv_rows.append(data_in)
+
+        csv_writer.writerows(csv_rows)
+        event_file.close()
+
+    # TODO: Compare event files
+
+    largest_number = head_lens[0]
+    for number in head_lens:
+        if number > largest_number:
+            largest_number = number
+    
+    print(" > BIGGER header len:" + str(largest_number))  # DEBUG
+
 if __name__ == "__main__":
 
     start_time = time.time()
@@ -226,54 +277,7 @@ if __name__ == "__main__":
         # Save Kaitai Log
         # COMMON HEADER
 
-        head_lens = list()
-        for this_inst in inst_order:
-            i = inst_order.index(this_inst)
-            csv_name = "events_" + this_inst + ".csv"
-            event_files = open(csv_name, "w", newline="")
-            csv_writer = csv.writer(event_files)
-            data_in = [ "val", "cont", "pos" ]
-            csv_writer.writerow(data_in)
-            
-            match this_inst:
-                case "guitar":
-                    inst_events = file_cbr.tracks.guitar.hdr.events
-                case "rhythm":
-                    inst_events = file_cbr.tracks.rhythm.hdr.events
-                case "drums":
-                    inst_events = file_cbr.tracks.drums.hdr.events
-                case "vocals":
-                    try:                    
-                        inst_events = file_cbr.tracks.vocals_with_extras.hdr.events
-                    except:
-                        inst_events = file_cbr.tracks.vocals_no_extras.hdr.events
-                case "extras":
-                    try:    
-                        inst_events = file_cbr.tracks.extras.events
-                    except:
-                        inst_events = []
-                case _:
-                    inst_events = []
-
-            head_lens.append(len(inst_events))
-            print(this_inst + " header len: " + str(int(len(inst_events))))
-            
-            csv_rows = []
-            for block in inst_events:
-                data_in = [ block.val, block.cont, block.pos ]
-                csv_rows.append(data_in)
-
-            csv_writer.writerows(csv_rows)
-            event_files.close()
-
-        # TODO: Compare event files
-
-        largest_number = head_lens[0]
-        for number in head_lens:
-            if number > largest_number:
-                largest_number = number
-        
-        print(" > BIGGER header len:" + str(largest_number))  # DEBUG
+        ExtractEvents(file_cbr)
 
         # Instruments charing manual analisis
         notes_len = []
