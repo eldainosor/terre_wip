@@ -112,10 +112,10 @@ types:
 
   event:
     seq:
-      - id: val
+      - id: foo
         type: u2
-      
-      - id: cont
+        
+      - id: bar
         type: u2
         
       - id: pos
@@ -157,11 +157,11 @@ types:
   notes:
     seq:
       - id: foo
-        type: u2
+        type: u1
       - id: bar
         type: u1
-      - id: nulo
-        type: u1
+      - id: pos
+        type: u2
   
   voice:
     seq:

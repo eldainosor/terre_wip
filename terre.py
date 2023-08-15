@@ -19,7 +19,7 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         file_name = "events_" + this_inst + ".csv"
         event_file = open(file_name, "w", newline="")
         csv_writer = csv.writer(event_file)
-        data_in = [ "val", "cont", "pos" ]
+        data_in = [ "foo", "bar", "pos", "DIFF", "COUNT" ]
         csv_writer.writerow(data_in)
         
         match this_inst:
@@ -46,8 +46,10 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         print(this_inst + " header len: " + str(int(len(inst_events))))
         
         csv_rows = []
+        aux = 0
         for block in inst_events:
-            data_in = [ block.val, block.cont, block.pos ]
+            data_in = [ block.foo, block.bar, block.pos, (block.foo - aux)]
+            aux = block.foo
             csv_rows.append(data_in)
 
         csv_writer.writerows(csv_rows)
@@ -69,7 +71,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
             file_name = "charts_" + this_inst + "_" + this_diff + ".csv"
             chart_file = open(file_name, "w", newline="")
             csv_writer = csv.writer(chart_file)
-            data_in = [ "foo", "bar" ]
+            data_in = [ "foo", "bar", "pos" ]
             csv_writer.writerow(data_in)
             
             match this_inst:
@@ -111,11 +113,9 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                 
                 csv_rows = []
                 for block in notes:
-                    data_in = [ block.foo, block.bar ]
+                    data_in = [ block.foo, block.bar, block.pos ]
                     csv_rows.append(data_in)
-                    if block.nulo:
-                        print(">> ERROR! No NULL fret found in: " + band_name + " - " + song_name + ": " + this_inst + " " + this_diff) # DEBUG
-            
+                    
             csv_writer.writerows(csv_rows)
             chart_file.close()
 

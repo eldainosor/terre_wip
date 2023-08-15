@@ -34,8 +34,8 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.val = self._io.read_u2le()
-            self.cont = self._io.read_u2le()
+            self.foo = self._io.read_u2le()
+            self.bar = self._io.read_u2le()
             self.pos = self._io.read_u4le()
 
 
@@ -176,9 +176,9 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.foo = self._io.read_u2le()
+            self.foo = self._io.read_u1()
             self.bar = self._io.read_u1()
-            self.nulo = self._io.read_u1()
+            self.pos = self._io.read_u2le()
 
 
     class MetaData(KaitaiStruct):
