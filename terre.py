@@ -50,16 +50,16 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         i = 0
         bar_prev = -1
         for block in inst_events:
-            if block.addr == bar_prev:
+            if block.count == bar_prev:
                 i += 1
                 last_bar = " "
             else:
                 last_bar = str(i)
                 i = 0
-            bar_prev = block.addr
+            bar_prev = block.count
             #data_in = [ block.foo, block.bar, block.pos, (block.foo - aux), i, last_bar]
-            data_in = [ format(block.addr, "06X"), block.type, (block.addr - aux)]
-            aux = block.addr
+            data_in = [ format(block.count, "06X"), block.type, (block.count - aux)]
+            aux = block.count
             csv_rows.append(data_in)
 
         csv_writer.writerows(csv_rows)
@@ -99,23 +99,23 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                         notes_inst = file_cbr.tracks.vocals_no_extras
                 case _:
                     notes_inst = []
-                
+
             if notes_inst:
-                match this_diff:
-                    case "easy":
-                        try:
-                            notes = notes_inst.easy.song
-                        except:
-                            notes = []
-                    case "norm":
-                            notes = notes_inst.norm.song                        
-                    case "hard":
-                        try:
-                            notes = notes_inst.hard.song
-                        except:
-                            notes = []
-                    case _:
+                if this_inst == "vocals":
+                    try:
+                        notes = notes_inst.pts_frets.pointers
+                    except:
                         notes = []
+                else:
+                    match this_diff:
+                        case "easy":
+                            notes = notes_inst.easy.song
+                        case "norm":
+                            notes = notes_inst.norm.song                        
+                        case "hard":
+                            notes = notes_inst.hard.song
+                        case _:
+                            notes = []
                 notes_len.append(len(notes))
 
                 # TODO: analize notes_inst.lyrics for vocals
@@ -123,8 +123,13 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                 print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
                 
                 csv_rows = []
+                aux = 0
                 for block in notes:
-                    data_in = [ block.foo, block.bar, block.pos ]
+                    try:
+                        data_in = [ block.foo, block.bar, block.pos ]
+                    except:
+                        data_in = [ format(block, "06X"), block, block - aux]
+                        aux = block
                     csv_rows.append(data_in)
                     
             csv_writer.writerows(csv_rows)

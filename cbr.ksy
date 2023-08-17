@@ -81,7 +81,6 @@ types:
         type: voice
         if: trk_pts[3] == 0
         size-eos: true
-      
         
   header:
     seq:
@@ -145,7 +144,7 @@ types:
   array:
     seq:
       - id: song
-        type: u4
+        type: notes
         repeat: eos
         doc: NOTE should be 12 bytes
         

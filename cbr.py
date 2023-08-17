@@ -148,7 +148,7 @@ class Cbr(KaitaiStruct):
             self.song = []
             i = 0
             while not self._io.is_eof():
-                self.song.append(self._io.read_u4le())
+                self.song.append(Cbr.Notes(self._io, self, self._root))
                 i += 1
 
 
