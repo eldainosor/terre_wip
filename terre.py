@@ -19,7 +19,7 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         file_name = "events_" + this_inst + ".csv"
         event_file = open(file_name, "w", newline="")
         csv_writer = csv.writer(event_file)
-        data_in = [ "foo", "bar", "pos", "DIFF", "COUNT" ]
+        data_in = [ "count", "type", "DIFF"]
         csv_writer.writerow(data_in)
         
         match this_inst:
@@ -47,12 +47,23 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         
         csv_rows = []
         aux = 0
+        i = 0
+        bar_prev = -1
         for block in inst_events:
-            data_in = [ block.foo, block.bar, block.pos, (block.foo - aux)]
-            aux = block.foo
+            if block.addr == bar_prev:
+                i += 1
+                last_bar = " "
+            else:
+                last_bar = str(i)
+                i = 0
+            bar_prev = block.addr
+            #data_in = [ block.foo, block.bar, block.pos, (block.foo - aux), i, last_bar]
+            data_in = [ format(block.addr, "06X"), block.type, (block.addr - aux)]
+            aux = block.addr
             csv_rows.append(data_in)
 
         csv_writer.writerows(csv_rows)
+        #data_in = ["DATOS", max_bar, max_pos]
         event_file.close()
 
     # TODO: Compare event files

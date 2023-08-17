@@ -2,9 +2,7 @@ meta:
   id: cbr
   file-extension: cbr
   endian: le
-  imports:
-    - /common/vlq_base128_be
-
+  
 seq:
   - id: info
     type: meta_data
@@ -112,13 +110,10 @@ types:
 
   event:
     seq:
-      - id: foo
-        type: u2
+      - id: count
+        type: u4
         
-      - id: bar
-        type: u2
-        
-      - id: pos
+      - id: type
         type: u4
         
   instrument:
@@ -150,10 +145,17 @@ types:
   array:
     seq:
       - id: song
-        type: notes
+        type: u4
         repeat: eos
         doc: NOTE should be 12 bytes
-  
+        
+  lister:
+    seq:
+      - id: pointers
+        type: u8
+        repeat: eos
+        doc: NOTE should be 12 bytes
+        
   notes:
     seq:
       - id: foo
@@ -168,9 +170,12 @@ types:
       - id: hdr
         type: header
       
+      - id: magic1
+        contents: [0x05, 0x00, 0x00, 0x00]
+        
       - id: info
-        type: u8
-
+        type: u4
+        
       - id: start_wave_pos
         type: u8
       - id: wave_vol
@@ -181,11 +186,19 @@ types:
         terminator: 0
         size: 100
         
+      - id: pts_frets
+        type: lister
+        size: info * 8
+        doc: This is a list of pointers in the dificult
+        
+      - id: magic2
+        contents: [0x02, 0x00, 0x00, 0x00]
+        
       - id: norm
         type: array
-        size: start_lyrics_pos - start_wave_pos 
-        doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes
-        
+        size: start_lyrics_pos - start_wave_pos - info * 8 - 4
+        doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes that ALSO points to SOMETHING
+
       - id: lyrics
         size-eos: true
 
