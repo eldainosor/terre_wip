@@ -125,15 +125,14 @@ class Cbr(KaitaiStruct):
             self.wave_vol = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
             self.lyrics_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(100), 0, False)
-            self._raw_pts_frets = self._io.read_bytes((self.info * 8))
-            _io__raw_pts_frets = KaitaiStream(BytesIO(self._raw_pts_frets))
-            self.pts_frets = Cbr.Lister(_io__raw_pts_frets, self, self._root)
-            self.magic2 = self._io.read_bytes(4)
-            if not self.magic2 == b"\x02\x00\x00\x00":
-                raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic2, self._io, u"/types/voice/seq/8")
-            self._raw_norm = self._io.read_bytes((((self.start_lyrics_pos - self.start_wave_pos) - (self.info * 8)) - 4))
-            _io__raw_norm = KaitaiStream(BytesIO(self._raw_norm))
-            self.norm = Cbr.Array(_io__raw_norm, self, self._root)
+            self.pts_frets = []
+            for i in range(self.info):
+                self.pts_frets.append(self._io.read_u8le())
+
+            self.elements = []
+            for i in range(self.info):
+                self.elements.append(Cbr.Flow(self._io, self, self._root))
+
             self.lyrics = self._io.read_bytes_full()
 
 
@@ -150,6 +149,24 @@ class Cbr(KaitaiStruct):
             while not self._io.is_eof():
                 self.song.append(Cbr.Notes(self._io, self, self._root))
                 i += 1
+
+
+
+    class Flow(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.magic = self._io.read_bytes(4)
+            if not self.magic == b"\x02\x00\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic, self._io, u"/types/flow/seq/0")
+            self.next_pt = self._io.read_u8le()
+            self.water = []
+            for i in range(8):
+                self.water.append(self._io.read_u4le())
 
 
 

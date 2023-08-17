@@ -146,8 +146,21 @@ types:
       - id: song
         type: notes
         repeat: eos
-        doc: NOTE should be 12 bytes
+        doc: NOTE should be 12 bytes        
         
+  flow:
+    seq:
+      - id: magic
+        contents: [0x02, 0x00, 0x00, 0x00]
+        
+      - id: next_pt
+        type: u8
+        
+      - id: water
+        type: u4
+        repeat: expr
+        repeat-expr: 8
+
   lister:
     seq:
       - id: pointers
@@ -186,17 +199,14 @@ types:
         size: 100
         
       - id: pts_frets
-        type: lister
-        size: info * 8
-        doc: This is a list of pointers in the dificult
-        
-      - id: magic2
-        contents: [0x02, 0x00, 0x00, 0x00]
-        
-      - id: norm
-        type: array
-        size: start_lyrics_pos - start_wave_pos - info * 8 - 4
-        doc: TODO pitch_pts[0] is pointing first next struct of notes in 12bytes that ALSO points to SOMETHING
+        type: u8
+        repeat: expr
+        repeat-expr: info
+
+      - id: elements
+        type: flow
+        repeat: expr
+        repeat-expr: info
 
       - id: lyrics
         size-eos: true

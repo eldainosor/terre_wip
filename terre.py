@@ -103,7 +103,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
             if notes_inst:
                 if this_inst == "vocals":
                     try:
-                        notes = notes_inst.pts_frets.pointers
+                        notes = notes_inst.elements
                     except:
                         notes = []
                 else:
@@ -123,15 +123,22 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                 print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
                 
                 csv_rows = []
-                aux = 0
                 for block in notes:
                     try:
                         data_in = [ block.foo, block.bar, block.pos ]
                     except:
-                        data_in = [ format(block, "06X"), block, block - aux]
-                        aux = block
+                        if block.water[1] != block.water[5]:
+                            print("Dif found in voice") # DEBUG
+                        if block.water[2] != block.water[7]:
+                            print("Dif found in voice") # DEBUG
+                        if block.water[4] != block.water[6]:
+                            print("Dif found in voice") # DEBUG
+            # TODO: Verify pointers form "Frest Pts" with "Flow Next"
+                        data_in = [ format(block.next_pt, "06X") ]
+                        for i in range(8):
+                            data_in.append(block.water[i])
                     csv_rows.append(data_in)
-                    
+                
             csv_writer.writerows(csv_rows)
             chart_file.close()
 
