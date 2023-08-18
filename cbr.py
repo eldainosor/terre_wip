@@ -120,18 +120,22 @@ class Cbr(KaitaiStruct):
             self.magic1 = self._io.read_bytes(4)
             if not self.magic1 == b"\x05\x00\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x05\x00\x00\x00", self.magic1, self._io, u"/types/voice/seq/1")
-            self.info = self._io.read_u4le()
+            self.num_waves_pts = self._io.read_u4le()
             self.start_wave_pos = self._io.read_u8le()
-            self.wave_vol = self._io.read_u4le()
+            self.num_lyrics_pts = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
             self.lyrics_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(100), 0, False)
-            self.pts_frets = []
-            for i in range(self.info):
-                self.pts_frets.append(self._io.read_u8le())
+            self.pts_wave = []
+            for i in range(self.num_waves_pts):
+                self.pts_wave.append(self._io.read_u8le())
 
             self.elements = []
-            for i in range(self.info):
+            for i in range(self.num_waves_pts):
                 self.elements.append(Cbr.Flow(self._io, self, self._root))
+
+            self.pts_lyrics = []
+            for i in range(self.num_lyrics_pts):
+                self.pts_lyrics.append(self._io.read_u8le())
 
             self.lyrics = self._io.read_bytes_full()
 

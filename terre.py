@@ -103,7 +103,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
             if notes_inst:
                 if this_inst == "vocals":
                     notes = notes_inst.elements
-                    addrs = notes_inst.pts_frets
+                    addrs = notes_inst.pts_wave
                 else:
                     match this_diff:
                         case "easy":

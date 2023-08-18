@@ -185,28 +185,36 @@ types:
       - id: magic1
         contents: [0x05, 0x00, 0x00, 0x00]
         
-      - id: info
+      - id: num_waves_pts
         type: u4
         
       - id: start_wave_pos
         type: u8
-      - id: wave_vol
+        
+      - id: num_lyrics_pts
         type: u4
+        
       - id: start_lyrics_pos
         type: u8
+        
       - id: lyrics_vol
         terminator: 0
         size: 100
         
-      - id: pts_frets
+      - id: pts_wave
         type: u8
         repeat: expr
-        repeat-expr: info
+        repeat-expr: num_waves_pts
 
       - id: elements
         type: flow
         repeat: expr
-        repeat-expr: info
+        repeat-expr: num_waves_pts
+        
+      - id: pts_lyrics
+        type: u8
+        repeat: expr
+        repeat-expr: num_lyrics_pts
 
       - id: lyrics
         size-eos: true
