@@ -197,11 +197,8 @@ types:
       - id: start_lyrics_pos
         type: u8
         
-      - id: magic2
-        contents: [0x88, 0x13, 0x00, 0x00]
-      
-      - id: nulls
-        size: 0x60
+      - id: lyrics_info
+        size: 100
         
       - id: pts_wave
         type: u8
@@ -252,7 +249,7 @@ types:
         repeat: expr
         repeat-expr: num_text
       
-      - id: text
+      - id: text_block
         type: syllable
         repeat: expr
         repeat-expr: num_text

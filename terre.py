@@ -126,8 +126,9 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                     try:
                         data_in = [ block.foo, block.bar, block.pos ]
                     except:
-                        for syll in block:
-                            data_in = [ syll.text ]
+                        data_in = []
+                        for syll in block.text_block:
+                            data_in.append(syll.text)
                     csv_rows.append(data_in)
                 
             csv_writer.writerows(csv_rows)
