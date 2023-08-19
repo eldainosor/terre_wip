@@ -102,8 +102,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
 
             if notes_inst:
                 if this_inst == "vocals":
-                    notes = notes_inst.elements
-                    addrs = notes_inst.pts_wave
+                    notes = notes_inst.pts_lyrics
                 else:
                     match this_diff:
                         case "easy":
@@ -122,23 +121,13 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                 
                 csv_rows = []
                 j = 0
+                aux = 0
                 for block in notes:
                     try:
                         data_in = [ block.foo, block.bar, block.pos ]
                     except:
-                        if block.water[1] != block.water[5]:
-                            print("Dif found in voice") # DEBUG
-                        if block.water[2] != block.water[7]:
-                            print("Dif found in voice") # DEBUG
-                        if block.water[4] != block.water[6]:
-                            print("Dif found in voice") # DEBUG
-                        data_in = [ addrs[j], block.next_pt - 16 ]
-                        aux = addrs[j] - block.next_pt + 28
-                        if ( aux ):
-                            print("Dif addr fond!") # DEBUG
-                        for i in range(5):
-                            data_in.append(block.water[i])
-                        j += 1
+                        data_in = [ format( block, "06X"),  block, block - aux]
+                        aux = block
                     csv_rows.append(data_in)
                 
             csv_writer.writerows(csv_rows)
