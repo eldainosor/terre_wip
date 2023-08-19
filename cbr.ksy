@@ -217,26 +217,48 @@ types:
         repeat-expr: num_lyrics_pts
 
       - id: lyrics
+        type: verse
+        repeat: expr
+        repeat-expr: num_lyrics_pts
+        
+      - id: other
         size-eos: true
+        doc: TODO: test if can be deleted
+
+  syllable:
+    seq:        
+      - id: time_start
+        type: u4
+      - id: time_end
+        type: u4
+        
+      - id: nulo
+        type: u4
+        doc: TODO: test if is always NULL
+      
+      - id: text
+        type: strz
+        encoding: ASCII
 
   verse:
     seq:
-      - id: start
-        type: u2
-      - id: line_in
-        type: u2
-      - id: end
-        type: u2
-      - id: line_out
-        type: u2
-      - id: verse_type2
-        type: u2
-      - id: verse_type3
-        type: u2
+      - id: num_text
+        type: u4
+      
+      - id: info
+        type: u4
+        repeat: expr
+        repeat-expr: 6
+      
+      - id: pts_text
+        type: u8
+        repeat: expr
+        repeat-expr: num_text
+      
       - id: text
-        type: strz
-        if: start < end
-        encoding: ASCII
+        type: syllable
+        repeat: expr
+        repeat-expr: num_text
 
 enums:
   inst_id:

@@ -137,7 +137,25 @@ class Cbr(KaitaiStruct):
             for i in range(self.num_lyrics_pts):
                 self.pts_lyrics.append(self._io.read_u8le())
 
-            self.lyrics = self._io.read_bytes_full()
+            self.lyrics = []
+            for i in range(self.num_lyrics_pts):
+                self.lyrics.append(Cbr.Verse(self._io, self, self._root))
+
+            self.other = self._io.read_bytes_full()
+
+
+    class Syllable(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.time_start = self._io.read_u4le()
+            self.time_end = self._io.read_u4le()
+            self.nulo = self._io.read_u4le()
+            self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
 
 
     class Array(KaitaiStruct):
@@ -182,14 +200,18 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.start = self._io.read_u2le()
-            self.line_in = self._io.read_u2le()
-            self.end = self._io.read_u2le()
-            self.line_out = self._io.read_u2le()
-            self.verse_type2 = self._io.read_u2le()
-            self.verse_type3 = self._io.read_u2le()
-            if self.start < self.end:
-                self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+            self.num_text = self._io.read_u4le()
+            self.info = []
+            for i in range(6):
+                self.info.append(self._io.read_u4le())
+
+            self.pts_text = []
+            for i in range(self.num_text):
+                self.pts_text.append(self._io.read_u8le())
+
+            self.text = []
+            for i in range(self.num_text):
+                self.text.append(Cbr.Syllable(self._io, self, self._root))
 
 
 
