@@ -197,9 +197,11 @@ types:
       - id: start_lyrics_pos
         type: u8
         
-      - id: lyrics_vol
-        terminator: 0
-        size: 100
+      - id: magic2
+        contents: [0x88, 0x13, 0x00, 0x00]
+      
+      - id: nulls
+        size: 0x60
         
       - id: pts_wave
         type: u8
@@ -220,10 +222,6 @@ types:
         type: verse
         repeat: expr
         repeat-expr: num_lyrics_pts
-        
-      - id: other
-        size-eos: true
-        doc: TODO: test if can be deleted
 
   syllable:
     seq:        
@@ -232,13 +230,12 @@ types:
       - id: time_end
         type: u4
         
-      - id: nulo
+      - id: type
         type: u4
-        doc: TODO: test if is always NULL
-      
+        
       - id: text
         type: strz
-        encoding: ASCII
+        encoding: WINDOWS-1252
 
   verse:
     seq:

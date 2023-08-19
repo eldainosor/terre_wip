@@ -102,7 +102,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
 
             if notes_inst:
                 if this_inst == "vocals":
-                    notes = notes_inst.pts_lyrics
+                    notes = notes_inst.lyrics
                 else:
                     match this_diff:
                         case "easy":
@@ -126,8 +126,8 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                     try:
                         data_in = [ block.foo, block.bar, block.pos ]
                     except:
-                        data_in = [ format( block, "06X"),  block, block - aux]
-                        aux = block
+                        for syll in block:
+                            data_in = [ syll.text ]
                     csv_rows.append(data_in)
                 
             csv_writer.writerows(csv_rows)

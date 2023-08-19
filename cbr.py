@@ -124,7 +124,10 @@ class Cbr(KaitaiStruct):
             self.start_wave_pos = self._io.read_u8le()
             self.num_lyrics_pts = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
-            self.lyrics_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(100), 0, False)
+            self.magic2 = self._io.read_bytes(4)
+            if not self.magic2 == b"\x88\x13\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x88\x13\x00\x00", self.magic2, self._io, u"/types/voice/seq/6")
+            self.nulls = self._io.read_bytes(96)
             self.pts_wave = []
             for i in range(self.num_waves_pts):
                 self.pts_wave.append(self._io.read_u8le())
@@ -141,7 +144,6 @@ class Cbr(KaitaiStruct):
             for i in range(self.num_lyrics_pts):
                 self.lyrics.append(Cbr.Verse(self._io, self, self._root))
 
-            self.other = self._io.read_bytes_full()
 
 
     class Syllable(KaitaiStruct):
@@ -154,8 +156,8 @@ class Cbr(KaitaiStruct):
         def _read(self):
             self.time_start = self._io.read_u4le()
             self.time_end = self._io.read_u4le()
-            self.nulo = self._io.read_u4le()
-            self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+            self.type = self._io.read_u4le()
+            self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"WINDOWS-1252")
 
 
     class Array(KaitaiStruct):
