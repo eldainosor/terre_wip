@@ -15,7 +15,17 @@ class Cbr(KaitaiStruct):
         rhythm = 1
         drums = 2
         voice = 3
-        song = 4
+        band = 4
+
+    class DiffLvl(Enum):
+        easy = 0
+        norm = 1
+        hard = 2
+
+    class PosId(Enum):
+        lo = 0
+        me = 1
+        hi = 2
     def __init__(self, _io, _parent=None, _root=None):
         self._io = _io
         self._parent = _parent
@@ -25,22 +35,6 @@ class Cbr(KaitaiStruct):
     def _read(self):
         self.info = Cbr.MetaData(self._io, self, self._root)
         self.tracks = Cbr.Track(self._io, self, self._root)
-
-    class Lister(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.pointers = []
-            i = 0
-            while not self._io.is_eof():
-                self.pointers.append(self._io.read_u8le())
-                i += 1
-
-
 
     class Frets(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
@@ -66,7 +60,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.diff = self._io.read_u4le()
+            self.diff = KaitaiStream.resolve_enum(Cbr.DiffLvl, self._io.read_u4le())
             self.num_frets_pts = self._io.read_u4le()
             self.time_start = self._io.read_u4le()
             self.pts_frets = []
@@ -115,33 +109,15 @@ class Cbr(KaitaiStruct):
                 self.trk_info.append(self._io.read_u4le())
 
             self.trk_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(1660), 0, False)
-            if self.trk_pts[0] != 0:
-                self._raw_guitar = self._io.read_bytes((self.trk_pts[0] - 2048))
-                _io__raw_guitar = KaitaiStream(BytesIO(self._raw_guitar))
-                self.guitar = Cbr.Instrument(_io__raw_guitar, self, self._root)
+            self.charts = []
+            for i in range(3):
+                self.charts.append(Cbr.Instrument(self._io, self, self._root))
 
-            if self.trk_pts[1] != 0:
-                self._raw_rhythm = self._io.read_bytes((self.trk_pts[1] - self.trk_pts[0]))
-                _io__raw_rhythm = KaitaiStream(BytesIO(self._raw_rhythm))
-                self.rhythm = Cbr.Instrument(_io__raw_rhythm, self, self._root)
+            if self.trk_info[3] == 3:
+                self.vocals = Cbr.Voice(self._io, self, self._root)
 
-            if self.trk_pts[2] != 0:
-                self._raw_drums = self._io.read_bytes((self.trk_pts[2] - self.trk_pts[1]))
-                _io__raw_drums = KaitaiStream(BytesIO(self._raw_drums))
-                self.drums = Cbr.Instrument(_io__raw_drums, self, self._root)
-
-            if self.trk_pts[3] != 0:
-                self._raw_vocals_with_extras = self._io.read_bytes((self.trk_pts[3] - self.trk_pts[2]))
-                _io__raw_vocals_with_extras = KaitaiStream(BytesIO(self._raw_vocals_with_extras))
-                self.vocals_with_extras = Cbr.Voice(_io__raw_vocals_with_extras, self, self._root)
-
-            if self.trk_pts[3] != 0:
-                self.extras = Cbr.Header(self._io, self, self._root)
-
-            if self.trk_pts[3] == 0:
-                self._raw_vocals_no_extras = self._io.read_bytes_full()
-                _io__raw_vocals_no_extras = KaitaiStream(BytesIO(self._raw_vocals_no_extras))
-                self.vocals_no_extras = Cbr.Voice(_io__raw_vocals_no_extras, self, self._root)
+            if self.trk_info[4] == 4:
+                self.band = Cbr.Header(self._io, self, self._root)
 
 
 
@@ -161,14 +137,14 @@ class Cbr(KaitaiStruct):
             self.start_wave_pos = self._io.read_u8le()
             self.num_lyrics_pts = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
-            self.lyrics_info = self._io.read_bytes(100)
+            self.lyrics_info = KaitaiStream.bytes_terminate(self._io.read_bytes(100), 0, False)
             self.pts_wave = []
             for i in range(self.num_waves_pts):
                 self.pts_wave.append(self._io.read_u8le())
 
-            self.elements = []
+            self.wave_form = []
             for i in range(self.num_waves_pts):
-                self.elements.append(Cbr.Flow(self._io, self, self._root))
+                self.wave_form.append(Cbr.Flow(self._io, self, self._root))
 
             self.pts_lyrics = []
             for i in range(self.num_lyrics_pts):
@@ -192,22 +168,6 @@ class Cbr(KaitaiStruct):
             self.time_end = self._io.read_u4le()
             self.type = self._io.read_u4le()
             self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"WINDOWS-1252")
-
-
-    class Array(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.song = []
-            i = 0
-            while not self._io.is_eof():
-                self.song.append(Cbr.Notes(self._io, self, self._root))
-                i += 1
-
 
 
     class Spark(KaitaiStruct):
@@ -274,7 +234,9 @@ class Cbr(KaitaiStruct):
 
         def _read(self):
             self.instrument_id = KaitaiStream.resolve_enum(Cbr.InstId, self._io.read_u4le())
-            self.channel = self._io.read_u4le()
+            self.channel = self._io.read_bytes(4)
+            if not self.channel == b"\x00\x02\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x00\x02\x00\x00", self.channel, self._io, u"/types/header/seq/1")
             self.start_diff_pos = self._io.read_u8le()
             self.num_events = self._io.read_u4le()
             self.start_events_pos = self._io.read_u8le()
@@ -285,18 +247,6 @@ class Cbr(KaitaiStruct):
 
 
 
-    class Notes(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.foo = self._io.read_u2le()
-            self.bar = self._io.read_u2le()
-
-
     class MetaData(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -305,12 +255,18 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.magic = self._io.read_bytes(4)
-            if not self.magic == b"\x76\x98\xCD\xAB":
-                raise kaitaistruct.ValidationNotEqualError(b"\x76\x98\xCD\xAB", self.magic, self._io, u"/types/meta_data/seq/0")
-            self.flags_1 = self._io.read_u8le()
+            self.magic_1 = self._io.read_bytes(4)
+            if not self.magic_1 == b"\x76\x98\xCD\xAB":
+                raise kaitaistruct.ValidationNotEqualError(b"\x76\x98\xCD\xAB", self.magic_1, self._io, u"/types/meta_data/seq/0")
+            self.magic_2 = self._io.read_bytes(4)
+            if not self.magic_2 == b"\x00\x00\x04\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x00\x00\x04\x00", self.magic_2, self._io, u"/types/meta_data/seq/1")
+            self.magic_3 = self._io.read_bytes(4)
+            if not self.magic_3 == b"\x00\x08\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x00\x08\x00\x00", self.magic_3, self._io, u"/types/meta_data/seq/2")
             self.song_id = self._io.read_u8le()
-            self.flags_2 = self._io.read_u8le()
+            self.instr_num = self._io.read_u4le()
+            self.instr_mask = self._io.read_u4le()
             self.band_id = self._io.read_u8le()
             self.disc_id = self._io.read_u8le()
             self.year = self._io.read_u4le()
@@ -326,16 +282,20 @@ class Cbr(KaitaiStruct):
 
         def _read(self):
             self.hdr = Cbr.Header(self._io, self, self._root)
-            self.magic = self._io.read_bytes(8)
-            if not self.magic == b"\x02\x00\x00\x00\x03\x00\x00\x00":
-                raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00\x03\x00\x00\x00", self.magic, self._io, u"/types/instrument/seq/1")
+            self.magic_1 = self._io.read_bytes(4)
+            if not self.magic_1 == b"\x02\x00\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic_1, self._io, u"/types/instrument/seq/1")
+            self.magic_2 = self._io.read_bytes(4)
+            if not self.magic_2 == b"\x03\x00\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x03\x00\x00\x00", self.magic_2, self._io, u"/types/instrument/seq/2")
             self.diff_pts = []
             for i in range(15):
                 self.diff_pts.append(self._io.read_u8le())
 
-            self.easy = Cbr.Charts(self._io, self, self._root)
-            self.norm = Cbr.Charts(self._io, self, self._root)
-            self.hard = Cbr.Charts(self._io, self, self._root)
+            self.diff_charts = []
+            for i in range(3):
+                self.diff_charts.append(Cbr.Charts(self._io, self, self._root))
+
 
 
 

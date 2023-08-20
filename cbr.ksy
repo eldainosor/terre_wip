@@ -9,19 +9,18 @@ enums:
     1: rhythm
     2: drums
     3: voice
-    4: song
+    4: band
 
-enums:
-  pos_id:
-    0: lo
-    1: me
-    2: hi
-
-enums:
   diff_lvl:
     0: easy
     1: norm
     2: hard
+    
+    
+  pos_id:
+    0: lo
+    1: me
+    2: hi
     
 seq:
   - id: info
@@ -32,14 +31,18 @@ seq:
 types:
   meta_data:
     seq:
-      - id: magic
+      - id: magic_1
         contents: [0x76, 0x98, 0xCD, 0xAB]
-      - id: flags_1
-        type: u8
+      - id: magic_2
+        contents: [0x00, 0x00, 0x04, 0x00]
+      - id: magic_3
+        contents: [0x00, 0x08, 0x00, 0x00]
       - id: song_id
         type: u8
-      - id: flags_2
-        type: u8
+      - id: instr_num
+        type: u4
+      - id: instr_mask
+        type: u4
       - id: band_id
         type: u8
       - id: disc_id
@@ -75,32 +78,20 @@ types:
       - id: trk_vol
         terminator: 0
         size: 1660
+        doc: Variable not decoded yet
         
-      - id: guitar
+      - id: charts
         type: instrument
-        if: trk_pts[0] != 0
-        size: trk_pts[0] - 0x800
-      - id: rhythm
-        type: instrument
-        if: trk_pts[1] != 0
-        size: trk_pts[1] - trk_pts[0]
-      - id: drums
-        type: instrument
-        if: trk_pts[2] != 0
-        size: trk_pts[2] - trk_pts[1]
+        repeat: expr
+        repeat-expr: 3
         
-      - id: vocals_with_extras
+      - id: vocals
         type: voice
-        if: trk_pts[3] != 0
-        size:  trk_pts[3] - trk_pts[2]
-      - id: extras
+        if: trk_info[3] == 3
+        
+      - id: band
         type: header
-        if: trk_pts[3] != 0
-        
-      - id: vocals_no_extras
-        type: voice
-        if: trk_pts[3] == 0
-        size-eos: true
+        if: trk_info[4] == 4
         
   header:
     seq:
@@ -109,7 +100,7 @@ types:
         enum: inst_id
 
       - id: channel
-        type: u4
+        contents: [0x00, 0x02, 0x00, 0x00]
         
       - id: start_diff_pos
         type: u8
@@ -123,6 +114,7 @@ types:
       - id: bpm
         terminator: 0
         size: 484
+        doc: Variable not decoded yet
         
       - id: events
         type: event
@@ -142,8 +134,10 @@ types:
       - id: hdr
         type: header
       
-      - id: magic
-        contents: [0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00]
+      - id: magic_1
+        contents: [0x02, 0x00, 0x00, 0x00]
+      - id: magic_2
+        contents: [0x03, 0x00, 0x00, 0x00]
 
       - id: diff_pts
         type: u8
@@ -151,17 +145,16 @@ types:
         repeat-expr: 15
         doc: pointers to the END of each difficulty chart for this instrument
 
-      - id: easy
+      - id: diff_charts
         type: charts
-      - id: norm
-        type: charts
-      - id: hard
-        type: charts
+        repeat: expr
+        repeat-expr: 3
         
   charts:
     seq:
       - id: diff
         type: u4
+        enum: diff_lvl
         
       - id: num_frets_pts
         type: u4
@@ -199,41 +192,7 @@ types:
         repeat: expr
         repeat-expr: 3
 
-  array:
-    seq:
-      - id: song
-        type: notes
-        repeat: eos
-        doc: NOTE should be 12 bytes        
         
-  flow:
-    seq:
-      - id: magic
-        contents: [0x02, 0x00, 0x00, 0x00]
-        
-      - id: next_pt
-        type: u8
-        
-      - id: water
-        type: u4
-        repeat: expr
-        repeat-expr: 8
-        doc: Is this timing?
-
-  lister:
-    seq:
-      - id: pointers
-        type: u8
-        repeat: eos
-        doc: NOTE should be 12 bytes
-        
-  notes:
-    seq:
-      - id: foo
-        type: u2
-      - id: bar
-        type: u2
-  
   voice:
     seq:
       - id: hdr
@@ -256,13 +215,15 @@ types:
         
       - id: lyrics_info
         size: 100
+        terminator: 0
+        doc: Variable not decoded yet
         
       - id: pts_wave
         type: u8
         repeat: expr
         repeat-expr: num_waves_pts
 
-      - id: elements
+      - id: wave_form
         type: flow
         repeat: expr
         repeat-expr: num_waves_pts
@@ -276,20 +237,20 @@ types:
         type: verse
         repeat: expr
         repeat-expr: num_lyrics_pts
-
-  syllable:
-    seq:        
-      - id: time_start
-        type: u4
-      - id: time_end
-        type: u4
         
-      - id: type
-        type: u4
+  flow:
+    seq:
+      - id: magic
+        contents: [0x02, 0x00, 0x00, 0x00]
         
-      - id: text
-        type: strz
-        encoding: WINDOWS-1252
+      - id: next_pt
+        type: u8
+        
+      - id: water
+        type: u4
+        repeat: expr
+        repeat-expr: 8
+        doc: Is this timing?
 
   verse:
     seq:
@@ -310,5 +271,18 @@ types:
         type: syllable
         repeat: expr
         repeat-expr: num_text
-
-    
+        
+  syllable:
+    seq:        
+      - id: time_start
+        type: u4
+      - id: time_end
+        type: u4
+        
+      - id: type
+        type: u4
+        
+      - id: text
+        type: strz
+        encoding: WINDOWS-1252
+        
