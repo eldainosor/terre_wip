@@ -2,7 +2,27 @@ meta:
   id: cbr
   file-extension: cbr
   endian: le
-  
+        
+enums:
+  inst_id:
+    0: guitar
+    1: rhythm
+    2: drums
+    3: voice
+    4: song
+
+enums:
+  pos_id:
+    0: lo
+    1: me
+    2: hi
+
+enums:
+  diff_lvl:
+    0: easy
+    1: norm
+    2: hard
+    
 seq:
   - id: info
     type: meta_data
@@ -131,24 +151,18 @@ types:
         repeat-expr: 15
         doc: pointers to the END of each difficulty chart for this instrument
 
-      - id: nulo
-        size: 4
-        
       - id: easy
-        type: u4
-        repeat: expr
-        repeat-expr: ( diff_pts[1] - diff_pts[0] ) / 4 
-        
+        type: charts
       - id: norm
-        type: array
-        size: diff_pts[2] - diff_pts[1]
-        
+        type: charts
       - id: hard
-        type: array
-        size-eos: true
+        type: charts
         
   charts:
     seq:
+      - id: diff
+        type: u4
+        
       - id: num_frets_pts
         type: u4
         
@@ -297,23 +311,4 @@ types:
         repeat: expr
         repeat-expr: num_text
 
-enums:
-  inst_id:
-    0: guitar
-    1: rhythm
-    2: drums
-    3: voice
-    4: song
-
-enums:
-  diff_id:
-    0: easy
-    1: norm
-    2: hard
-    
-enums:
-  pos_id:
-    0: lo
-    1: me
-    2: hi
     

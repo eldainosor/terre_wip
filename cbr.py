@@ -66,6 +66,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
+            self.diff = self._io.read_u4le()
             self.num_frets_pts = self._io.read_u4le()
             self.time_start = self._io.read_u4le()
             self.pts_frets = []
@@ -332,17 +333,9 @@ class Cbr(KaitaiStruct):
             for i in range(15):
                 self.diff_pts.append(self._io.read_u8le())
 
-            self.nulo = self._io.read_bytes(4)
-            self.easy = []
-            for i in range((self.diff_pts[1] - self.diff_pts[0]) // 4):
-                self.easy.append(self._io.read_u4le())
-
-            self._raw_norm = self._io.read_bytes((self.diff_pts[2] - self.diff_pts[1]))
-            _io__raw_norm = KaitaiStream(BytesIO(self._raw_norm))
-            self.norm = Cbr.Array(_io__raw_norm, self, self._root)
-            self._raw_hard = self._io.read_bytes_full()
-            _io__raw_hard = KaitaiStream(BytesIO(self._raw_hard))
-            self.hard = Cbr.Array(_io__raw_hard, self, self._root)
+            self.easy = Cbr.Charts(self._io, self, self._root)
+            self.norm = Cbr.Charts(self._io, self, self._root)
+            self.hard = Cbr.Charts(self._io, self, self._root)
 
 
 
