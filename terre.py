@@ -115,9 +115,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
                             notes = []
                 notes_len.append(len(notes))
 
-                # TODO: analize notes_inst.lyrics for vocals
-
-                print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
+                # print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
                 
                 csv_rows = []
                 j = 0
@@ -139,7 +137,7 @@ def ExtractCharts(file_cbr: cbr.Cbr):
         if number > largest_number:
             largest_number = number
     
-    print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
+    # print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
 
 if __name__ == "__main__":
 

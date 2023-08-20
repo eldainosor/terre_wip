@@ -91,11 +91,13 @@ types:
       - id: channel
         type: u4
         
-      - id: end_pos
+      - id: start_diff_pos
         type: u8
-      - id: size_bytes
+        
+      - id: num_events
         type: u4
-      - id: start_pos
+        
+      - id: start_events_pos
         type: u8
              
       - id: bpm
@@ -105,7 +107,7 @@ types:
       - id: events
         type: event
         repeat: expr
-        repeat-expr: size_bytes
+        repeat-expr: num_events
 
   event:
     seq:
@@ -128,19 +130,61 @@ types:
         repeat: expr
         repeat-expr: 15
         doc: pointers to the END of each difficulty chart for this instrument
+
+      - id: nulo
+        size: 4
         
       - id: easy
-        type: array
-        size: diff_pts[1] - diff_pts[0]
+        type: u4
+        repeat: expr
+        repeat-expr: ( diff_pts[1] - diff_pts[0] ) / 4 
         
       - id: norm
         type: array
         size: diff_pts[2] - diff_pts[1]
-
+        
       - id: hard
         type: array
         size-eos: true
         
+  charts:
+    seq:
+      - id: num_frets_pts
+        type: u4
+        
+      - id: time_start
+        type: u4
+        
+      - id: pts_frets
+        type: u8		
+        repeat: expr
+        repeat-expr: num_frets_pts
+        
+      - id: frets_on_fire
+        type: frets	
+        repeat: expr
+        repeat-expr: num_frets_pts
+        
+  frets:
+    seq:
+      - id: num_frets_wave
+        type: u4
+        
+      - id: pts_start_wave
+        type: u8
+        
+      - id: frets_wave
+        type: spark
+        repeat: expr
+        repeat-expr: num_frets_wave
+        
+  spark:
+    seq:
+      - id: fire
+        type: u4
+        repeat: expr
+        repeat-expr: 3
+
   array:
     seq:
       - id: song
@@ -160,6 +204,7 @@ types:
         type: u4
         repeat: expr
         repeat-expr: 8
+        doc: Is this timing?
 
   lister:
     seq:
@@ -171,10 +216,8 @@ types:
   notes:
     seq:
       - id: foo
-        type: u1
+        type: u2
       - id: bar
-        type: u1
-      - id: pos
         type: u2
   
   voice:

@@ -42,6 +42,42 @@ class Cbr(KaitaiStruct):
 
 
 
+    class Frets(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.num_frets_wave = self._io.read_u4le()
+            self.pts_start_wave = self._io.read_u8le()
+            self.frets_wave = []
+            for i in range(self.num_frets_wave):
+                self.frets_wave.append(Cbr.Spark(self._io, self, self._root))
+
+
+
+    class Charts(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.num_frets_pts = self._io.read_u4le()
+            self.time_start = self._io.read_u4le()
+            self.pts_frets = []
+            for i in range(self.num_frets_pts):
+                self.pts_frets.append(self._io.read_u8le())
+
+            self.frets_on_fire = []
+            for i in range(self.num_frets_pts):
+                self.frets_on_fire.append(Cbr.Frets(self._io, self, self._root))
+
+
+
     class Event(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -173,6 +209,20 @@ class Cbr(KaitaiStruct):
 
 
 
+    class Spark(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.fire = []
+            for i in range(3):
+                self.fire.append(self._io.read_u4le())
+
+
+
     class Flow(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -224,12 +274,12 @@ class Cbr(KaitaiStruct):
         def _read(self):
             self.instrument_id = KaitaiStream.resolve_enum(Cbr.InstId, self._io.read_u4le())
             self.channel = self._io.read_u4le()
-            self.end_pos = self._io.read_u8le()
-            self.size_bytes = self._io.read_u4le()
-            self.start_pos = self._io.read_u8le()
+            self.start_diff_pos = self._io.read_u8le()
+            self.num_events = self._io.read_u4le()
+            self.start_events_pos = self._io.read_u8le()
             self.bpm = KaitaiStream.bytes_terminate(self._io.read_bytes(484), 0, False)
             self.events = []
-            for i in range(self.size_bytes):
+            for i in range(self.num_events):
                 self.events.append(Cbr.Event(self._io, self, self._root))
 
 
@@ -242,9 +292,8 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.foo = self._io.read_u1()
-            self.bar = self._io.read_u1()
-            self.pos = self._io.read_u2le()
+            self.foo = self._io.read_u2le()
+            self.bar = self._io.read_u2le()
 
 
     class MetaData(KaitaiStruct):
@@ -283,9 +332,11 @@ class Cbr(KaitaiStruct):
             for i in range(15):
                 self.diff_pts.append(self._io.read_u8le())
 
-            self._raw_easy = self._io.read_bytes((self.diff_pts[1] - self.diff_pts[0]))
-            _io__raw_easy = KaitaiStream(BytesIO(self._raw_easy))
-            self.easy = Cbr.Array(_io__raw_easy, self, self._root)
+            self.nulo = self._io.read_bytes(4)
+            self.easy = []
+            for i in range((self.diff_pts[1] - self.diff_pts[0]) // 4):
+                self.easy.append(self._io.read_u4le())
+
             self._raw_norm = self._io.read_bytes((self.diff_pts[2] - self.diff_pts[1]))
             _io__raw_norm = KaitaiStream(BytesIO(self._raw_norm))
             self.norm = Cbr.Array(_io__raw_norm, self, self._root)
