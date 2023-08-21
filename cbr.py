@@ -62,7 +62,7 @@ class Cbr(KaitaiStruct):
         def _read(self):
             self.diff = KaitaiStream.resolve_enum(Cbr.DiffLvl, self._io.read_u4le())
             self.num_frets_pts = self._io.read_u4le()
-            self.time_start = self._io.read_u4le()
+            self.speed = self._io.read_u4le()
             self.pts_frets = []
             for i in range(self.num_frets_pts):
                 self.pts_frets.append(self._io.read_u8le())
@@ -81,7 +81,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.count = self._io.read_u4le()
+            self.time = self._io.read_u4le()
             self.type = self._io.read_u4le()
 
 
@@ -108,7 +108,8 @@ class Cbr(KaitaiStruct):
             for i in range(6):
                 self.trk_info.append(self._io.read_u4le())
 
-            self.trk_vol = KaitaiStream.bytes_terminate(self._io.read_bytes(1660), 0, False)
+            self.trk_vol = self._io.read_u4le()
+            self.nulos = KaitaiStream.bytes_terminate(self._io.read_bytes(1656), 0, False)
             self.charts = []
             for i in range(3):
                 self.charts.append(Cbr.Instrument(self._io, self, self._root))
@@ -178,10 +179,9 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.fire = []
-            for i in range(3):
-                self.fire.append(self._io.read_u4le())
-
+            self.timing = self._io.read_u4le()
+            self.len = self._io.read_u4le()
+            self.type = self._io.read_u4le()
 
 
     class Flow(KaitaiStruct):
@@ -240,7 +240,8 @@ class Cbr(KaitaiStruct):
             self.start_diff_pos = self._io.read_u8le()
             self.num_events = self._io.read_u4le()
             self.start_events_pos = self._io.read_u8le()
-            self.bpm = KaitaiStream.bytes_terminate(self._io.read_bytes(484), 0, False)
+            self.bpm = self._io.read_u4le()
+            self.nulos = KaitaiStream.bytes_terminate(self._io.read_bytes(480), 0, False)
             self.events = []
             for i in range(self.num_events):
                 self.events.append(Cbr.Event(self._io, self, self._root))

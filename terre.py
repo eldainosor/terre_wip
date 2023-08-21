@@ -7,6 +7,7 @@ import subprocess
 import time
 import cbr, disc, band
 import csv, configparser
+import chchart_parser
 
 # Config Constants 
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
@@ -20,11 +21,20 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         file_name = "events_" + this_inst_name + ".csv"
         event_file = open(file_name, "w", newline="")
         csv_writer = csv.writer(event_file)
-        data_in = [ "count", "type" ]
+        data_in = [ "time", 
+                   "type" , 
+                   "DIFF" , 
+                   "MIN",
+                   "SEC",
+                   "bpm", 
+                   "vol" ]
         csv_writer.writerow(data_in)
         
         inst_events = this_inst.head.events
 
+        bpm = this_inst.head.bpm
+        vol = file_cbr.tracks.trk_vol
+            
         head_lens.append(len(inst_events))
         #print(this_inst_name + " header len: " + str(int(len(inst_events))))       # DEBUG
         #print(this_inst_name + " header len: " + str(this_inst.head.num_events))    # DEBUG
@@ -32,13 +42,23 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         csv_rows = []
         aux = 0
         for block in inst_events:
-            data_in = [ block.count, block.type, block.count - aux ]
-            aux = block.count
+            sec = ( block.time ) / ( 45000 )
+            #sec *= 60
+            #sec /= bpm
+            min = int(sec / 60)
+            sec %= 60
+
+            data_in = [ block.time, 
+                        block.type, 
+                        block.time - aux,
+                        min,
+                        sec,
+                        bpm, 
+                        vol ]
+            aux = block.time
             csv_rows.append(data_in)
         csv_writer.writerows(csv_rows)
         event_file.close()
-
-    # TODO: Compare event files
 
     largest_number = head_lens[0]
     for number in head_lens:
@@ -48,7 +68,6 @@ def ExtractEvents(file_cbr: cbr.Cbr):
     # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
 def ExtractCharts(file_cbr: cbr.Cbr):
-    notes_len = []
     for this_inst in file_cbr.tracks.charts:
         this_inst_name = this_inst.head.instrument_id.name
         for this_diff in this_inst.diff_charts:
@@ -56,13 +75,41 @@ def ExtractCharts(file_cbr: cbr.Cbr):
             file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
             chart_file = open(file_name, "w", newline="")
             csv_writer = csv.writer(chart_file)
-            data_in = [ "time", "len", "type", "fret" ]
+            
+            bpm = this_inst.head.bpm
+            vol = file_cbr.tracks.trk_vol
+            speed = this_diff.speed
+            
+            data_in = [ "time", 
+                       "len", 
+                       "type", 
+                       "fret", 
+                       "MIN", 
+                       "SEC",
+                       "bpm",
+                       "vol",
+                       "speed"
+                       ]
             csv_writer.writerow(data_in)
             
             csv_rows = []
             for i, this_fret in enumerate(this_diff.frets_on_fire):
                 for this_spark in this_fret.frets_wave:
-                    data_in = [ this_spark.fire[0], this_spark.fire[1], this_spark.fire[2] , i]
+                    sec = ( this_spark.timing ) / ( 45000 )
+                    #sec *= 60
+                    #sec /= bpm
+                    min = int(sec / 60)
+                    sec %= 60
+                    data_in = [ this_spark.timing, 
+                               this_spark.len, 
+                               this_spark.type, 
+                               i, 
+                               min, 
+                               sec,
+                               bpm,
+                               vol,
+                               speed
+                               ]
                     csv_rows.append(data_in)
 
             csv_writer.writerows(csv_rows)
@@ -254,8 +301,8 @@ if __name__ == "__main__":
         # Copy preview
         source = songs_dir + "\\" + song_id
         dest = new_song_dir
-        #print("Copying preview...")
         try:
+            #print("Copying preview...")
             shutil.copyfile(source + ".prv", dest  + "\\preview.wav")
         except:
             print("File [ ", dest,  "\\preview.wav ] already exists")
@@ -269,10 +316,10 @@ if __name__ == "__main__":
 
         # Copy icon
         # TODO extract from Disk (.ico to .png)
-        #print("Copying icon...")
         source = work_dir
         dest = new_song_dir
         try:
+            #print("Copying icon...")
             shutil.copyfile(source + "\\erdtv.png", dest  + "\\erdtv.png")
         except:
             print("File [ ", dest,  "\\erdtv.png ] already exists")
@@ -314,18 +361,18 @@ if __name__ == "__main__":
         csv_name = "songs.csv"
         new_file = open(csv_name, "a", newline="")
         csv_writer = csv.writer(new_file)
-        data_in =  [ band_name,
-                     song_name,
-                     disc_name,
-                     year,
-                     song_id,
-                     band_id,
-                     disc_id,
-                     difficulties[0], # Guitar
-                     difficulties[1], # Rhythm
-                     difficulties[2], # Drums
-                     difficulties[3], # Vocal
-                     difficulties[4] # Band
+        data_in = [ band_name,
+                    song_name,
+                    disc_name,
+                    year,
+                    song_id,
+                    band_id,
+                    disc_id,
+                    difficulties[0], # Guitar
+                    difficulties[1], # Rhythm
+                    difficulties[2], # Drums
+                    difficulties[3], # Vocal
+                    difficulties[4] # Band
         ]
 
         csv_writer.writerow(data_in)
@@ -358,12 +405,12 @@ if __name__ == "__main__":
         # Generate lists of songs extracted
         os.chdir(raw_dir)
         songs_list = os.listdir(raw_dir)
-        n = len(songs_list)
+        #n = len(songs_list)
 
         # Loof for each song
-        for this_song in songs_list:
-            i = songs_list.index(this_song) + 1
-            print(" >> Converting (", int(i) , "/" , int(n) , "): ", this_song) 
+        for i, this_song in enumerate(songs_list):
+            #i = songs_list.index(this_song) + 1
+            print(" >> Converting (", int(i) , "/" , int(len(songs_list)) , "): ", this_song) 
 
             start_song = time.time()
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
@@ -377,8 +424,8 @@ if __name__ == "__main__":
                 print("[", dest_dir, "] already exists")
 
             # Copy album image
-            #print("Copying album...")
             try:
+                #print("Copying album...")
                 copy_file = "\\album.png"
                 source_file = source_dir + copy_file
                 dest_file = dest_dir + copy_file
@@ -397,8 +444,8 @@ if __name__ == "__main__":
                 print("File [ ", dest_file, " ] already exists")
 
             # Copy icon image
-            #print("Copying icon...")
             try:
+                #print("Copying icon...")
                 copy_file = "\\erdtv.png"
                 source_file = source_dir + copy_file
                 dest_file = dest_dir + copy_file
@@ -407,8 +454,8 @@ if __name__ == "__main__":
                 print("File [ ", dest_file, " ] already exists")
 
             # Copy metadata file
-            #print("Copying metadata...")
             try:
+                #print("Copying metadata...")
                 copy_file = "\\song.ini"
                 source_file = source_dir + copy_file
                 dest_file = dest_dir + copy_file

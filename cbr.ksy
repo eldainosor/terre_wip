@@ -76,8 +76,11 @@ types:
         repeat-expr: 6
         
       - id: trk_vol
+        type: u4
+      
+      - id: nulos  
         terminator: 0
-        size: 1660
+        size: 1656
         doc: Variable not decoded yet
         
       - id: charts
@@ -112,8 +115,11 @@ types:
         type: u8
              
       - id: bpm
+        type: u4
+        
+      - id: nulos
         terminator: 0
-        size: 484
+        size: 480
         doc: Variable not decoded yet
         
       - id: events
@@ -123,7 +129,7 @@ types:
 
   event:
     seq:
-      - id: count
+      - id: time
         type: u4
         
       - id: type
@@ -159,7 +165,7 @@ types:
       - id: num_frets_pts
         type: u4
         
-      - id: time_start
+      - id: speed
         type: u4
         
       - id: pts_frets
@@ -187,11 +193,14 @@ types:
         
   spark:
     seq:
-      - id: fire
+      - id: timing
         type: u4
-        repeat: expr
-        repeat-expr: 3
-
+        
+      - id: len
+        type: u4
+        
+      - id: type
+        type: u4
         
   voice:
     seq:
