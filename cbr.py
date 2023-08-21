@@ -129,7 +129,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.hdr = Cbr.Header(self._io, self, self._root)
+            self.head = Cbr.Header(self._io, self, self._root)
             self.magic1 = self._io.read_bytes(4)
             if not self.magic1 == b"\x05\x00\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x05\x00\x00\x00", self.magic1, self._io, u"/types/voice/seq/1")
@@ -281,7 +281,7 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.hdr = Cbr.Header(self._io, self, self._root)
+            self.head = Cbr.Header(self._io, self, self._root)
             self.magic_1 = self._io.read_bytes(4)
             if not self.magic_1 == b"\x02\x00\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic_1, self._io, u"/types/instrument/seq/1")

@@ -10,60 +10,32 @@ import csv, configparser
 
 # Config Constants 
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
-inst_order = ["guitar", "rhythm", "drums", "vocals", "extras"]
+inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "norm", "hard"]
 
 def ExtractEvents(file_cbr: cbr.Cbr):
     head_lens = []
-    for this_inst in inst_order:
-        file_name = "events_" + this_inst + ".csv"
+    for this_inst in file_cbr.tracks.charts:
+        this_inst_name = this_inst.head.instrument_id.name
+        file_name = "events_" + this_inst_name + ".csv"
         event_file = open(file_name, "w", newline="")
         csv_writer = csv.writer(event_file)
-        data_in = [ "count", "type", "DIFF"]
+        data_in = [ "count", "type" ]
         csv_writer.writerow(data_in)
         
-        match this_inst:
-            case "guitar":
-                inst_events = file_cbr.tracks.guitar.hdr.events
-            case "rhythm":
-                inst_events = file_cbr.tracks.rhythm.hdr.events
-            case "drums":
-                inst_events = file_cbr.tracks.drums.hdr.events
-            case "vocals":
-                try:                    
-                    inst_events = file_cbr.tracks.vocals_with_extras.hdr.events
-                except:
-                    inst_events = file_cbr.tracks.vocals_no_extras.hdr.events
-            case "extras":
-                try:    
-                    inst_events = file_cbr.tracks.extras.events
-                except:
-                    inst_events = []
-            case _:
-                inst_events = []
+        inst_events = this_inst.head.events
 
         head_lens.append(len(inst_events))
-        print(this_inst + " header len: " + str(int(len(inst_events))))
+        #print(this_inst_name + " header len: " + str(int(len(inst_events))))       # DEBUG
+        #print(this_inst_name + " header len: " + str(this_inst.head.num_events))    # DEBUG
         
         csv_rows = []
         aux = 0
-        i = 0
-        bar_prev = -1
         for block in inst_events:
-            if block.count == bar_prev:
-                i += 1
-                last_bar = " "
-            else:
-                last_bar = str(i)
-                i = 0
-            bar_prev = block.count
-            #data_in = [ block.foo, block.bar, block.pos, (block.foo - aux), i, last_bar]
-            data_in = [ format(block.count, "06X"), block.type, (block.count - aux)]
+            data_in = [ block.count, block.type, block.count - aux ]
             aux = block.count
             csv_rows.append(data_in)
-
         csv_writer.writerows(csv_rows)
-        #data_in = ["DATOS", max_bar, max_pos]
         event_file.close()
 
     # TODO: Compare event files
@@ -73,71 +45,28 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         if number > largest_number:
             largest_number = number
     
-    print(" > BIGGER header len:" + str(largest_number))  # DEBUG
+    # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
 def ExtractCharts(file_cbr: cbr.Cbr):
     notes_len = []
-    for this_inst in inst_order:
-        for this_diff in diff_order:
-            file_name = "charts_" + this_inst + "_" + this_diff + ".csv"
+    for this_inst in file_cbr.tracks.charts:
+        this_inst_name = this_inst.head.instrument_id.name
+        for this_diff in this_inst.diff_charts:
+            this_diff_name = this_diff.diff.name
+            file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
             chart_file = open(file_name, "w", newline="")
             csv_writer = csv.writer(chart_file)
-            data_in = [ "foo", "bar", "pos" ]
+            data_in = [ "time", "len", "type", "fret" ]
             csv_writer.writerow(data_in)
             
-            match this_inst:
-                case "guitar":
-                    notes_inst = file_cbr.tracks.guitar
-                case "rhythm":
-                    notes_inst = file_cbr.tracks.rhythm
-                case "drums":
-                    notes_inst = file_cbr.tracks.drums
-                case "vocals":
-                    try:
-                        notes_inst = file_cbr.tracks.vocals_with_extras
-                    except: 
-                        notes_inst = file_cbr.tracks.vocals_no_extras
-                case _:
-                    notes_inst = []
-
-            if notes_inst:
-                if this_inst == "vocals":
-                    notes = notes_inst.lyrics
-                else:
-                    match this_diff:
-                        case "easy":
-                            notes = notes_inst.easy.song
-                        case "norm":
-                            notes = notes_inst.norm.song                        
-                        case "hard":
-                            notes = notes_inst.hard.song
-                        case _:
-                            notes = []
-                notes_len.append(len(notes))
-
-                # print(this_inst + " " + this_diff + " len: " + str(int(len(notes))))
-                
-                csv_rows = []
-                j = 0
-                aux = 0
-                for block in notes:
-                    try:
-                        data_in = [ block.foo, block.bar, block.pos ]
-                    except:
-                        data_in = []
-                        for syll in block.text_block:
-                            data_in.append(syll.text)
+            csv_rows = []
+            for i, this_fret in enumerate(this_diff.frets_on_fire):
+                for this_spark in this_fret.frets_wave:
+                    data_in = [ this_spark.fire[0], this_spark.fire[1], this_spark.fire[2] , i]
                     csv_rows.append(data_in)
-                
+
             csv_writer.writerows(csv_rows)
             chart_file.close()
-
-    largest_number = notes_len[0]
-    for number in notes_len:
-        if number > largest_number:
-            largest_number = number
-    
-    # print(" > BIGGER diff len:" + str(largest_number))  # DEBUG
 
 if __name__ == "__main__":
 
@@ -332,9 +261,9 @@ if __name__ == "__main__":
             print("File [ ", dest,  "\\preview.wav ] already exists")
 
         # Copy video (slow)
-        #print("Copying video...")
         try:
-            shutil.copyfile(source + ".vid", dest  + "\\video.asf")
+            print("Copying video... ")
+            # shutil.copyfile(source + ".vid", dest  + "\\video.asf")
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 

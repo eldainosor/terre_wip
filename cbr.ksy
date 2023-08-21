@@ -131,7 +131,7 @@ types:
         
   instrument:
     seq:
-      - id: hdr
+      - id: head
         type: header
       
       - id: magic_1
@@ -195,7 +195,7 @@ types:
         
   voice:
     seq:
-      - id: hdr
+      - id: head
         type: header
       
       - id: magic1
