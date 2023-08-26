@@ -70,7 +70,23 @@ if __name__ == "__main__":
                     "Dif:R",
                     "Dif:D",
                     "Dif:V",
-                    "Dif:B"
+                    "Dif:B", 
+                    "Vol",
+                    "BPM:G",
+                    "BPM:R",
+                    "BPM:D",
+                    "BPM:V",
+                    "BPM:B",
+                    "S:G_0",
+                    "S:G_1",
+                    "S:G_2",
+                    "S:R_0",
+                    "S:R_1",
+                    "S:R_2",
+                    "S:D_0",
+                    "S:D_1",
+                    "S:D_2",
+                    "S:V_0"
         ]
         
         csv_writer.writerow(data_in)
@@ -130,6 +146,8 @@ if __name__ == "__main__":
         for instrument in difficulties:
             band_diff += instrument
         difficulties[4] = int(band_diff / 4)
+        
+        song_vol = file_cbr.tracks.trk_vol
 
         print("Diff. Guitar =\t" + str(difficulties[0]))  # DEBUG test Kaitai
         print("Diff. Rythm =\t" + str(difficulties[1]))  # DEBUG test Kaitai
@@ -207,7 +225,7 @@ if __name__ == "__main__":
         # Copy video (slow)
         try:
             print("Copying video... ")
-            shutil.copyfile(source + ".vid", dest  + "\\video.asf")
+            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 
@@ -226,8 +244,16 @@ if __name__ == "__main__":
 
         #ExtractEvents(file_cbr)        
         head_lens = []
+        bpms = [0,0,0,0,0]
+        bpms[3] = file_cbr.tracks.vocals.head.bpm
+        try:
+            bpms[4] = file_cbr.tracks.band.bpm
+        except:
+            bpms[4] = 0
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
+            j = this_inst.head.instrument_id.value
+            bpms[j] = this_inst.head.bpm
             file_name = "events_" + this_inst_name + ".csv"
             event_file = open(file_name, "w", newline="")
             csv_writer = csv.writer(event_file)
@@ -281,10 +307,14 @@ if __name__ == "__main__":
 
         #ExtractCharts(file_cbr)
         
+        speeds = [0,0,0,0,0,0,0,0,0,0]
+        speeds[9] = file_cbr.tracks.vocals.speed
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             for this_diff in this_inst.diff_charts:
                 this_diff_name = this_diff.diff.name
+                j = this_inst.head.instrument_id.value*3 + this_diff.diff.value
+                speeds[j] = this_diff.speed
                 file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
                 chart_file = open(file_name, "w", newline="")
                 csv_writer = csv.writer(chart_file)
@@ -442,7 +472,24 @@ if __name__ == "__main__":
                     difficulties[1], # Rhythm
                     difficulties[2], # Drums
                     difficulties[3], # Vocal
-                    difficulties[4] # Band
+                    difficulties[4], # Band
+                    #TODO Extract all this things
+                    song_vol,
+                    bpms[0],    # Guitar
+                    bpms[1],    # Rhythm
+                    bpms[2],    # Drums
+                    bpms[3],    # Vocal
+                    bpms[4],    # Band
+                    speeds[0],  # Guitar-Easy
+                    speeds[1],  # Guitar-Norm
+                    speeds[2],  # Guitar-Hard
+                    speeds[3],  # Rhythm-Easy
+                    speeds[4],  # Rhythm-Norm
+                    speeds[5],  # Rhythm-Hard
+                    speeds[6],  # Drums-Easy
+                    speeds[7],  # Drums-Norm
+                    speeds[8],  # Drums-Hard
+                    speeds[9],  # Vocals
         ]
 
         csv_writer.writerow(data_in)
@@ -460,8 +507,8 @@ if __name__ == "__main__":
         
     # Convert to Clone Hero (needs FFMPEG)
     #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    convert = 'Y'  # DEBUG
-    #convert = 'N'  # DEBUG
+    #convert = 'Y'  # DEBUG
+    convert = 'N'  # DEBUG
     if convert == 'Y':
         ffmpeg_file = work_dir + "\\ffmpeg.exe"
 

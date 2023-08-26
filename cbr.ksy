@@ -102,7 +102,7 @@ types:
         type: u4
         enum: inst_id
 
-      - id: channel
+      - id: magic
         contents: [0x00, 0x02, 0x00, 0x00]
         
       - id: start_diff_pos
@@ -207,7 +207,7 @@ types:
       - id: head
         type: header
       
-      - id: magic1
+      - id: magic
         contents: [0x05, 0x00, 0x00, 0x00]
         
       - id: num_waves_pts
@@ -222,8 +222,11 @@ types:
       - id: start_lyrics_pos
         type: u8
         
-      - id: lyrics_info
-        size: 100
+      - id: speed
+        type: u4
+
+      - id: nulos
+        size: 96
         terminator: 0
         doc: Variable not decoded yet
         
