@@ -225,12 +225,12 @@ if __name__ == "__main__":
         # Copy video (slow)
         try:
             print("Copying video... ")
-            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")
+            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 
         # Copy icon
-        # TODO extract from Disk (.ico to .png)
+        #TODO extract from Disk (.ico to .png)
         source = work_dir
         dest = new_song_dir
         try:
@@ -244,16 +244,10 @@ if __name__ == "__main__":
 
         #ExtractEvents(file_cbr)        
         head_lens = []
-        bpms = [0,0,0,0,0]
-        bpms[3] = file_cbr.tracks.vocals.head.bpm
-        try:
-            bpms[4] = file_cbr.tracks.band.bpm
-        except:
-            bpms[4] = 0
+        bpms = []
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
-            j = this_inst.head.instrument_id.value
-            bpms[j] = this_inst.head.bpm
+            bpms.append(this_inst.head.bpm)
             file_name = "events_" + this_inst_name + ".csv"
             event_file = open(file_name, "w", newline="")
             csv_writer = csv.writer(event_file)
@@ -298,6 +292,12 @@ if __name__ == "__main__":
             csv_writer.writerows(csv_rows)
             event_file.close()
 
+        bpms.append(file_cbr.tracks.vocals.head.bpm)
+        try:
+            bpms.append(file_cbr.tracks.band.bpm)
+        except:
+            bpms.append(int(0))
+        
         largest_number = head_lens[0]
         for number in head_lens:
             if number > largest_number:
@@ -307,14 +307,13 @@ if __name__ == "__main__":
 
         #ExtractCharts(file_cbr)
         
-        speeds = [0,0,0,0,0,0,0,0,0,0]
-        speeds[9] = file_cbr.tracks.vocals.speed
+        speeds = []
+        
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             for this_diff in this_inst.diff_charts:
                 this_diff_name = this_diff.diff.name
-                j = this_inst.head.instrument_id.value*3 + this_diff.diff.value
-                speeds[j] = this_diff.speed
+                speeds.append(this_diff.speed)
                 file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
                 chart_file = open(file_name, "w", newline="")
                 csv_writer = csv.writer(chart_file)
@@ -357,7 +356,7 @@ if __name__ == "__main__":
 
                 csv_writer.writerows(csv_rows)
                 chart_file.close()
-        
+        speeds.append(file_cbr.tracks.vocals.speed)
         # Create chart file
         new_file = open("notes.chart", "w")
 
@@ -420,14 +419,7 @@ if __name__ == "__main__":
                 #TODO: Fix fliped notes on guitar and bass
 
                 new_file.write("\n}\n")
-        
-        '''
-        new_file.write("\ndiff_guitar = " + str(difficulties[0]))
-        new_file.write("\ndiff_bass = " + str(difficulties[1]))
-        new_file.write("\ndiff_vocals = " + str(difficulties[2]))
-        new_file.write("\ndiff_drums = " + str(difficulties[3]))
-        '''
-        
+                
         new_file.close()
 
         # Save metadata
@@ -473,7 +465,6 @@ if __name__ == "__main__":
                     difficulties[2], # Drums
                     difficulties[3], # Vocal
                     difficulties[4], # Band
-                    #TODO Extract all this things
                     song_vol,
                     bpms[0],    # Guitar
                     bpms[1],    # Rhythm
@@ -650,7 +641,7 @@ if __name__ == "__main__":
                 cmd = cmd + ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
                 cmd = cmd + "\"" + dest_file + "\""
                 print("Command: " + cmd)    # DEBUG
-                subprocess.run(cmd)    #TODO: Do NOT comment
+                subprocess.run(cmd)
             except:
                 print("FFMPEG.exe not found")
 
