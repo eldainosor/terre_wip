@@ -7,7 +7,7 @@ import subprocess
 import time
 import cbr, disc, band
 import csv, configparser
-import chchart_parser
+# from chchart_parser.chart import Chart
 
 # Config Constants 
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
@@ -39,6 +39,8 @@ def ExtractEvents(file_cbr: cbr.Cbr):
         #print(this_inst_name + " header len: " + str(int(len(inst_events))))       # DEBUG
         #print(this_inst_name + " header len: " + str(this_inst.head.num_events))    # DEBUG
         
+        # chart = Chart(chart_path)
+
         csv_rows = []
         aux = 0
         for block in inst_events:
@@ -327,8 +329,178 @@ if __name__ == "__main__":
         # Save Kaitai Log
         # COMMON HEADER
 
-        ExtractEvents(file_cbr)
-        ExtractCharts(file_cbr)
+        #ExtractEvents(file_cbr)        
+        head_lens = []
+        for this_inst in file_cbr.tracks.charts:
+            this_inst_name = this_inst.head.instrument_id.name
+            file_name = "events_" + this_inst_name + ".csv"
+            event_file = open(file_name, "w", newline="")
+            csv_writer = csv.writer(event_file)
+            data_in = [ "time", 
+                    "type" , 
+                    "DIFF" , 
+                    "MIN",
+                    "SEC",
+                    "bpm", 
+                    "vol" ]
+            csv_writer.writerow(data_in)
+            
+            inst_events = this_inst.head.events
+
+            bpm = this_inst.head.bpm
+            vol = file_cbr.tracks.trk_vol
+                
+            head_lens.append(len(inst_events))
+            #print(this_inst_name + " header len: " + str(int(len(inst_events))))       # DEBUG
+            #print(this_inst_name + " header len: " + str(this_inst.head.num_events))    # DEBUG
+            
+            # chart = Chart(chart_path)
+
+            csv_rows = []
+            aux = 0
+            for block in inst_events:
+                sec = ( block.time ) / ( 45000 )
+                #sec *= 60
+                #sec /= bpm
+                min = int(sec / 60)
+                sec %= 60
+
+                data_in = [ block.time, 
+                            block.type, 
+                            block.time - aux,
+                            min,
+                            sec,
+                            bpm, 
+                            vol ]
+                aux = block.time
+                csv_rows.append(data_in)
+            csv_writer.writerows(csv_rows)
+            event_file.close()
+
+        largest_number = head_lens[0]
+        for number in head_lens:
+            if number > largest_number:
+                largest_number = number
+        
+        # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
+
+        #ExtractCharts(file_cbr)
+        
+        for this_inst in file_cbr.tracks.charts:
+            this_inst_name = this_inst.head.instrument_id.name
+            for this_diff in this_inst.diff_charts:
+                this_diff_name = this_diff.diff.name
+                file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
+                chart_file = open(file_name, "w", newline="")
+                csv_writer = csv.writer(chart_file)
+                
+                bpm = this_inst.head.bpm
+                vol = file_cbr.tracks.trk_vol
+                speed = this_diff.speed
+                
+                data_in = [ "time", 
+                        "len", 
+                        "type", 
+                        "fret", 
+                        "MIN", 
+                        "SEC",
+                        "bpm",
+                        "vol",
+                        "speed"
+                        ]
+                csv_writer.writerow(data_in)
+                
+                csv_rows = []
+                for i, this_fret in enumerate(this_diff.frets_on_fire):
+                    for this_spark in this_fret.frets_wave:
+                        sec = ( this_spark.timing ) / ( 45000 )
+                        #sec *= 60
+                        #sec /= bpm
+                        min = int(sec / 60)
+                        sec %= 60
+                        data_in = [ this_spark.timing, 
+                                this_spark.len, 
+                                this_spark.type, 
+                                4-i, 
+                                min, 
+                                sec,
+                                bpm,
+                                vol,
+                                speed
+                                ]
+                        csv_rows.append(data_in)
+
+                csv_writer.writerows(csv_rows)
+                chart_file.close()
+        
+        # Create chart file
+        new_file = open("notes.chart", "w")
+
+        new_file.write("[Song]")
+        new_file.write("\n{")
+        new_file.write("\n\tName = \"" + song_name + "\"")
+        new_file.write("\n\tArtist = \"" + band_name + "\"")
+        new_file.write("\n\tAlbum = \"" + disc_name + "\"")
+        new_file.write("\n\tYear = \", " + str(year) + "\"")
+        new_file.write("\n\tCharter = \"Next Level\"")
+        #new_file.write("\n\tOffset = 3000")
+        new_file.write("\n\tPlayer2 = bass")
+        new_file.write("\n\tDifficulty = " + str(difficulties[4]))
+        new_file.write("\n\tGenre = \"Rock Argentino\"")
+        res = 192   #TODO: Find real resolution (ticks per 1/4 note)
+        new_file.write("\n\tResolution = " + str(res))
+        new_file.write("\n}\n")
+
+        new_file.write("[SyncTrack]")
+        new_file.write("\n{")
+        bpm = 120   #TODO: Find real bpm (beats per minute)
+        new_file.write("\n\t0 = B " + str(bpm*1000))
+        ts_num = 4  #TODO: Find real ts (time signature - compas)
+        ts_dem = 2  # this is 2^ts_dem
+        new_file.write("\n\t0 = TS " + str(ts_num) + " " + str(ts_dem))
+        new_file.write("\n}\n")
+
+        new_file.write("[Events]")
+        new_file.write("\n{")
+        #TODO: Add loop for extracting events
+        # 3xTnstruments, band, vocals and LYRICS 
+        new_file.write("\n}\n")
+
+        #TODO: Loop 3xInstruments
+        #this_diff = "Hard"
+        #this_inst = "Drums"
+        for this_inst in file_cbr.tracks.charts:
+            this_inst_name = this_inst.head.instrument_id.name
+            match this_inst_name:
+                case "guitar":
+                    this_inst_name = "Single"
+                case "rhythm":
+                    this_inst_name = "DobleBass"
+                case "drums":
+                    this_inst_name = "Drums"
+                case _:
+                    this_inst_name = ""
+            
+            for this_diff in this_inst.diff_charts:
+                this_diff_name = this_diff.diff.name
+            
+                new_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
+                new_file.write("\n{")
+                for i, this_fret in enumerate(this_diff.frets_on_fire):
+                        for this_spark in this_fret.frets_wave:
+                            new_file.write("\n\t" + str(this_spark.timing) + " = N " + str(4-i) + " " + str(this_spark.len) )
+                #TODO: Add loop for extracting frets and notes
+
+                new_file.write("\n}\n")
+        
+        '''
+        new_file.write("\ndiff_guitar = " + str(difficulties[0]))
+        new_file.write("\ndiff_bass = " + str(difficulties[1]))
+        new_file.write("\ndiff_vocals = " + str(difficulties[2]))
+        new_file.write("\ndiff_drums = " + str(difficulties[3]))
+        '''
+        
+        new_file.close()
 
         # Save metadata
         config = configparser.ConfigParser()
