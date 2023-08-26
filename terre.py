@@ -14,109 +14,6 @@ data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "norm", "hard"]
 
-def ExtractEvents(file_cbr: cbr.Cbr):
-    head_lens = []
-    for this_inst in file_cbr.tracks.charts:
-        this_inst_name = this_inst.head.instrument_id.name
-        file_name = "events_" + this_inst_name + ".csv"
-        event_file = open(file_name, "w", newline="")
-        csv_writer = csv.writer(event_file)
-        data_in = [ "time", 
-                   "type" , 
-                   "DIFF" , 
-                   "MIN",
-                   "SEC",
-                   "bpm", 
-                   "vol" ]
-        csv_writer.writerow(data_in)
-        
-        inst_events = this_inst.head.events
-
-        bpm = this_inst.head.bpm
-        vol = file_cbr.tracks.trk_vol
-            
-        head_lens.append(len(inst_events))
-        #print(this_inst_name + " header len: " + str(int(len(inst_events))))       # DEBUG
-        #print(this_inst_name + " header len: " + str(this_inst.head.num_events))    # DEBUG
-        
-        # chart = Chart(chart_path)
-
-        csv_rows = []
-        aux = 0
-        for block in inst_events:
-            sec = ( block.time ) / ( 45000 )
-            #sec *= 60
-            #sec /= bpm
-            min = int(sec / 60)
-            sec %= 60
-
-            data_in = [ block.time, 
-                        block.type, 
-                        block.time - aux,
-                        min,
-                        sec,
-                        bpm, 
-                        vol ]
-            aux = block.time
-            csv_rows.append(data_in)
-        csv_writer.writerows(csv_rows)
-        event_file.close()
-
-    largest_number = head_lens[0]
-    for number in head_lens:
-        if number > largest_number:
-            largest_number = number
-    
-    # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
-
-def ExtractCharts(file_cbr: cbr.Cbr):
-    for this_inst in file_cbr.tracks.charts:
-        this_inst_name = this_inst.head.instrument_id.name
-        for this_diff in this_inst.diff_charts:
-            this_diff_name = this_diff.diff.name
-            file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
-            chart_file = open(file_name, "w", newline="")
-            csv_writer = csv.writer(chart_file)
-            
-            bpm = this_inst.head.bpm
-            vol = file_cbr.tracks.trk_vol
-            speed = this_diff.speed
-            
-            data_in = [ "time", 
-                       "len", 
-                       "type", 
-                       "fret", 
-                       "MIN", 
-                       "SEC",
-                       "bpm",
-                       "vol",
-                       "speed"
-                       ]
-            csv_writer.writerow(data_in)
-            
-            csv_rows = []
-            for i, this_fret in enumerate(this_diff.frets_on_fire):
-                for this_spark in this_fret.frets_wave:
-                    sec = ( this_spark.timing ) / ( 45000 )
-                    #sec *= 60
-                    #sec /= bpm
-                    min = int(sec / 60)
-                    sec %= 60
-                    data_in = [ this_spark.timing, 
-                               this_spark.len, 
-                               this_spark.type, 
-                               i, 
-                               min, 
-                               sec,
-                               bpm,
-                               vol,
-                               speed
-                               ]
-                    csv_rows.append(data_in)
-
-            csv_writer.writerows(csv_rows)
-            chart_file.close()
-
 if __name__ == "__main__":
 
     start_time = time.time()
@@ -188,13 +85,12 @@ if __name__ == "__main__":
         print("Output dir:\t[", raw_dir, "] already exists")
         
     # Raw extraction
-    for filename in cbr_files:
+    for k, filename in enumerate(cbr_files):
+        k += 1
         start_song = time.time()
         local = time.strftime("%H:%M:%S", time.localtime(start_song))
         print("Song start: ", local)
 
-        k = cbr_files.index(filename) + 1
-        
         print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
         os.chdir(songs_dir)
@@ -292,8 +188,7 @@ if __name__ == "__main__":
         new_file.close()
 
         # Save steams
-        for audio in audio_data:
-            i = audio_data.index(audio)
+        for i, audio in enumerate(audio_data):
             data_order[i]
             new_file = open(data_order[i] + ".flac", "wb")
             new_file.write(flac_head)
@@ -421,7 +316,7 @@ if __name__ == "__main__":
                         data_in = [ this_spark.timing, 
                                 this_spark.len, 
                                 this_spark.type, 
-                                4-i, 
+                                i, 
                                 min, 
                                 sec,
                                 bpm,
@@ -443,17 +338,22 @@ if __name__ == "__main__":
         new_file.write("\n\tAlbum = \"" + disc_name + "\"")
         new_file.write("\n\tYear = \", " + str(year) + "\"")
         new_file.write("\n\tCharter = \"Next Level\"")
-        #new_file.write("\n\tOffset = 3000")
+        new_file.write("\n\tOffset = 3")
         new_file.write("\n\tPlayer2 = bass")
         new_file.write("\n\tDifficulty = " + str(difficulties[4]))
         new_file.write("\n\tGenre = \"Rock Argentino\"")
-        res = 192   #TODO: Find real resolution (ticks per 1/4 note)
+        new_file.write("\n\tGuitarStream = \"guitar.ogg\"")
+        new_file.write("\n\tRhythmStream = \"rhythm.ogg\"")
+        new_file.write("\n\tDrumStream = \"drums.ogg\"")
+        new_file.write("\n\tVocalStream = \"vocals.ogg\"")
+        new_file.write("\n\tMusicStream = \"song.ogg\"")
+        res = 20670   #TODO: Find real resolution (ticks per 1/4 note)
         new_file.write("\n\tResolution = " + str(res))
         new_file.write("\n}\n")
 
         new_file.write("[SyncTrack]")
         new_file.write("\n{")
-        bpm = 120   #TODO: Find real bpm (beats per minute)
+        bpm = 128   #TODO: Find real bpm (beats per minute)
         new_file.write("\n\t0 = B " + str(bpm*1000))
         ts_num = 4  #TODO: Find real ts (time signature - compas)
         ts_dem = 2  # this is 2^ts_dem
@@ -466,16 +366,14 @@ if __name__ == "__main__":
         # 3xTnstruments, band, vocals and LYRICS 
         new_file.write("\n}\n")
 
-        #TODO: Loop 3xInstruments
-        #this_diff = "Hard"
-        #this_inst = "Drums"
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
+            
             match this_inst_name:
                 case "guitar":
                     this_inst_name = "Single"
                 case "rhythm":
-                    this_inst_name = "DobleBass"
+                    this_inst_name = "DoubleBass"
                 case "drums":
                     this_inst_name = "Drums"
                 case _:
@@ -488,8 +386,8 @@ if __name__ == "__main__":
                 new_file.write("\n{")
                 for i, this_fret in enumerate(this_diff.frets_on_fire):
                         for this_spark in this_fret.frets_wave:
-                            new_file.write("\n\t" + str(this_spark.timing) + " = N " + str(4-i) + " " + str(this_spark.len) )
-                #TODO: Add loop for extracting frets and notes
+                            new_file.write("\n\t" + str(this_spark.timing) + " = N " + str(i) + " " + str(this_spark.len) )
+                #TODO: Fix fliped notes on guitar and bass
 
                 new_file.write("\n}\n")
         
@@ -562,8 +460,8 @@ if __name__ == "__main__":
         
     # Convert to Clone Hero (needs FFMPEG)
     #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    #convert = 'Y'  # DEBUG
-    convert = 'N'  # DEBUG
+    convert = 'Y'  # DEBUG
+    #convert = 'N'  # DEBUG
     if convert == 'Y':
         ffmpeg_file = work_dir + "\\ffmpeg.exe"
 
@@ -580,9 +478,10 @@ if __name__ == "__main__":
         #n = len(songs_list)
 
         # Loof for each song
-        for i, this_song in enumerate(songs_list):
+        for j, this_song in enumerate(songs_list):
+            j += 1
             #i = songs_list.index(this_song) + 1
-            print(" >> Converting (", int(i) , "/" , int(len(songs_list)) , "): ", this_song) 
+            print(" >> Converting (", int(j) , "/" , int(len(songs_list)) , "): ", this_song) 
 
             start_song = time.time()
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
@@ -619,6 +518,16 @@ if __name__ == "__main__":
             try:
                 #print("Copying icon...")
                 copy_file = "\\erdtv.png"
+                source_file = source_dir + copy_file
+                dest_file = dest_dir + copy_file
+                shutil.copyfile(source_file, dest_file)
+            except:
+                print("File [ ", dest_file, " ] already exists")
+
+            # Copy charts file
+            try:
+                #print("Copying metadata...")
+                copy_file = "\\notes.chart"
                 source_file = source_dir + copy_file
                 dest_file = dest_dir + copy_file
                 shutil.copyfile(source_file, dest_file)
@@ -685,18 +594,16 @@ if __name__ == "__main__":
                 cmd = cmd + " -y -loglevel -8 -stats -hwaccel auto -i "
                 #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd = cmd + "\"" + source_file + "\""
-                j = 0
-                for instrument in data_order:
+                for i, instrument in enumerate(data_order):
                     audio_in = dest_dir + "\\" + instrument + ".ogg"
                     if os.path.exists(audio_in):
-                        j+=1
                         cmd = cmd + " -i \"" + audio_in + "\""
                 cmd = cmd + " -filter_complex amix=inputs=" 
-                cmd = cmd + str(int(j)) 
+                cmd = cmd + str(int(i)) 
                 cmd = cmd + ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
                 cmd = cmd + "\"" + dest_file + "\""
                 print("Command: " + cmd)    # DEBUG
-                subprocess.run(cmd)
+                #subprocess.run(cmd)    #TODO: Do NOT comment
             except:
                 print("FFMPEG.exe not found")
 
@@ -707,7 +614,7 @@ if __name__ == "__main__":
             total_tm = time.time() - start_time
             total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
             print("Total time took:\t" , total)
-            eta_time = time.gmtime((total_tm / i ) * (n - i))
+            eta_time = time.gmtime((total_tm / j ) * (n - j))
             print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
     total_tm = time.time() - start_time
