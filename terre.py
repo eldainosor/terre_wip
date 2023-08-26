@@ -207,7 +207,7 @@ if __name__ == "__main__":
         # Copy video (slow)
         try:
             print("Copying video... ")
-            # shutil.copyfile(source + ".vid", dest  + "\\video.asf")
+            shutil.copyfile(source + ".vid", dest  + "\\video.asf")
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 
@@ -603,7 +603,7 @@ if __name__ == "__main__":
                 cmd = cmd + ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
                 cmd = cmd + "\"" + dest_file + "\""
                 print("Command: " + cmd)    # DEBUG
-                #subprocess.run(cmd)    #TODO: Do NOT comment
+                subprocess.run(cmd)    #TODO: Do NOT comment
             except:
                 print("FFMPEG.exe not found")
 
