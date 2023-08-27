@@ -12,7 +12,7 @@ _Las marcas y productos mencionados son propiedad de sus respectivos dueños._
 
 ## Objetivos
 
-Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del disco de instalación original y exporta a otros juegos de ritmo similares (como [Clone Hero](https://clonehero.net/)) para que las canciones incluidas puedan ser disfrutadas por audiencias modernas.
+Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del disco de instalación original y exporta a otros juegos de ritmo similares (como [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/)) para que las canciones incluidas puedan ser disfrutadas por audiencias modernas.
 
 - [x] Extraer la información de las canciones (metadata)
 
@@ -26,7 +26,39 @@ Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del d
 
 - [x] Extraer el video de fondo de las canciones (video)
 
-- [ ] Extraer las notas de los instrumentos (charts)
+- [ ] Extraer las notas de los instrumentos (charts) [BETA]
+
+WIP (27-Ago-2023):
+
+Las notas de los instrumentos ya han sido identificadas y su decodificacion esta en proceso a formato Chart.
+
+Actualmente es jugable en estado primitivo y en desarrollo.
+
+[Charts format documentation by TheNathannator](https://github.com/TheNathannator/GuitarGame_ChartFormats/tree/main/doc/FileFormats/.chart)
+
+- [x] Identificar instrumentos
+
+- [x] Codificar instrumentos
+
+- [x] Identificar dificultades
+
+- [x] Codificar dificultades
+
+- [x] Identificar notas
+
+- [x] Codificar notas [BETA] (nesesita ajustes)
+
+- [ ] Identificar atributos (star power, etc)
+
+- [ ] Codificar atributos (star power, etc)
+
+- [x] Identificar letras (Lyrics)
+
+- [ ] Codificar letras
+
+- [ ] Identificar timings (compas, pulso, etc)
+
+- [ ] Codificar timings (BPM, Resolution, TimeSign)
 
 ## Requisitos 
 
@@ -59,7 +91,7 @@ Una vez finalizada la ejecución del código deberían haber dos directorios nue
 | drums.flac     | drums.ogg      | Audio bateria      |
 | vocals.flac    | vocals.ogg     | Audio cantante     |
 | song.flac      | song.ogg       | Audio extras       |
-| charts*.cbr    | notes*.mid     | Notas instrumentos |
+| notes.chart    | notes.chart    | Notas instrumentos |
 
 ## Descripción de los archivos y directorios
 
@@ -73,10 +105,12 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
  [band/artistID.band]
    0x0010 = Header
    0x00xx = Artist Name String
+   
  [disc/albumID.disc]
    0x0018 = Header
    0x0100 = Album Name String
    0x00xx = album.png
+   
  [song/songID.au]
    0x0000 = Header
    0x00xx = guitar.flac
@@ -84,13 +118,17 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
    0x00xx = drums.flac
    0x00xx = vocals.flac
    0x00xx = song.flac
+   
  [song/songID.prv]
    preview.wav
+   
  [song/songID.vid]
    video.asf
+   
  [song/songID.bgf]
    0x020C = Header
    0x00xx = background.png
+   
  [song/songID.cbr]
    0x001C = Header
    0x0008 = artistID (HEX)
@@ -99,11 +137,17 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
    0x0100 = Song Name String
    0x0A00 = Separator (2.5 KB)
    0x0600 = Chart SubHeader (8.0 KB)
-   0x00xx = Guitar chart (12bits packages, 0xD007 divisor?)
+   0x00xx = Guitar info
+   0x00xx = Guitar timings (8bits packages)
+   0x00xx = Guitar chart (12bits packages)
    0x00xx = Chart SubHeader (8.0 KB)
-   0x00xx = Rhythm chart (12bits packages, 0xD007 divisor?)
+   0x00xx = Rhythm info
+   0x00xx = Rhythm timings (8bits packages)
+   0x00xx = Rhythm chart (12bits packages)
    0x00xx = Chart SubHeader (8.0 KB)
-   0x00xx = Drums chart (12bits packages, 0xD007 divisor?)
+   0x00xx = Drums info
+   0x00xx = Drums timings (8bits packages)
+   0x00xx = Drums chart (12bits packages)
    0x00xx = Chart SubHeader (8.0 KB)
    0x00xx = Vocals info (8bits packages)
    0x00xx = Vocals waves (44bits packages)
@@ -111,6 +155,7 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
    0x00xx = Ending SubHeader (8.0 KB)
    ```
 
+Hay muchos detalles que han sido identificados y codificados con ayuda de Kaitai
 
 ## Créditos
 
