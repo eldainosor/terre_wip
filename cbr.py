@@ -14,12 +14,12 @@ class Cbr(KaitaiStruct):
         guitar = 0
         rhythm = 1
         drums = 2
-        voice = 3
+        vocals = 3
         band = 4
 
     class DiffLvl(Enum):
         easy = 0
-        norm = 1
+        medium = 1
         hard = 2
 
     class PosId(Enum):

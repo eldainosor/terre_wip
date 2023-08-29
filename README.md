@@ -28,7 +28,7 @@ Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del d
 
 - [ ] Extraer las notas de los instrumentos (charts) [BETA]
 
-WIP (27-Ago-2023):
+### WIP (27-Ago-2023):
 
 Las notas de los instrumentos ya han sido identificadas y su decodificacion esta en proceso a formato Chart.
 

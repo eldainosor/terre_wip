@@ -26,7 +26,7 @@ Intended for archive and preservation TeRRe extracts from your LEGALY OWNED inst
 
 - [x] Extract video file
 
-- [ ] Extract instruments charts
+- [x] Extract instruments charts
 
 ## Requirements
 

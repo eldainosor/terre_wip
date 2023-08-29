@@ -8,12 +8,12 @@ enums:
     0: guitar
     1: rhythm
     2: drums
-    3: voice
+    3: vocals
     4: band
 
   diff_lvl:
     0: easy
-    1: norm
+    1: medium
     2: hard
     
     

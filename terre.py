@@ -7,12 +7,13 @@ import subprocess
 import time
 import cbr, disc, band
 import csv, configparser
+from collections import Counter
 # from chchart_parser.chart import Chart
 
 # Config Constants 
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
-diff_order = ["easy", "norm", "hard"]
+diff_order = ["easy", "medium", "hard"]
 
 if __name__ == "__main__":
 
@@ -24,10 +25,10 @@ if __name__ == "__main__":
     local = time.strftime("%H:%M:%S", localtime)
     print("Start time: ", local)
 
-    disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
+    #disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
     #disc_dir = "E:" # DEBUG
-    mozart_dir = disc_dir + "\\install\\data\\mozart"
-    #mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"
+    #mozart_dir = disc_dir + "\\install\\data\\mozart"
+    mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"  #TODO: Delete when done
     songs_dir = mozart_dir + "\\song"
     bands_dir = mozart_dir + "\\band"
     discs_dir = mozart_dir + "\\disc"
@@ -225,7 +226,7 @@ if __name__ == "__main__":
         # Copy video (slow)
         try:
             print("Copying video... ")
-            shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
+            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 
@@ -289,6 +290,19 @@ if __name__ == "__main__":
                             vol ]
                 aux = block.time
                 csv_rows.append(data_in)
+            
+            res = 0
+            aux = 0
+            i = 0
+            diff_events = []
+            for block in inst_events:
+                diff_events.append(block.time - aux)
+                aux = block.time
+
+            diff_count = Counter(diff_events)
+            aux = diff_count.most_common(1)[0]
+            res = 2*aux[0]
+
             csv_writer.writerows(csv_rows)
             event_file.close()
 
@@ -335,8 +349,10 @@ if __name__ == "__main__":
                 csv_writer.writerow(data_in)
                 
                 csv_rows = []
+                csv_rows_sorted = []
                 for i, this_fret in enumerate(this_diff.frets_on_fire):
                     for this_spark in this_fret.frets_wave:
+                        #TODO: Find real Rsolution, BPM and TS.
                         sec = ( this_spark.timing ) / ( 45000 )
                         #sec *= 60
                         #sec /= bpm
@@ -353,12 +369,21 @@ if __name__ == "__main__":
                                 speed
                                 ]
                         csv_rows.append(data_in)
+                
+                csv_rows_sorted = sorted(csv_rows, key=lambda item: item[0])
 
-                csv_writer.writerows(csv_rows)
+                csv_writer.writerows(csv_rows_sorted)
                 chart_file.close()
         speeds.append(file_cbr.tracks.vocals.speed)
+
+
         # Create chart file
-        new_file = open("notes.chart", "w")
+
+        ts_num = 4  #TODO: Find real ts (time signature - compas)
+        ts_dem = 2  # this is 2^ts_dem
+        #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
+        bpm = res/160   #TODO: Find real bpm (beats per minute)
+        new_file = open("notes.chart", "w", encoding='utf-8')
 
         new_file.write("[Song]")
         new_file.write("\n{")
@@ -376,16 +401,12 @@ if __name__ == "__main__":
         new_file.write("\n\tDrumStream = \"drums.ogg\"")
         new_file.write("\n\tVocalStream = \"vocals.ogg\"")
         new_file.write("\n\tMusicStream = \"song.ogg\"")
-        res = 20670   #TODO: Find real resolution (ticks per 1/4 note)
-        new_file.write("\n\tResolution = " + str(res))
+        new_file.write("\n\tResolution = " + str(int(res)))
         new_file.write("\n}\n")
 
         new_file.write("[SyncTrack]")
         new_file.write("\n{")
-        bpm = 128   #TODO: Find real bpm (beats per minute)
-        new_file.write("\n\t0 = B " + str(bpm*1000))
-        ts_num = 4  #TODO: Find real ts (time signature - compas)
-        ts_dem = 2  # this is 2^ts_dem
+        new_file.write("\n\t0 = B " + str(int(bpm*1000)))
         new_file.write("\n\t0 = TS " + str(ts_num) + " " + str(ts_dem))
         new_file.write("\n}\n")
 
@@ -413,10 +434,26 @@ if __name__ == "__main__":
             
                 new_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
                 new_file.write("\n{")
+
+                sparks_list = []
                 for i, this_fret in enumerate(this_diff.frets_on_fire):
-                        for this_spark in this_fret.frets_wave:
-                            new_file.write("\n\t" + str(this_spark.timing) + " = N " + str(i) + " " + str(this_spark.len) )
-                #TODO: Fix fliped notes on guitar and bass
+                    for this_spark in this_fret.frets_wave:
+                        if this_inst_name == "Drums":
+                            this_note = i
+                        else:
+                            this_note = 4 - i
+                        
+               #TODO: note modes is:   0x00 NOTE "N", 0x01 "S" STAR, 0x10 HOPO "5", 0x20 UP,  0x30 DOWN
+                        match this_spark.type:
+                            case _:
+                                note_mod = "N"
+        
+                        sparks_list.append([this_spark.timing, note_mod, this_note, this_spark.len])
+                
+                sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
+
+                for this_sorted_spark in sorted_sparks:
+                    new_file.write("\n\t" + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
 
                 new_file.write("\n}\n")
                 
@@ -444,7 +481,7 @@ if __name__ == "__main__":
         config.set("song", ";video_start_time" , "3000")
         config.set("song", "delay", "3000") # Verify beats or secs
 
-        new_file = open("song.ini", "w")
+        new_file = open("song.ini", "w", encoding='utf-8')
         config.write(new_file)
         new_file.close()
 
@@ -497,8 +534,8 @@ if __name__ == "__main__":
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
-    convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    #convert = 'Y'  # DEBUG
+    #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
+    convert = 'Y'  # DEBUG
     #convert = 'N'  # DEBUG
     if convert == 'Y':
         ffmpeg_file = work_dir + "\\ffmpeg.exe"
