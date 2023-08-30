@@ -14,6 +14,7 @@ from collections import Counter
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "medium", "hard"]
+sec_tick = 43552
 
 if __name__ == "__main__":
 
@@ -87,7 +88,10 @@ if __name__ == "__main__":
                     "S:D_0",
                     "S:D_1",
                     "S:D_2",
-                    "S:V_0"
+                    "S:V_0",
+                    "Res",
+                    "Last tick",
+                    "BPM:cal",
         ]
         
         csv_writer.writerow(data_in)
@@ -273,14 +277,17 @@ if __name__ == "__main__":
             # chart = Chart(chart_path)
 
             csv_rows = []
+            last_tick = 0
             aux = 0
             for block in inst_events:
-                sec = ( block.time ) / ( 45000 )
+                
+                sec = ( block.time ) / ( sec_tick )
                 #sec *= 60
                 #sec /= bpm
                 min = int(sec / 60)
                 sec %= 60
 
+                last_tick = block.time
                 data_in = [ block.time, 
                             block.type, 
                             block.time - aux,
@@ -300,8 +307,9 @@ if __name__ == "__main__":
                 aux = block.time
 
             diff_count = Counter(diff_events)
-            aux = diff_count.most_common(1)[0]
-            res = 2*aux[0]
+            #aux = diff_count.most_common(1)[0]
+            #res = 2*aux[0]
+            res = 2*diff_count.most_common(1)[0][0]
 
             csv_writer.writerows(csv_rows)
             event_file.close()
@@ -353,7 +361,7 @@ if __name__ == "__main__":
                 for i, this_fret in enumerate(this_diff.frets_on_fire):
                     for this_spark in this_fret.frets_wave:
                         #TODO: Find real Rsolution, BPM and TS.
-                        sec = ( this_spark.timing ) / ( 45000 )
+                        sec = ( this_spark.timing ) / ( sec_tick )
                         #sec *= 60
                         #sec /= bpm
                         min = int(sec / 60)
@@ -382,7 +390,7 @@ if __name__ == "__main__":
         ts_num = 4  #TODO: Find real ts (time signature - compas)
         ts_dem = 2  # this is 2^ts_dem
         #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-        bpm = res/160   #TODO: Find real bpm (beats per minute)
+        bpm = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
         new_file = open("notes.chart", "w", encoding='utf-8')
 
         new_file.write("[Song]")
@@ -406,7 +414,7 @@ if __name__ == "__main__":
 
         new_file.write("[SyncTrack]")
         new_file.write("\n{")
-        new_file.write("\n\t0 = B " + str(int(bpm*1000)))
+        new_file.write("\n\t0 = B " + str(int(bpm)))
         new_file.write("\n\t0 = TS " + str(ts_num) + " " + str(ts_dem))
         new_file.write("\n}\n")
 
@@ -443,7 +451,7 @@ if __name__ == "__main__":
                         else:
                             this_note = 4 - i
                         
-               #TODO: note modes is:   0x00 NOTE "N", 0x01 "S" STAR, 0x10 HOPO "5", 0x20 UP,  0x30 DOWN
+               #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN
                         match this_spark.type:
                             case _:
                                 note_mod = "N"
@@ -518,6 +526,9 @@ if __name__ == "__main__":
                     speeds[7],  # Drums-Norm
                     speeds[8],  # Drums-Hard
                     speeds[9],  # Vocals
+                    res,
+                    last_tick,
+                    bpm,
         ]
 
         csv_writer.writerow(data_in)
