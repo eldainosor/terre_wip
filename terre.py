@@ -14,7 +14,7 @@ from collections import Counter
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "medium", "hard"]
-sec_tick = 43552
+sec_tick = 44096
 
 if __name__ == "__main__":
 
@@ -445,19 +445,40 @@ if __name__ == "__main__":
 
                 sparks_list = []
                 for i, this_fret in enumerate(this_diff.frets_on_fire):
+                    sp_list = []
                     for this_spark in this_fret.frets_wave:
                         if this_inst_name == "Drums":
                             this_note = i
                         else:
                             this_note = 4 - i
                         
-               #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN
-                        match this_spark.type:
-                            case _:
-                                note_mod = "N"
-        
-                        sparks_list.append([this_spark.timing, note_mod, this_note, this_spark.len])
-                
+                        #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN, 0x02 ???
+                        sparks_list.append([this_spark.timing, "N", this_note, this_spark.len])
+
+                        has_sp = this_spark.type & 0x01
+                        has_hopo = this_spark.type & 0x10
+                        has_strum = this_spark.type & 0x20
+                        has_other = this_spark.type & 0x0E  #DEBUG
+
+                        if has_sp:
+                            sp_list.append([this_spark.timing, "S", "2", this_spark.len])
+                            sparks_list.append([this_spark.timing, "S", "2", this_spark.len])
+                            #TODO: combine and unite STAR POWER
+
+                        if has_hopo:
+                            sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
+
+                        if has_strum:
+                            # TODO: What kind of modifier is this?
+                            sparks_list.append([this_spark.timing, "N", "9", this_spark.len])
+                            #sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
+    
+                        if has_other:
+                            # TODO: What kind of modifier is there?
+                            print("Other fret mod FOUND: " + str(has_other))   #DEBUG
+                            #sparks_list.append([this_spark.timing, "N", "10", this_spark.len])
+                            #sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
+
                 sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
 
                 for this_sorted_spark in sorted_sparks:
