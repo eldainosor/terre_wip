@@ -28,7 +28,7 @@ Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del d
 
 - [ ] Extraer las notas de los instrumentos (charts) [BETA]
 
-### WIP (27-Ago-2023):
+### WIP (31-Ago-2023):
 
 Las notas de los instrumentos ya han sido identificadas y su decodificacion esta en proceso a formato Chart.
 
@@ -46,19 +46,25 @@ Actualmente es jugable en estado primitivo y en desarrollo.
 
 - [x] Identificar notas
 
-- [x] Codificar notas [BETA] (nesesita ajustes)
+- [x] Codificar notas
 
-- [ ] Identificar atributos (star power, etc)
+- [x] Identificar atributos (star power, etc)
 
-- [ ] Codificar atributos (star power, etc)
+- [X] Codificar atributos (star power, etc) [BETA]
 
 - [x] Identificar letras (Lyrics)
 
-- [ ] Codificar letras
+- [x] Codificar letras [BETA]
 
-- [ ] Identificar timings (compas, pulso, etc)
+- [ ] Identificar canto
 
-- [ ] Codificar timings (BPM, Resolution, TimeSign)
+- [ ] Codificar canto
+
+- [x] Identificar timings (compas, pulso, etc)
+
+- [ ] Codificar timings (BPM, Resolution, TimeSign) [ALPHA] (necesita calibracion)
+
+- ¿Migrar a MIDI?
 
 ## Requisitos 
 
