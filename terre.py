@@ -15,6 +15,7 @@ data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "medium", "hard"]
 sec_tick = 44096
+#TODO: Res=480000 a recalc ticks with variable BPM from [event]
 
 if __name__ == "__main__":
 
@@ -413,6 +414,7 @@ if __name__ == "__main__":
         new_file.write("\n}\n")
 
         new_file.write("[SyncTrack]")
+        #TODO: Res=480000 a recalc ticks with variable BPM from [event]
         new_file.write("\n{")
         new_file.write("\n\t0 = B " + str(int(bpm)))
         new_file.write("\n\t0 = TS " + str(ts_num) + " " + str(ts_dem))
@@ -420,8 +422,15 @@ if __name__ == "__main__":
 
         new_file.write("[Events]")
         new_file.write("\n{")
-        #TODO: Add loop for extracting events
-        # 3xTnstruments, band, vocals and LYRICS 
+
+        # Lyrics extraction
+        lyrics_phrases = []
+        for this_phrase in file_cbr.tracks.vocals.lyrics:
+            new_file.write("\n\t" + str(this_phrase.info[0]) + " = E \"phrase_start\"")
+            for this_syll in this_phrase.text_block:
+                new_file.write("\n\t" + str(this_syll.time_start) + " = E \"lyric " + str(this_syll.text) + "\"")
+            new_file.write("\n\t" + str(this_phrase.info[1]) + " = E \"phrase_end\"")
+                
         new_file.write("\n}\n")
 
         for this_inst in file_cbr.tracks.charts:
@@ -474,7 +483,7 @@ if __name__ == "__main__":
                             #sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
     
                         if has_other:
-                            # TODO: What kind of modifier is there?
+                            # TODO: What other kind of modifier are there?
                             print("Other fret mod FOUND: " + str(has_other))   #DEBUG
                             #sparks_list.append([this_spark.timing, "N", "10", this_spark.len])
                             #sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
@@ -509,6 +518,18 @@ if __name__ == "__main__":
         config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
         config.set("song", ";video_start_time" , "3000")
         config.set("song", "delay", "3000") # Verify beats or secs
+
+        config.set("song", "diff_rhythm", "-1")
+        config.set("song", "diff_drums_real", "-1")
+        config.set("song", "diff_keys", "-1")
+        config.set("song", "diff_guitarghl", "-1")
+        config.set("song", "diff_bassghl", "-1")
+        config.set("song", "diff_rhythm_ghl", "-1")
+        config.set("song", "diff_guitar_coop_ghl", "-1")
+        config.set("song", "diff_guitar_coop", "-1")
+        config.set("song", "preview_start_time", "-1")
+        config.set("song", "pro_drums", "0")
+        config.set("song", "five_lane_drums", "0")
 
         new_file = open("song.ini", "w", encoding='utf-8')
         config.write(new_file)
