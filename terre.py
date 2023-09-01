@@ -27,10 +27,10 @@ if __name__ == "__main__":
     local = time.strftime("%H:%M:%S", localtime)
     print("Start time: ", local)
 
-    #disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
+    disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
     #disc_dir = "E:" # DEBUG
-    #mozart_dir = disc_dir + "\\install\\data\\mozart"
-    mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"  #TODO: Delete when done
+    mozart_dir = disc_dir + "\\install\\data\\mozart"
+    #mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"  #TODO: Delete when done
     songs_dir = mozart_dir + "\\song"
     bands_dir = mozart_dir + "\\band"
     discs_dir = mozart_dir + "\\disc"
@@ -231,7 +231,7 @@ if __name__ == "__main__":
         # Copy video (slow)
         try:
             print("Copying video... ")
-            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
+            shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 
@@ -587,8 +587,8 @@ if __name__ == "__main__":
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
-    #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    convert = 'Y'  # DEBUG
+    convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
+    #convert = 'Y'  # DEBUG
     #convert = 'N'  # DEBUG
     if convert == 'Y':
         ffmpeg_file = work_dir + "\\ffmpeg.exe"
