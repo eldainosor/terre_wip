@@ -328,10 +328,7 @@ if __name__ == "__main__":
         
         # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
-        #ExtractCharts(file_cbr)
-        
         speeds = []
-        
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             for this_diff in this_inst.diff_charts:
@@ -416,15 +413,34 @@ if __name__ == "__main__":
         new_file.write("[SyncTrack]")
         #TODO: Res=480000 a recalc ticks with variable BPM from [event]
         new_file.write("\n{")
-        new_file.write("\n\t0 = B " + str(int(bpm)))
         new_file.write("\n\t0 = TS " + str(ts_num) + " " + str(ts_dem))
+        new_file.write("\n\t0 = B " + str(int(bpm)))
+
+        # BMPs secuence
+        bpm_list_phrases = []
+        this_tick = 0
+        prev_tick = 0
+        this_res = res
+        this_bpm = bpm
+        for this_event in file_cbr.tracks.charts[0].head.events:
+            this_tick = this_event.time
+            this_res = 2*(this_tick - prev_tick)
+            if this_event.type == 3:
+                if this_res == 0:
+                    this_bpm = 1000*60*sec_tick/res
+                else:
+                    this_bpm = 1000*60*sec_tick/this_res
+                #new_file.write("\n\t" + str(this_event.time) + " = B " + str(int(this_bpm)))
+                #new_file.write("\n\t" + str(this_event.time) + " = TS " + str(ts_num) + " " + str(ts_dem))
+            prev_tick = this_tick
+            
+
         new_file.write("\n}\n")
 
         new_file.write("[Events]")
         new_file.write("\n{")
 
         # Lyrics extraction
-        lyrics_phrases = []
         for this_phrase in file_cbr.tracks.vocals.lyrics:
             new_file.write("\n\t" + str(this_phrase.info[0]) + " = E \"phrase_start\"")
             for this_syll in this_phrase.text_block:
@@ -453,8 +469,11 @@ if __name__ == "__main__":
                 new_file.write("\n{")
 
                 sparks_list = []
+                sp_list = []
+                hopo_list = []
+                strum_list = []
+                mods_list = []
                 for i, this_fret in enumerate(this_diff.frets_on_fire):
-                    sp_list = []
                     for this_spark in this_fret.frets_wave:
                         if this_inst_name == "Drums":
                             this_note = i
@@ -470,33 +489,109 @@ if __name__ == "__main__":
                         has_other = this_spark.type & 0x0E  #DEBUG
 
                         if has_sp:
-                            sp_list.append([this_spark.timing, "S", "2", this_spark.len])
-                            sparks_list.append([this_spark.timing, "S", "2", this_spark.len])
-                            #TODO: combine and unite STAR POWER
-
+                            sp_list.append([this_spark.timing, "S", this_note, this_spark.len])
+                            #sp_list.append([this_spark.timing, "S", 2, this_spark.len])
+                        
                         if has_hopo:
-                            sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
+                            hopo_list.append([this_spark.timing, "N", 5, this_spark.len])
 
                         if has_strum:
                             # TODO: What kind of modifier is this?
-                            sparks_list.append([this_spark.timing, "N", "9", this_spark.len])
-                            #sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
+                            strum_list.append([this_spark.timing, "N", 9, this_spark.len])
+                            #strum_list.append([this_spark.timing, "N", 5, this_spark.len])
     
                         if has_other:
                             # TODO: What other kind of modifier are there?
                             print("Other fret mod FOUND: " + str(has_other))   #DEBUG
-                            #sparks_list.append([this_spark.timing, "N", "10", this_spark.len])
-                            #sparks_list.append([this_spark.timing, "N", "5", this_spark.len])
+                            #mods_list.append([this_spark.timing, "N", 10, this_spark.len])
+                            #mods_list.append([this_spark.timing, "N", 5, this_spark.len])
 
+                sp_list_old = []
+                sp_list_old.extend(sp_list)
+                sp_list.extend(sparks_list)
+                sorted_stars = []
+                sorted_stars = sorted(sp_list, key=lambda item: item[0])
+
+                first_timing = 0
+                first_len = 0
+                last_timing = 0
+                last_len = 0
+                
+                prev_timing = 0
+                prev_type = "N"
+                prev_len = 0
+
+                sp_counting = 0
+
+                sp_list_new = []
+                
+                for this_timing, this_type, this_note, this_len in sorted_stars:
+                    match sp_counting:
+                        case 0:     #Waiting for S
+                            if this_type == "N":
+                                sp_counting = 0 #Waiting for S
+                            elif this_type == "S":
+                                first_timing = this_timing
+                                first_len = this_len
+                                last_timing = this_timing
+                                last_len = this_len
+                                sp_counting = 1 #Expect N
+                        case 1:     #Expect N
+                            if prev_timing == this_timing and prev_len == this_len:
+                                sp_counting = 1 #Keep counting
+                            else:
+                                if this_type == "S" and prev_type == "N":
+                                    sp_counting = 1
+                                else:
+                                    last_timing = prev_timing
+                                    last_len = prev_len
+                                    sp_counting = 2
+                        case 2:
+                            sp_len = last_timing 
+                            sp_len -= first_timing 
+                            sp_len += last_len
+                            sp_list_new.append([first_timing, "S", 2, sp_len])
+                            sp_counting = 0
+                        case _:
+                            sp_counting = 0
+                    prev_timing = this_timing
+                    prev_len = this_len
+                    prev_type = this_type
+                    
+                sparks_list.extend(sp_list_new)
+                sparks_list.extend(hopo_list)
+                sparks_list.extend(strum_list)
+                sorted_sparks = []
                 sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
-
+                
                 for this_sorted_spark in sorted_sparks:
                     new_file.write("\n\t" + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
 
                 new_file.write("\n}\n")
-                
-        new_file.close()
 
+        '''
+        #DEBUG BMP testing with DrumsExp
+        new_file.write("[ExpertDrums]")
+        new_file.write("\n{")
+
+        sparks_list = []
+        inst_events = file_cbr.tracks.charts[2].head.events
+        for block in inst_events:
+            #aux = 3 - block.type
+            aux = block.type + 1
+            #aux += 2
+            #aux %= 4
+            sparks_list.append([block.time, "N", aux, "0"])
+
+        sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
+
+        for this_sorted_spark in sorted_sparks:
+            new_file.write("\n\t" + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+
+        new_file.write("\n}\n")
+        '''
+        new_file.close()
+                
         # Save metadata
         config = configparser.ConfigParser()
         config.add_section("song")
