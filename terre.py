@@ -1,6 +1,20 @@
 #!/usr/bin/python
 # Python script
 # Made by Envido32
+'''
+Extra info about new variables name:
+trk_vol > trk_info[7]
+bpm	> chart_info
+events	> pulse
+event	> tick
+speed	> diff_info
+frets	> colour
+spark	> note
+timing	> time
+type	> mods
+speed	> vocal_info
+water	> pitch
+'''
 
 import os, re, shutil
 import subprocess
@@ -467,7 +481,7 @@ if __name__ == "__main__":
                 lyrics_list.append([this_syll.time_start, "E" , this_syll.text, " "])            
 
         for this_wave in file_cbr.tracks.vocals.wave_form:
-            wave_list.append([this_wave.water[1], this_wave.water[0] , this_wave.water[4], this_wave.water[2] - this_wave.water[1]]) 
+            wave_list.append([this_wave.pitch[1], this_wave.pitch[0] , this_wave.pitch[4], this_wave.pitch[2] - this_wave.pitch[1]]) 
         
         harm_list.extend(lyrics_list)
         harm_list.extend(wave_list)
@@ -475,8 +489,8 @@ if __name__ == "__main__":
         sorted_harms = []
         sorted_harms = sorted(harm_list, key=lambda item: item[0])
         
-        for this_sorted_spark in sorted_harms:
-                    new_file.write("\n  " + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+        for this_sorted_notes in sorted_harms:
+                    new_file.write("\n  " + str(this_sorted_notes[0]) + " = " + str(this_sorted_notes[1]) + " " + str(this_sorted_notes[2]) + " " + str(this_sorted_notes[3]) )
 
         new_file.write("\n}\n")
         '''
@@ -522,7 +536,7 @@ if __name__ == "__main__":
 
                         if has_sp:
                             sp_list.append([this_note.time, "S", note_colour, this_note.len])
-                            #sp_list.append([this_spark.timing, "S", 2, this_spark.len])
+                            #sp_list.append([this_note.time, "S", 2, this_note.len])
                         
                         if has_hopo:
                             hopo_list.append([this_note.time, "N", 5, this_note.len])
@@ -530,13 +544,13 @@ if __name__ == "__main__":
                         if has_strum:
                             # TODO: What kind of modifier is this?
                             strum_list.append([this_note.time, "N", 9, this_note.len])
-                            #strum_list.append([this_spark.timing, "N", 5, this_spark.len])
+                            #strum_list.append([this_note.time, "N", 5, this_note.len])
     
                         if has_other:
                             # TODO: What other kind of modifier are there?
                             print("Other fret mod FOUND: " + str(has_other))   #DEBUG
-                            #mods_list.append([this_spark.timing, "N", 10, this_spark.len])
-                            #mods_list.append([this_spark.timing, "N", 5, this_spark.len])
+                            #mods_list.append([this_note.time, "N", 10, this_note.len])
+                            #mods_list.append([this_note.time, "N", 5, this_note.len])
 
                 sp_list_old = []
                 sp_list_old.extend(sp_list)
