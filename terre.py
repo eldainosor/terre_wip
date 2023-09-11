@@ -27,10 +27,10 @@ if __name__ == "__main__":
     local = time.strftime("%H:%M:%S", localtime)
     print("Start time: ", local)
 
-    disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
+    #disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
     #disc_dir = "E:" # DEBUG
-    mozart_dir = disc_dir + "\\install\\data\\mozart"
-    #mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"  #TODO: Delete when done
+    #mozart_dir = disc_dir + "\\install\\data\\mozart"
+    mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"  #TODO: Delete when done
     songs_dir = mozart_dir + "\\song"
     bands_dir = mozart_dir + "\\band"
     discs_dir = mozart_dir + "\\disc"
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         source = songs_dir + "\\" + song_id
         dest = new_song_dir
         try:
-            #print("Copying preview...")
+            print("Copying preview...")
             shutil.copyfile(source + ".prv", dest  + "\\preview.wav")
         except:
             print("File [ ", dest,  "\\preview.wav ] already exists")
@@ -231,7 +231,7 @@ if __name__ == "__main__":
         # Copy video (slow)
         try:
             print("Copying video... ")
-            shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
+            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
         except:
             print("File [ ", dest,  "\\video.asf ] already exists")
 
@@ -393,28 +393,30 @@ if __name__ == "__main__":
 
         new_file.write("[Song]")
         new_file.write("\n{")
-        new_file.write("\n\tName = \"" + song_name + "\"")
-        new_file.write("\n\tArtist = \"" + band_name + "\"")
-        new_file.write("\n\tAlbum = \"" + disc_name + "\"")
-        new_file.write("\n\tYear = \", " + str(year) + "\"")
-        new_file.write("\n\tCharter = \"Next Level\"")
-        new_file.write("\n\tOffset = 3")
-        new_file.write("\n\tPlayer2 = bass")
-        new_file.write("\n\tDifficulty = " + str(difficulties[4]))
-        new_file.write("\n\tGenre = \"Rock Argentino\"")
-        new_file.write("\n\tGuitarStream = \"guitar.ogg\"")
-        new_file.write("\n\tRhythmStream = \"rhythm.ogg\"")
-        new_file.write("\n\tDrumStream = \"drums.ogg\"")
-        new_file.write("\n\tVocalStream = \"vocals.ogg\"")
-        new_file.write("\n\tMusicStream = \"song.ogg\"")
-        new_file.write("\n\tResolution = " + str(int(res)))
+        new_file.write("\n  Name = \"" + song_name + "\"")
+        new_file.write("\n  Artist = \"" + band_name + "\"")
+        new_file.write("\n  Charter = \"Next Level\"")
+        new_file.write("\n  Album = \"" + disc_name + "\"")
+        new_file.write("\n  Year = \", " + str(year) + "\"")
+        new_file.write("\n  Offset = 3")    #TODO: revome 3sec delay
+        #new_file.write("\n  Offset = 0")    #TODO: revome 3sec delay
+        new_file.write("\n  Resolution = " + str(int(res)))
+        new_file.write("\n  Player2 = bass")
+        new_file.write("\n  Difficulty = " + str(difficulties[4]))
+        new_file.write("\n  Genre = \"Rock Argentino\"")
+        new_file.write("\n  MusicStream = \"song.ogg\"")
+        new_file.write("\n  GuitarStream = \"guitar.ogg\"")
+        new_file.write("\n  RhythmStream = \"rhythm.ogg\"")
+        new_file.write("\n  DrumStream = \"drums.ogg\"")
+        new_file.write("\n  VocalStream = \"vocals.ogg\"")
         new_file.write("\n}\n")
 
         new_file.write("[SyncTrack]")
         #TODO: Res=480000 a recalc ticks with variable BPM from [event]
         new_file.write("\n{")
-        new_file.write("\n\t0 = TS " + str(ts_num) + " " + str(ts_dem))
-        new_file.write("\n\t0 = B " + str(int(bpm)))
+        #new_file.write("\n  0 = TS " + str(ts_num) + " " + str(ts_dem))
+        new_file.write("\n  0 = TS " + str(ts_num))
+        new_file.write("\n  0 = B " + str(int(bpm)))
 
         # BMPs secuence
         bpm_list_phrases = []
@@ -430,8 +432,9 @@ if __name__ == "__main__":
                     this_bpm = 1000*60*sec_tick/res
                 else:
                     this_bpm = 1000*60*sec_tick/this_res
-                #new_file.write("\n\t" + str(this_event.time) + " = B " + str(int(this_bpm)))
-                #new_file.write("\n\t" + str(this_event.time) + " = TS " + str(ts_num) + " " + str(ts_dem))
+                #new_file.write("\n  " + str(this_event.time) + " = TS " + str(ts_num) + " " + str(ts_dem))
+                new_file.write("\n  " + str(this_event.time) + " = TS " + str(ts_num))
+                new_file.write("\n  " + str(this_event.time) + " = B " + str(int(this_bpm)))
             prev_tick = this_tick
             
 
@@ -442,12 +445,44 @@ if __name__ == "__main__":
 
         # Lyrics extraction
         for this_phrase in file_cbr.tracks.vocals.lyrics:
-            new_file.write("\n\t" + str(this_phrase.info[0]) + " = E \"phrase_start\"")
+            new_file.write("\n  " + str(this_phrase.info[0]) + " = E \"phrase_start\"")
             for this_syll in this_phrase.text_block:
-                new_file.write("\n\t" + str(this_syll.time_start) + " = E \"lyric " + str(this_syll.text) + "\"")
-            new_file.write("\n\t" + str(this_phrase.info[1]) + " = E \"phrase_end\"")
+                new_file.write("\n  " + str(this_syll.time_start) + " = E \"lyric " + str(this_syll.text) + "\"")
+            new_file.write("\n  " + str(this_phrase.info[1]) + " = E \"phrase_end\"")
                 
         new_file.write("\n}\n")
+
+        #TODO: Add waveform of lyrics in [HARM1]
+        '''
+        new_file.write("[HARM1]")
+        new_file.write("\n{")
+
+        harm_list = []
+        lyrics_list = []
+        wave_list = []
+        types_list = []
+        for this_phrase in file_cbr.tracks.vocals.lyrics:
+            types_list.append([this_syll.time_start, "T" , 105, this_phrase.info[4]])
+            lyrics_list.append([this_syll.time_start, "N" , 105, this_phrase.info[1] - this_phrase.info[0]])
+            lyrics_list.append([this_syll.time_start, "N" , 105, this_phrase.info[5]])
+            for this_syll in this_phrase.text_block:
+                types_list.append([this_syll.time_start, "T" , 116, this_syll.type])
+                lyrics_list.append([this_syll.time_start, "E" , this_syll.text, " "])            
+
+        for this_wave in file_cbr.tracks.vocals.wave_form:
+            wave_list.append([this_wave.water[1], this_wave.water[0] , this_wave.water[4], this_wave.water[2] - this_wave.water[1]]) 
+        
+        harm_list.extend(lyrics_list)
+        harm_list.extend(wave_list)
+        harm_list.extend(types_list)
+        sorted_harms = []
+        sorted_harms = sorted(harm_list, key=lambda item: item[0])
+        
+        for this_sorted_spark in sorted_harms:
+                    new_file.write("\n  " + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+
+        new_file.write("\n}\n")
+        '''
 
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
@@ -525,6 +560,7 @@ if __name__ == "__main__":
 
                 sp_list_new = []
                 
+                #TODO: Star Power works OK on CH and Moonscraper... not YARG, why?
                 for this_timing, this_type, this_note, this_len in sorted_stars:
                     match sp_counting:
                         case 0:     #Waiting for S
@@ -559,17 +595,17 @@ if __name__ == "__main__":
                     prev_type = this_type
                     
                 sparks_list.extend(sp_list_new)
-                sparks_list.extend(hopo_list)
-                sparks_list.extend(strum_list)
+                #sparks_list.extend(hopo_list)
+                #sparks_list.extend(strum_list)
                 sorted_sparks = []
                 sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
                 
                 for this_sorted_spark in sorted_sparks:
-                    new_file.write("\n\t" + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+                    new_file.write("\n  " + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
 
                 new_file.write("\n}\n")
 
-        '''
+
         #DEBUG BMP testing with DrumsExp
         new_file.write("[ExpertDrums]")
         new_file.write("\n{")
@@ -586,10 +622,10 @@ if __name__ == "__main__":
         sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
 
         for this_sorted_spark in sorted_sparks:
-            new_file.write("\n\t" + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+            new_file.write("\n  " + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
 
         new_file.write("\n}\n")
-        '''
+        
         new_file.close()
                 
         # Save metadata
@@ -611,8 +647,8 @@ if __name__ == "__main__":
         config.set("song", "banner_link_a", "http://www.elrockdetuvida.com/website/index.php")
         config.set("song", "link_name_a", "Homepage")
         config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-        config.set("song", ";video_start_time" , "3000")
-        config.set("song", "delay", "3000") # Verify beats or secs
+        config.set("song", ";video_start_time" , "3000")    #TODO: remove 3sec delay
+        config.set("song", "delay", "3000")                 #TODO: remove 3sec delay
 
         config.set("song", "diff_rhythm", "-1")
         config.set("song", "diff_drums_real", "-1")
@@ -682,8 +718,8 @@ if __name__ == "__main__":
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
-    convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    #convert = 'Y'  # DEBUG
+    #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
+    convert = 'Y'  # DEBUG
     #convert = 'N'  # DEBUG
     if convert == 'Y':
         ffmpeg_file = work_dir + "\\ffmpeg.exe"
@@ -795,12 +831,12 @@ if __name__ == "__main__":
 
                     cmd = ffmpeg_file
                     cmd = cmd + " -y -loglevel -8 -stats -i " 
-                    #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
+                    #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
                     cmd = cmd + "\"" + source_file + "\""
-                    cmd = cmd + " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "     #Skipp 3sec
-                    #cmd = cmd + " -c:a libvorbis -b:a 320k " 
+                    cmd = cmd + " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
+                    #cmd = cmd + " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
                     cmd = cmd + "\"" + dest_file + "\""
-                    #print("Command: " + cmd)    # DEBUG
+                    #print("Command: " + cmd)    #DEBUG
                     subprocess.run(cmd)
                 except:
                     print("FFMPEG.exe not found")
@@ -813,15 +849,14 @@ if __name__ == "__main__":
                 dest_file = dest_dir + copy_file + ".webm"
                 
                 cmd = ffmpeg_file 
-                #cmd = cmd + " -y -loglevel -8 -stats -ss 3000ms -i "   # Intro Skip
                 cmd = cmd + " -y -loglevel -8 -stats -hwaccel auto -i "
-                #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd = cmd + "\"" + source_file + "\""
                 for i, instrument in enumerate(data_order):
                     audio_in = dest_dir + "\\" + instrument + ".ogg"
                     if os.path.exists(audio_in):
                         cmd = cmd + " -i \"" + audio_in + "\""
-                cmd = cmd + " -filter_complex amix=inputs=" 
+                #cmd = cmd + " -ss 3000ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
+                cmd = cmd + " -filter_complex amix=inputs="                 # Intro Skip #TODO: remove 3sec delay
                 cmd = cmd + str(int(i)) 
                 cmd = cmd + ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
                 cmd = cmd + "\"" + dest_file + "\""
