@@ -16,11 +16,17 @@ enums:
     1: medium
     2: hard
     
-    
   pos_id:
     0: lo
     1: me
     2: hi
+    
+  colour_id:
+    0: orange
+    1: blue
+    2: yellow
+    3: red
+    4: green
     
 seq:
   - id: info
@@ -73,15 +79,12 @@ types:
       - id: trk_info
         type: u4
         repeat: expr
-        repeat-expr: 6
+        repeat-expr: 7
+        doc: Variable not decoded yet
         
-      - id: trk_vol
-        type: u4
-      
       - id: nulos  
         terminator: 0
         size: 1656
-        doc: Variable not decoded yet
         
       - id: charts
         type: instrument
@@ -114,20 +117,20 @@ types:
       - id: start_events_pos
         type: u8
              
-      - id: bpm
+      - id: chart_info
         type: u4
+        doc: Variable not decoded yet
         
       - id: nulos
         terminator: 0
         size: 480
-        doc: Variable not decoded yet
         
-      - id: events
-        type: event
+      - id: pulse
+        type: tick
         repeat: expr
         repeat-expr: num_events
 
-  event:
+  tick:
     seq:
       - id: time
         type: u4
@@ -165,7 +168,7 @@ types:
       - id: num_frets_pts
         type: u4
         
-      - id: speed
+      - id: diff_info
         type: u4
         
       - id: pts_frets
@@ -174,11 +177,11 @@ types:
         repeat-expr: num_frets_pts
         
       - id: frets_on_fire
-        type: frets	
+        type: colour
         repeat: expr
         repeat-expr: num_frets_pts
         
-  frets:
+  colour:
     seq:
       - id: num_frets_wave
         type: u4
@@ -187,19 +190,19 @@ types:
         type: u8
         
       - id: frets_wave
-        type: spark
+        type: note
         repeat: expr
         repeat-expr: num_frets_wave
         
-  spark:
+  note:
     seq:
-      - id: timing
+      - id: time
         type: u4
         
       - id: len
         type: u4
         
-      - id: type
+      - id: mods
         type: u4
         
   voice:
@@ -222,13 +225,13 @@ types:
       - id: start_lyrics_pos
         type: u8
         
-      - id: speed
+      - id: vocal_info
         type: u4
+        doc: Variable not decoded yet
 
       - id: nulos
-        size: 96
         terminator: 0
-        doc: Variable not decoded yet
+        size: 96
         
       - id: pts_wave
         type: u8
@@ -258,7 +261,7 @@ types:
       - id: next_pt
         type: u8
         
-      - id: water
+      - id: pitch
         type: u4
         repeat: expr
         repeat-expr: 8
@@ -288,6 +291,7 @@ types:
     seq:        
       - id: time_start
         type: u4
+        
       - id: time_end
         type: u4
         

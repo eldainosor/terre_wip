@@ -26,6 +26,13 @@ class Cbr(KaitaiStruct):
         lo = 0
         me = 1
         hi = 2
+
+    class ColourId(Enum):
+        orange = 0
+        blue = 1
+        yellow = 2
+        red = 3
+        green = 4
     def __init__(self, _io, _parent=None, _root=None):
         self._io = _io
         self._parent = _parent
@@ -35,22 +42,6 @@ class Cbr(KaitaiStruct):
     def _read(self):
         self.info = Cbr.MetaData(self._io, self, self._root)
         self.tracks = Cbr.Track(self._io, self, self._root)
-
-    class Frets(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.num_frets_wave = self._io.read_u4le()
-            self.pts_start_wave = self._io.read_u8le()
-            self.frets_wave = []
-            for i in range(self.num_frets_wave):
-                self.frets_wave.append(Cbr.Spark(self._io, self, self._root))
-
-
 
     class Charts(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
@@ -62,27 +53,15 @@ class Cbr(KaitaiStruct):
         def _read(self):
             self.diff = KaitaiStream.resolve_enum(Cbr.DiffLvl, self._io.read_u4le())
             self.num_frets_pts = self._io.read_u4le()
-            self.speed = self._io.read_u4le()
+            self.diff_info = self._io.read_u4le()
             self.pts_frets = []
             for i in range(self.num_frets_pts):
                 self.pts_frets.append(self._io.read_u8le())
 
             self.frets_on_fire = []
             for i in range(self.num_frets_pts):
-                self.frets_on_fire.append(Cbr.Frets(self._io, self, self._root))
+                self.frets_on_fire.append(Cbr.Colour(self._io, self, self._root))
 
-
-
-    class Event(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.time = self._io.read_u4le()
-            self.type = self._io.read_u4le()
 
 
     class Track(KaitaiStruct):
@@ -105,10 +84,9 @@ class Cbr(KaitaiStruct):
                 self.diff_level.append(self._io.read_u2le())
 
             self.trk_info = []
-            for i in range(6):
+            for i in range(7):
                 self.trk_info.append(self._io.read_u4le())
 
-            self.trk_vol = self._io.read_u4le()
             self.nulos = KaitaiStream.bytes_terminate(self._io.read_bytes(1656), 0, False)
             self.charts = []
             for i in range(3):
@@ -138,7 +116,7 @@ class Cbr(KaitaiStruct):
             self.start_wave_pos = self._io.read_u8le()
             self.num_lyrics_pts = self._io.read_u4le()
             self.start_lyrics_pos = self._io.read_u8le()
-            self.speed = self._io.read_u4le()
+            self.vocal_info = self._io.read_u4le()
             self.nulos = KaitaiStream.bytes_terminate(self._io.read_bytes(96), 0, False)
             self.pts_wave = []
             for i in range(self.num_waves_pts):
@@ -172,7 +150,7 @@ class Cbr(KaitaiStruct):
             self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"WINDOWS-1252")
 
 
-    class Spark(KaitaiStruct):
+    class Tick(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
             self._parent = _parent
@@ -180,9 +158,21 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.timing = self._io.read_u4le()
-            self.len = self._io.read_u4le()
+            self.time = self._io.read_u4le()
             self.type = self._io.read_u4le()
+
+
+    class Note(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.time = self._io.read_u4le()
+            self.len = self._io.read_u4le()
+            self.mods = self._io.read_u4le()
 
 
     class Flow(KaitaiStruct):
@@ -197,9 +187,25 @@ class Cbr(KaitaiStruct):
             if not self.magic == b"\x02\x00\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic, self._io, u"/types/flow/seq/0")
             self.next_pt = self._io.read_u8le()
-            self.water = []
+            self.pitch = []
             for i in range(8):
-                self.water.append(self._io.read_u4le())
+                self.pitch.append(self._io.read_u4le())
+
+
+
+    class Colour(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.num_frets_wave = self._io.read_u4le()
+            self.pts_start_wave = self._io.read_u8le()
+            self.frets_wave = []
+            for i in range(self.num_frets_wave):
+                self.frets_wave.append(Cbr.Note(self._io, self, self._root))
 
 
 
@@ -241,11 +247,11 @@ class Cbr(KaitaiStruct):
             self.start_diff_pos = self._io.read_u8le()
             self.num_events = self._io.read_u4le()
             self.start_events_pos = self._io.read_u8le()
-            self.bpm = self._io.read_u4le()
+            self.chart_info = self._io.read_u4le()
             self.nulos = KaitaiStream.bytes_terminate(self._io.read_bytes(480), 0, False)
-            self.events = []
+            self.pulse = []
             for i in range(self.num_events):
-                self.events.append(Cbr.Event(self._io, self, self._root))
+                self.pulse.append(Cbr.Tick(self._io, self, self._root))
 
 
 

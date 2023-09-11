@@ -75,11 +75,11 @@ if __name__ == "__main__":
                     "Dif:V",
                     "Dif:B", 
                     "Vol",
-                    "BPM:G",
-                    "BPM:R",
-                    "BPM:D",
-                    "BPM:V",
-                    "BPM:B",
+                    "Info:G",
+                    "Info:R",
+                    "Info:D",
+                    "Info:V",
+                    "Info:B",
                     "S:G_0",
                     "S:G_1",
                     "S:G_2",
@@ -153,7 +153,7 @@ if __name__ == "__main__":
             band_diff += instrument
         difficulties[4] = int(band_diff / 4)
         
-        song_vol = file_cbr.tracks.trk_vol
+        track_info = file_cbr.tracks.trk_info[6]
 
         print("Diff. Guitar =\t" + str(difficulties[0]))  # DEBUG test Kaitai
         print("Diff. Rythm =\t" + str(difficulties[1]))  # DEBUG test Kaitai
@@ -250,76 +250,76 @@ if __name__ == "__main__":
 
         #ExtractEvents(file_cbr)        
         head_lens = []
-        bpms = []
+        chart_info = []
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
-            bpms.append(this_inst.head.bpm)
-            file_name = "events_" + this_inst_name + ".csv"
-            event_file = open(file_name, "w", newline="")
-            csv_writer = csv.writer(event_file)
+            chart_info.append(this_inst.head.chart_info)
+            file_name = "pulse_" + this_inst_name + ".csv"
+            pulse_file = open(file_name, "w", newline="")
+            csv_writer = csv.writer(pulse_file)
             data_in = [ "time", 
                     "type" , 
                     "DIFF" , 
                     "MIN",
                     "SEC",
-                    "bpm", 
-                    "vol" ]
+                    "cht_nfo", 
+                    "trk_nfo" ]
             csv_writer.writerow(data_in)
             
-            inst_events = this_inst.head.events
+            inst_pulse = this_inst.head.pulse
 
-            bpm = this_inst.head.bpm
-            vol = file_cbr.tracks.trk_vol
+            this_chart_info = this_inst.head.chart_info
+            this_trk_info = file_cbr.tracks.trk_info[6]
                 
-            head_lens.append(len(inst_events))
-            #print(this_inst_name + " header len: " + str(int(len(inst_events))))       # DEBUG
-            #print(this_inst_name + " header len: " + str(this_inst.head.num_events))    # DEBUG
+            head_lens.append(len(inst_pulse))
+            #print(this_inst_name + " header len: " + str(int(len(inst_pulse))))       # DEBUG
+            #print(this_inst_name + " header len: " + str(this_inst.head.num_pulse))    # DEBUG
             
             # chart = Chart(chart_path)
 
             csv_rows = []
             last_tick = 0
             aux = 0
-            for block in inst_events:
+            for this_pulse in inst_pulse:
                 
-                sec = ( block.time ) / ( sec_tick )
+                sec = ( this_pulse.time ) / ( sec_tick )
                 #sec *= 60
                 #sec /= bpm
                 min = int(sec / 60)
                 sec %= 60
 
-                last_tick = block.time
-                data_in = [ block.time, 
-                            block.type, 
-                            block.time - aux,
+                last_tick = this_pulse.time
+                data_in = [ this_pulse.time, 
+                            this_pulse.type, 
+                            this_pulse.time - aux,
                             min,
                             sec,
-                            bpm, 
-                            vol ]
-                aux = block.time
+                            this_chart_info, 
+                            this_trk_info ]
+                aux = this_pulse.time
                 csv_rows.append(data_in)
             
             res = 0
             aux = 0
             i = 0
-            diff_events = []
-            for block in inst_events:
-                diff_events.append(block.time - aux)
-                aux = block.time
+            diff_pulse = []
+            for this_pulse in inst_pulse:
+                diff_pulse.append(this_pulse.time - aux)
+                aux = this_pulse.time
 
-            diff_count = Counter(diff_events)
+            diff_count = Counter(diff_pulse)
             #aux = diff_count.most_common(1)[0]
             #res = 2*aux[0]
             res = 2*diff_count.most_common(1)[0][0]
 
             csv_writer.writerows(csv_rows)
-            event_file.close()
+            pulse_file.close()
 
-        bpms.append(file_cbr.tracks.vocals.head.bpm)
+        chart_info.append(file_cbr.tracks.vocals.head.chart_info)
         try:
-            bpms.append(file_cbr.tracks.band.bpm)
+            chart_info.append(file_cbr.tracks.band.chart_info)
         except:
-            bpms.append(int(0))
+            chart_info.append(int(0))
         
         largest_number = head_lens[0]
         for number in head_lens:
@@ -328,19 +328,19 @@ if __name__ == "__main__":
         
         # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
-        speeds = []
+        diff_info = []
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             for this_diff in this_inst.diff_charts:
                 this_diff_name = this_diff.diff.name
-                speeds.append(this_diff.speed)
+                diff_info.append(this_diff.diff_info)
                 file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
                 chart_file = open(file_name, "w", newline="")
                 csv_writer = csv.writer(chart_file)
                 
-                bpm = this_inst.head.bpm
-                vol = file_cbr.tracks.trk_vol
-                speed = this_diff.speed
+                this_chart_info = this_inst.head.chart_info
+                this_trk_info = file_cbr.tracks.trk_info[6]
+                this_diff_info = this_diff.diff_info
                 
                 data_in = [ "time", 
                         "len", 
@@ -348,31 +348,31 @@ if __name__ == "__main__":
                         "fret", 
                         "MIN", 
                         "SEC",
-                        "bpm",
-                        "vol",
-                        "speed"
+                        "cht_nfo",
+                        "trk_nfo",
+                        "diff_nfo"
                         ]
                 csv_writer.writerow(data_in)
                 
                 csv_rows = []
                 csv_rows_sorted = []
-                for i, this_fret in enumerate(this_diff.frets_on_fire):
-                    for this_spark in this_fret.frets_wave:
+                for i, this_colour in enumerate(this_diff.frets_on_fire):
+                    for this_note in this_colour.frets_wave:
                         #TODO: Find real Rsolution, BPM and TS.
-                        sec = ( this_spark.timing ) / ( sec_tick )
+                        sec = ( this_note.time ) / ( sec_tick )
                         #sec *= 60
                         #sec /= bpm
                         min = int(sec / 60)
                         sec %= 60
-                        data_in = [ this_spark.timing, 
-                                this_spark.len, 
-                                this_spark.type, 
+                        data_in = [ this_note.time, 
+                                this_note.len, 
+                                this_note.mods, 
                                 i, 
                                 min, 
                                 sec,
-                                bpm,
-                                vol,
-                                speed
+                                this_chart_info,
+                                this_trk_info,
+                                this_diff_info
                                 ]
                         csv_rows.append(data_in)
                 
@@ -380,15 +380,13 @@ if __name__ == "__main__":
 
                 csv_writer.writerows(csv_rows_sorted)
                 chart_file.close()
-        speeds.append(file_cbr.tracks.vocals.speed)
-
+        diff_info.append(file_cbr.tracks.vocals.vocal_info)
 
         # Create chart file
-
         ts_num = 4  #TODO: Find real ts (time signature - compas)
         ts_dem = 2  # this is 2^ts_dem
         #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-        bpm = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
+        this_chart_info = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
         new_file = open("notes.chart", "w", encoding='utf-8')
 
         new_file.write("[Song]")
@@ -416,28 +414,27 @@ if __name__ == "__main__":
         new_file.write("\n{")
         #new_file.write("\n  0 = TS " + str(ts_num) + " " + str(ts_dem))
         new_file.write("\n  0 = TS " + str(ts_num))
-        new_file.write("\n  0 = B " + str(int(bpm)))
+        new_file.write("\n  0 = B " + str(int(this_chart_info)))
 
         # BMPs secuence
         bpm_list_phrases = []
         this_tick = 0
         prev_tick = 0
         this_res = res
-        this_bpm = bpm
-        for this_event in file_cbr.tracks.charts[0].head.events:
-            this_tick = this_event.time
+        this_bpm = this_chart_info
+        for this_pulse in file_cbr.tracks.charts[0].head.pulse:
+            this_tick = this_pulse.time
             this_res = 2*(this_tick - prev_tick)
-            if this_event.type == 3:
+            if this_pulse.type == 2:
                 if this_res == 0:
                     this_bpm = 1000*60*sec_tick/res
                 else:
                     this_bpm = 1000*60*sec_tick/this_res
                 #new_file.write("\n  " + str(this_event.time) + " = TS " + str(ts_num) + " " + str(ts_dem))
-                new_file.write("\n  " + str(this_event.time) + " = TS " + str(ts_num))
-                new_file.write("\n  " + str(this_event.time) + " = B " + str(int(this_bpm)))
+                new_file.write("\n  " + str(this_pulse.time) + " = TS " + str(ts_num))
+                new_file.write("\n  " + str(this_pulse.time) + " = B " + str(int(this_bpm)))
             prev_tick = this_tick
             
-
         new_file.write("\n}\n")
 
         new_file.write("[Events]")
@@ -503,36 +500,36 @@ if __name__ == "__main__":
                 new_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
                 new_file.write("\n{")
 
-                sparks_list = []
+                notes_list = []
                 sp_list = []
                 hopo_list = []
                 strum_list = []
                 mods_list = []
-                for i, this_fret in enumerate(this_diff.frets_on_fire):
-                    for this_spark in this_fret.frets_wave:
+                for i, this_colour in enumerate(this_diff.frets_on_fire):
+                    for this_note in this_colour.frets_wave:
                         if this_inst_name == "Drums":
-                            this_note = i
+                            note_colour = i
                         else:
-                            this_note = 4 - i
+                            note_colour = 4 - i
                         
                         #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN, 0x02 ???
-                        sparks_list.append([this_spark.timing, "N", this_note, this_spark.len])
+                        notes_list.append([this_note.time, "N", note_colour, this_note.len])
 
-                        has_sp = this_spark.type & 0x01
-                        has_hopo = this_spark.type & 0x10
-                        has_strum = this_spark.type & 0x20
-                        has_other = this_spark.type & 0x0E  #DEBUG
+                        has_sp = this_note.mods & 0x01
+                        has_hopo = this_note.mods & 0x10
+                        has_strum = this_note.mods & 0x20
+                        has_other = this_note.mods & 0x0E  #DEBUG
 
                         if has_sp:
-                            sp_list.append([this_spark.timing, "S", this_note, this_spark.len])
+                            sp_list.append([this_note.time, "S", note_colour, this_note.len])
                             #sp_list.append([this_spark.timing, "S", 2, this_spark.len])
                         
                         if has_hopo:
-                            hopo_list.append([this_spark.timing, "N", 5, this_spark.len])
+                            hopo_list.append([this_note.time, "N", 5, this_note.len])
 
                         if has_strum:
                             # TODO: What kind of modifier is this?
-                            strum_list.append([this_spark.timing, "N", 9, this_spark.len])
+                            strum_list.append([this_note.time, "N", 9, this_note.len])
                             #strum_list.append([this_spark.timing, "N", 5, this_spark.len])
     
                         if has_other:
@@ -543,7 +540,7 @@ if __name__ == "__main__":
 
                 sp_list_old = []
                 sp_list_old.extend(sp_list)
-                sp_list.extend(sparks_list)
+                sp_list.extend(notes_list)
                 sorted_stars = []
                 sorted_stars = sorted(sp_list, key=lambda item: item[0])
 
@@ -594,14 +591,14 @@ if __name__ == "__main__":
                     prev_len = this_len
                     prev_type = this_type
                     
-                sparks_list.extend(sp_list_new)
-                #sparks_list.extend(hopo_list)
-                #sparks_list.extend(strum_list)
-                sorted_sparks = []
-                sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
+                notes_list.extend(sp_list_new)
+                #notes_list.extend(hopo_list)
+                #notes_list.extend(strum_list)
+                sorted_notes = []
+                sorted_notes = sorted(notes_list, key=lambda item: item[0])
                 
-                for this_sorted_spark in sorted_sparks:
-                    new_file.write("\n  " + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+                for this_sorted_note in sorted_notes:
+                    new_file.write("\n  " + str(this_sorted_note[0]) + " = " + str(this_sorted_note[1]) + " " + str(this_sorted_note[2]) + " " + str(this_sorted_note[3]) )
 
                 new_file.write("\n}\n")
 
@@ -610,19 +607,19 @@ if __name__ == "__main__":
         new_file.write("[ExpertDrums]")
         new_file.write("\n{")
 
-        sparks_list = []
-        inst_events = file_cbr.tracks.charts[2].head.events
-        for block in inst_events:
+        notes_list = []
+        inst_pulse = file_cbr.tracks.charts[2].head.pulse
+        for this_pulse in inst_pulse:
             #aux = 3 - block.type
-            aux = block.type + 1
+            aux = this_pulse.type + 1
             #aux += 2
             #aux %= 4
-            sparks_list.append([block.time, "N", aux, "0"])
+            notes_list.append([this_pulse.time, "N", aux, "0"])
 
-        sorted_sparks = sorted(sparks_list, key=lambda item: item[0])
+        sorted_notes = sorted(notes_list, key=lambda item: item[0])
 
-        for this_sorted_spark in sorted_sparks:
-            new_file.write("\n  " + str(this_sorted_spark[0]) + " = " + str(this_sorted_spark[1]) + " " + str(this_sorted_spark[2]) + " " + str(this_sorted_spark[3]) )
+        for this_sorted_note in sorted_notes:
+            new_file.write("\n  " + str(this_sorted_note[0]) + " = " + str(this_sorted_note[1]) + " " + str(this_sorted_note[2]) + " " + str(this_sorted_note[3]) )
 
         new_file.write("\n}\n")
         
@@ -683,25 +680,25 @@ if __name__ == "__main__":
                     difficulties[2], # Drums
                     difficulties[3], # Vocal
                     difficulties[4], # Band
-                    song_vol,
-                    bpms[0],    # Guitar
-                    bpms[1],    # Rhythm
-                    bpms[2],    # Drums
-                    bpms[3],    # Vocal
-                    bpms[4],    # Band
-                    speeds[0],  # Guitar-Easy
-                    speeds[1],  # Guitar-Norm
-                    speeds[2],  # Guitar-Hard
-                    speeds[3],  # Rhythm-Easy
-                    speeds[4],  # Rhythm-Norm
-                    speeds[5],  # Rhythm-Hard
-                    speeds[6],  # Drums-Easy
-                    speeds[7],  # Drums-Norm
-                    speeds[8],  # Drums-Hard
-                    speeds[9],  # Vocals
+                    track_info,
+                    chart_info[0],    # Guitar
+                    chart_info[1],    # Rhythm
+                    chart_info[2],    # Drums
+                    chart_info[3],    # Vocal
+                    chart_info[4],    # Band
+                    diff_info[0],  # Guitar-Easy
+                    diff_info[1],  # Guitar-Norm
+                    diff_info[2],  # Guitar-Hard
+                    diff_info[3],  # Rhythm-Easy
+                    diff_info[4],  # Rhythm-Norm
+                    diff_info[5],  # Rhythm-Hard
+                    diff_info[6],  # Drums-Easy
+                    diff_info[7],  # Drums-Norm
+                    diff_info[8],  # Drums-Hard
+                    diff_info[9],  # Vocals
                     res,
                     last_tick,
-                    bpm,
+                    this_chart_info,
         ]
 
         csv_writer.writerow(data_in)
