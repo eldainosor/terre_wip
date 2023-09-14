@@ -277,7 +277,8 @@ if __name__ == "__main__":
                     "MIN",
                     "SEC",
                     "cht_nfo", 
-                    "trk_nfo" ]
+                    "trk_nfo",
+                      ]
             csv_writer.writerow(data_in)
             
             inst_pulse = this_inst.head.pulse
@@ -309,7 +310,8 @@ if __name__ == "__main__":
                             min,
                             sec,
                             this_chart_info, 
-                            this_trk_info ]
+                            this_trk_info,
+                              ]
                 aux = this_pulse.time
                 csv_rows.append(data_in)
             
@@ -342,6 +344,7 @@ if __name__ == "__main__":
         
         # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
+        '''
         diff_info = []
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
@@ -386,7 +389,7 @@ if __name__ == "__main__":
                                 sec,
                                 this_chart_info,
                                 this_trk_info,
-                                this_diff_info
+                                this_diff_info,
                                 ]
                         csv_rows.append(data_in)
                 
@@ -395,12 +398,13 @@ if __name__ == "__main__":
                 csv_writer.writerows(csv_rows_sorted)
                 chart_file.close()
         diff_info.append(file_cbr.tracks.vocals.vocal_info)
+        '''
 
         # Create chart file
         ts_num = 4  #TODO: Find real ts (time signature - compas)
         ts_dem = 2  # this is 2^ts_dem
         #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-        this_chart_info = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
+        bpm = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
         new_file = open("notes.chart", "w", encoding='utf-8')
 
         new_file.write("[Song]")
@@ -427,28 +431,59 @@ if __name__ == "__main__":
         #TODO: Res=480000 a recalc ticks with variable BPM from [event]
         new_file.write("\n{")
         #new_file.write("\n  0 = TS " + str(ts_num) + " " + str(ts_dem))
-        new_file.write("\n  0 = TS " + str(ts_num))
-        new_file.write("\n  0 = B " + str(int(this_chart_info)))
+        #new_file.write("\n  0 = TS " + str(ts_num))
+        #new_file.write("\n  0 = B " + str(int(bpm)))
 
         # BMPs secuence
+        #TODO analize pulse ts_num and bpm
         bpm_list_phrases = []
-        this_tick = 0
         prev_tick = 0
+        start_tick = 0
         this_res = res
-        this_bpm = this_chart_info
+        this_bpm = bpm
+        this_ts_n = ts_num
+        #this_ts_d = ts_dem
+        ts_count = 0
+        prev_pulse_time = 0
+        prev_pulse_type = 0
+        prev_bpm = 0
+        prev_ts_n = 0
+        #TODO fix sync
         for this_pulse in file_cbr.tracks.charts[0].head.pulse:
-            this_tick = this_pulse.time
-            this_res = 2*(this_tick - prev_tick)
-            if this_pulse.type == 2:
-                if this_res == 0:
-                    this_bpm = 1000*60*sec_tick/res
+            if this_pulse.time >= prev_pulse_time:
+                # Start pulse
+                if this_pulse.type == 2:
+                    # Save and Reestart
+                    if ts_count > 0 and prev_pulse_type == 1:                        
+                        this_ts_n = int (ts_count / 2)
+                        this_res = this_pulse.time - start_pulse.time
+                        this_res /= this_ts_n
+                        this_bpm = 1000*60*sec_tick/this_res
+                        if this_ts_n != prev_ts_n:
+                            new_file.write("\n  " + str(this_pulse.time) + " = TS " + str(this_ts_n))
+                            prev_ts_n = this_ts_n
+                        if this_bpm != prev_bpm:
+                            new_file.write("\n  " + str(this_pulse.time) + " = B " + str(int(this_bpm)))
+                            prev_bpm = this_bpm
+                    # First Pulse
+                    start_pulse = this_pulse
+                    ts_count = 1
+
+                elif this_pulse.type == 3 and prev_pulse_type == 2:
+                    ts_count += 1
+                elif this_pulse.type == 0 and prev_pulse_type == 3:
+                    ts_count += 1
+                elif this_pulse.type == 1 and prev_pulse_type == 0:
+                    ts_count += 1
+                elif this_pulse.type == 0 and prev_pulse_type == 1:
+                    ts_count += 1
                 else:
-                    this_bpm = 1000*60*sec_tick/this_res
-                #new_file.write("\n  " + str(this_event.time) + " = TS " + str(ts_num) + " " + str(ts_dem))
-                new_file.write("\n  " + str(this_pulse.time) + " = TS " + str(ts_num))
-                new_file.write("\n  " + str(this_pulse.time) + " = B " + str(int(this_bpm)))
-            prev_tick = this_tick
+                    ts_count = 0
+            else:
+                ts_count = 0
             
+            prev_pulse_time = this_pulse.time
+            prev_pulse_type = this_pulse.type
         new_file.write("\n}\n")
 
         new_file.write("[Events]")
@@ -617,7 +652,7 @@ if __name__ == "__main__":
                 new_file.write("\n}\n")
 
 
-        #DEBUG BMP testing with DrumsExp
+        #DEBUG BPM testing with DrumsExp
         new_file.write("[ExpertDrums]")
         new_file.write("\n{")
 
@@ -700,16 +735,16 @@ if __name__ == "__main__":
                     chart_info[2],    # Drums
                     chart_info[3],    # Vocal
                     chart_info[4],    # Band
-                    diff_info[0],  # Guitar-Easy
-                    diff_info[1],  # Guitar-Norm
-                    diff_info[2],  # Guitar-Hard
-                    diff_info[3],  # Rhythm-Easy
-                    diff_info[4],  # Rhythm-Norm
-                    diff_info[5],  # Rhythm-Hard
-                    diff_info[6],  # Drums-Easy
-                    diff_info[7],  # Drums-Norm
-                    diff_info[8],  # Drums-Hard
-                    diff_info[9],  # Vocals
+                    #diff_info[0],  # Guitar-Easy
+                    #diff_info[1],  # Guitar-Norm
+                    #diff_info[2],  # Guitar-Hard
+                    #diff_info[3],  # Rhythm-Easy
+                    #diff_info[4],  # Rhythm-Norm
+                    #diff_info[5],  # Rhythm-Hard
+                    #diff_info[6],  # Drums-Easy
+                    #diff_info[7],  # Drums-Norm
+                    #diff_info[8],  # Drums-Hard
+                    #diff_info[9],  # Vocals
                     res,
                     last_tick,
                     this_chart_info,
