@@ -28,8 +28,17 @@ from collections import Counter
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "medium", "hard"]
-sec_tick = 44096
+sec_tick = 44096    #TODO: find if it can be fixed or calibrated
+const_res = 480     #Like RB
+#const_res = 192    #Like GH
 #TODO: Res=480000 a recalc ticks with variable BPM from [event]
+
+'''
+def fixtiming(time):
+    this_bpm = 1000*60*sec_tick/this_res
+    res = 2*diff_count.most_common(1)[0][0]
+    return time
+'''
 
 if __name__ == "__main__":
 
@@ -94,19 +103,20 @@ if __name__ == "__main__":
                     "Info:D",
                     "Info:V",
                     "Info:B",
-                    "S:G_0",
-                    "S:G_1",
-                    "S:G_2",
-                    "S:R_0",
-                    "S:R_1",
-                    "S:R_2",
-                    "S:D_0",
-                    "S:D_1",
-                    "S:D_2",
-                    "S:V_0",
+                    #"S:G_0",
+                    #"S:G_1",
+                    #"S:G_2",
+                    #"S:R_0",
+                    #"S:R_1",
+                    #"S:R_2",
+                    #"S:D_0",
+                    #"S:D_1",
+                    #"S:D_2",
+                    #"S:V_0",
                     "Res",
+                    "First tick",
                     "Last tick",
-                    "BPM:cal",
+                    #"BPM:cal",
         ]
         
         csv_writer.writerow(data_in)
@@ -293,6 +303,7 @@ if __name__ == "__main__":
             # chart = Chart(chart_path)
 
             csv_rows = []
+            first_tick = 0
             last_tick = 0
             aux = 0
             for this_pulse in inst_pulse:
@@ -302,6 +313,9 @@ if __name__ == "__main__":
                 #sec /= bpm
                 min = int(sec / 60)
                 sec %= 60
+
+                if first_tick == 0:
+                    first_tick = this_pulse.time
 
                 last_tick = this_pulse.time
                 data_in = [ this_pulse.time, 
@@ -448,40 +462,38 @@ if __name__ == "__main__":
         prev_pulse_type = 0
         prev_bpm = 0
         prev_ts_n = 0
+        start_pulse_time = 0
+        offset_pulse = 0
         #TODO fix sync
         for this_pulse in file_cbr.tracks.charts[0].head.pulse:
-            if this_pulse.time >= prev_pulse_time:
+            #if offset_pulse > 0:
+            if start_pulse_time > 0:
+
                 # Start pulse
-                if this_pulse.type == 2:
+                if this_pulse.type != 2:
+                    ts_count += 1
+                else:
                     # Save and Reestart
-                    if ts_count > 0 and prev_pulse_type == 1:                        
+                    if ts_count > 1:
                         this_ts_n = int (ts_count / 2)
-                        this_res = this_pulse.time - start_pulse.time
+                        this_res = this_pulse.time - start_pulse_time
                         this_res /= this_ts_n
                         this_bpm = 1000*60*sec_tick/this_res
                         if this_ts_n != prev_ts_n:
-                            new_file.write("\n  " + str(this_pulse.time) + " = TS " + str(this_ts_n))
+                            new_file.write("\n  " + str(start_pulse_time + offset_pulse) + " = TS " + str(this_ts_n))
                             prev_ts_n = this_ts_n
                         if this_bpm != prev_bpm:
-                            new_file.write("\n  " + str(this_pulse.time) + " = B " + str(int(this_bpm)))
-                            prev_bpm = this_bpm
-                    # First Pulse
-                    start_pulse = this_pulse
+                            new_file.write("\n  " + str(start_pulse_time + offset_pulse) + " = B " + str(int(this_bpm)))
+                            prev_bpm = this_bpm                        
+                    start_pulse_time = this_pulse.time
                     ts_count = 1
-
-                elif this_pulse.type == 3 and prev_pulse_type == 2:
-                    ts_count += 1
-                elif this_pulse.type == 0 and prev_pulse_type == 3:
-                    ts_count += 1
-                elif this_pulse.type == 1 and prev_pulse_type == 0:
-                    ts_count += 1
-                elif this_pulse.type == 0 and prev_pulse_type == 1:
-                    ts_count += 1
-                else:
-                    ts_count = 0
-            else:
-                ts_count = 0
             
+            else:
+                if this_pulse.type == 3 and prev_pulse_type == 2:
+                    #offset_pulse = prev_pulse_time
+                    start_pulse_time = prev_pulse_time
+                    ts_count = 2
+                
             prev_pulse_time = this_pulse.time
             prev_pulse_type = this_pulse.type
         new_file.write("\n}\n")
@@ -746,8 +758,9 @@ if __name__ == "__main__":
                     #diff_info[8],  # Drums-Hard
                     #diff_info[9],  # Vocals
                     res,
+                    first_tick,
                     last_tick,
-                    this_chart_info,
+                    #this_chart_info,
         ]
 
         csv_writer.writerow(data_in)
