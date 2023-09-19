@@ -124,7 +124,7 @@ class Cbr(KaitaiStruct):
 
             self.wave_form = []
             for i in range(self.num_waves_pts):
-                self.wave_form.append(Cbr.Flow(self._io, self, self._root))
+                self.wave_form.append(Cbr.Pitch(self._io, self, self._root))
 
             self.pts_lyrics = []
             for i in range(self.num_lyrics_pts):
@@ -175,24 +175,6 @@ class Cbr(KaitaiStruct):
             self.mods = self._io.read_u4le()
 
 
-    class Flow(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.magic = self._io.read_bytes(4)
-            if not self.magic == b"\x02\x00\x00\x00":
-                raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic, self._io, u"/types/flow/seq/0")
-            self.next_pt = self._io.read_u8le()
-            self.pitch = []
-            for i in range(8):
-                self.pitch.append(self._io.read_u4le())
-
-
-
     class Colour(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -232,6 +214,28 @@ class Cbr(KaitaiStruct):
 
 
 
+    class Pitch(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.magic = self._io.read_bytes(4)
+            if not self.magic == b"\x02\x00\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x02\x00\x00\x00", self.magic, self._io, u"/types/pitch/seq/0")
+            self.next_pt = self._io.read_u8le()
+            self.scale = self._io.read_u4le()
+            self.start = self._io.read_u4le()
+            self.end = self._io.read_u4le()
+            self.mod = self._io.read_u4le()
+            self.note = self._io.read_u4le()
+            self.start_harm = self._io.read_u4le()
+            self.note_harm = self._io.read_u4le()
+            self.end_harm = self._io.read_u4le()
+
+
     class Header(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -245,12 +249,12 @@ class Cbr(KaitaiStruct):
             if not self.magic == b"\x00\x02\x00\x00":
                 raise kaitaistruct.ValidationNotEqualError(b"\x00\x02\x00\x00", self.magic, self._io, u"/types/header/seq/1")
             self.start_diff_pos = self._io.read_u8le()
-            self.num_events = self._io.read_u4le()
-            self.start_events_pos = self._io.read_u8le()
+            self.num_pulse = self._io.read_u4le()
+            self.start_pulse_pos = self._io.read_u8le()
             self.chart_info = self._io.read_u4le()
             self.nulos = KaitaiStream.bytes_terminate(self._io.read_bytes(480), 0, False)
             self.pulse = []
-            for i in range(self.num_events):
+            for i in range(self.num_pulse):
                 self.pulse.append(Cbr.Tick(self._io, self, self._root))
 
 

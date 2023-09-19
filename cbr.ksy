@@ -111,10 +111,10 @@ types:
       - id: start_diff_pos
         type: u8
         
-      - id: num_events
+      - id: num_pulse
         type: u4
         
-      - id: start_events_pos
+      - id: start_pulse_pos
         type: u8
              
       - id: chart_info
@@ -128,7 +128,7 @@ types:
       - id: pulse
         type: tick
         repeat: expr
-        repeat-expr: num_events
+        repeat-expr: num_pulse
 
   tick:
     seq:
@@ -239,7 +239,7 @@ types:
         repeat-expr: num_waves_pts
 
       - id: wave_form
-        type: flow
+        type: pitch
         repeat: expr
         repeat-expr: num_waves_pts
         
@@ -253,7 +253,7 @@ types:
         repeat: expr
         repeat-expr: num_lyrics_pts
         
-  flow:
+  pitch:
     seq:
       - id: magic
         contents: [0x02, 0x00, 0x00, 0x00]
@@ -261,11 +261,23 @@ types:
       - id: next_pt
         type: u8
         
-      - id: pitch
+      - id: scale
         type: u4
-        repeat: expr
-        repeat-expr: 8
-        doc: Is this timing?
+      - id: start
+        type: u4
+      - id: end
+        type: u4
+      - id: mod
+        type: u4
+      - id: note
+        type: u4
+        
+      - id: start_harm
+        type: u4
+      - id: note_harm
+        type: u4
+      - id: end_harm
+        type: u4
 
   verse:
     seq:

@@ -1,20 +1,6 @@
 #!/usr/bin/python
 # Python script
 # Made by Envido32
-'''
-Extra info about new variables name:
-trk_vol > trk_info[7]
-bpm	> chart_info
-events	> pulse
-event	> tick
-speed	> diff_info
-frets	> colour
-spark	> note
-timing	> time
-type	> mods
-speed	> vocal_info
-water	> pitch
-'''
 
 import os, re, shutil
 import subprocess
@@ -28,7 +14,7 @@ from collections import Counter
 data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
 inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
 diff_order = ["easy", "medium", "hard"]
-sec_tick = 44096    #TODO: find if it can be fixed or calibrated
+sec_tick = 44092    #TODO: find if it can be fixed or calibrated
 const_res = 480     #Like RB
 #const_res = 192    #Like GH
 #TODO: Res=480000 a recalc ticks with variable BPM from [event]
@@ -272,7 +258,7 @@ if __name__ == "__main__":
         # Save Kaitai Log
         # COMMON HEADER
 
-        #ExtractEvents(file_cbr)        
+        # Extract Pulses (file_cbr)        
         head_lens = []
         chart_info = []
         for this_inst in file_cbr.tracks.charts:
@@ -358,7 +344,6 @@ if __name__ == "__main__":
         
         # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
-        '''
         diff_info = []
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
@@ -412,7 +397,57 @@ if __name__ == "__main__":
                 csv_writer.writerows(csv_rows_sorted)
                 chart_file.close()
         diff_info.append(file_cbr.tracks.vocals.vocal_info)
-        '''
+
+
+        file_name = "charts_vocals.csv"
+        chart_file = open(file_name, "w", newline="")
+        csv_writer = csv.writer(chart_file)
+        
+        #   0       1       2   3       4    5       6       7
+        # [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
+        data_in = [ "TIME", 
+                    "LEN", 
+                    "mod", 
+                    "scale", 
+                    "noteA",
+                    "noteB",
+                    "NULL",
+                    "startA",
+                    "startB",
+                    "NULL",
+                    "endA",
+                    "endB",
+                    "NULL",
+                    ]
+        csv_writer.writerow(data_in)
+
+        csv_rows = []
+        csv_rows_sorted = []
+                
+        for this_wave in file_cbr.tracks.vocals.wave_form:
+            # Pitch: [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
+            this_note = this_wave.note
+            #this_note %= 5
+            data_in = [ this_wave.start,     # Time
+                        this_wave.end - this_wave.start,   #Len
+                        this_wave.mod,     # Mod
+                        this_wave.scale,     # Scale
+                        this_wave.note,     # NoteA
+                        this_wave.note_harm,     # NoteB
+                        this_wave.note_harm - this_wave.note,    # NULL
+                        this_wave.start,     # StartA
+                        this_wave.start_harm,     # StartB
+                        this_wave.start_harm - this_wave.start,    # NULL
+                        this_wave.end,     # EndA
+                        this_wave.end_harm,     # EndB
+                        this_wave.end_harm - this_wave.end    # NULL
+                        ]
+            csv_rows.append(data_in)
+
+        csv_rows_sorted = sorted(csv_rows, key=lambda item: item[0])
+
+        csv_writer.writerows(csv_rows_sorted)
+        chart_file.close()
 
         # Create chart file
         ts_num = 4  #TODO: Find real ts (time signature - compas)
@@ -457,7 +492,7 @@ if __name__ == "__main__":
         this_bpm = bpm
         this_ts_n = ts_num
         #this_ts_d = ts_dem
-        ts_count = 0
+        beats = 0
         prev_pulse_time = 0
         prev_pulse_type = 0
         prev_bpm = 0
@@ -471,11 +506,11 @@ if __name__ == "__main__":
 
                 # Start pulse
                 if this_pulse.type != 2:
-                    ts_count += 1
+                    beats += 1
                 else:
                     # Save and Reestart
-                    if ts_count > 1:
-                        this_ts_n = int (ts_count / 2)
+                    if beats > 1:
+                        this_ts_n = int (beats / 2)
                         this_res = this_pulse.time - start_pulse_time
                         this_res /= this_ts_n
                         this_bpm = 1000*60*sec_tick/this_res
@@ -486,13 +521,13 @@ if __name__ == "__main__":
                             new_file.write("\n  " + str(start_pulse_time + offset_pulse) + " = B " + str(int(this_bpm)))
                             prev_bpm = this_bpm                        
                     start_pulse_time = this_pulse.time
-                    ts_count = 1
+                    beats = 1
             
             else:
                 if this_pulse.type == 3 and prev_pulse_type == 2:
-                    #offset_pulse = prev_pulse_time
+                    offset_pulse = prev_pulse_time
                     start_pulse_time = prev_pulse_time
-                    ts_count = 2
+                    beats = 2
                 
             prev_pulse_time = this_pulse.time
             prev_pulse_type = this_pulse.type
@@ -510,38 +545,34 @@ if __name__ == "__main__":
                 
         new_file.write("\n}\n")
 
-        #TODO: Add waveform of lyrics in [HARM1]
-        '''
-        new_file.write("[HARM1]")
+        new_file.write("[HardKeyboard]")    #DEBUG Vocals test
+        #new_file.write("[Vocals]")    #DEBUG Vocals test
         new_file.write("\n{")
 
-        harm_list = []
-        lyrics_list = []
         wave_list = []
-        types_list = []
-        for this_phrase in file_cbr.tracks.vocals.lyrics:
-            types_list.append([this_syll.time_start, "T" , 105, this_phrase.info[4]])
-            lyrics_list.append([this_syll.time_start, "N" , 105, this_phrase.info[1] - this_phrase.info[0]])
-            lyrics_list.append([this_syll.time_start, "N" , 105, this_phrase.info[5]])
-            for this_syll in this_phrase.text_block:
-                types_list.append([this_syll.time_start, "T" , 116, this_syll.type])
-                lyrics_list.append([this_syll.time_start, "E" , this_syll.text, " "])            
-
+        harm_list = []
+        sp_list = []
         for this_wave in file_cbr.tracks.vocals.wave_form:
-            wave_list.append([this_wave.pitch[1], this_wave.pitch[0] , this_wave.pitch[4], this_wave.pitch[2] - this_wave.pitch[1]]) 
-        
-        harm_list.extend(lyrics_list)
+            # Pitch: [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
+            this_note = this_wave.note + 12 * this_wave.scale
+            this_note_harm = this_wave.note_harm + 12 * this_wave.scale
+            #this_note %= 5
+            wave_list.append([this_wave.start, "N", this_note, this_wave.end - this_wave.start]) 
+            harm_list.append([this_wave.start_harm, "E", this_note_harm, this_wave.end_harm - this_wave.start_harm]) 
+            if this_wave.mod:
+                wave_list.append([this_wave.start, "S", this_note, this_wave.end - this_wave.start]) 
+                #wave_list.append([this_wave.start, "S", 2, this_wave.end - this_wave.start]) 
+            
         harm_list.extend(wave_list)
-        harm_list.extend(types_list)
+        harm_list.extend(sp_list)
         sorted_harms = []
         sorted_harms = sorted(harm_list, key=lambda item: item[0])
         
         for this_sorted_notes in sorted_harms:
-                    new_file.write("\n  " + str(this_sorted_notes[0]) + " = " + str(this_sorted_notes[1]) + " " + str(this_sorted_notes[2]) + " " + str(this_sorted_notes[3]) )
+            new_file.write("\n  " + str(this_sorted_notes[0]) + " = " + str(this_sorted_notes[1])  + " " + str(this_sorted_notes[2]) + " " + str(this_sorted_notes[3]))
 
         new_file.write("\n}\n")
-        '''
-
+        
         for this_inst in file_cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             
