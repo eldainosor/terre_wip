@@ -7,13 +7,12 @@ import subprocess
 import time
 import cbr, disc, band
 import csv, configparser
+from terre_ex import *
 from collections import Counter
 # from chchart_parser.chart import Chart
 
 # Config Constants 
-data_order = ["head","guitar", "rhythm", "drums", "vocals", "song"]
-inst_order = ["guitar", "rhythm", "drums", "vocals", "band"]
-diff_order = ["easy", "medium", "hard"]
+debug = True       #DEBUG
 sec_tick = 44092    #TODO: find if it can be fixed or calibrated
 const_res = 480     #Like RB
 #const_res = 192    #Like GH
@@ -32,20 +31,19 @@ if __name__ == "__main__":
 
     print(" >>> EXTRACTOR TODO EL ROCK (RECARGADO) <<< ")
 
-    localtime = time.localtime(start_time)
-    local = time.strftime("%H:%M:%S", localtime)
-    print("Start time: ", local)
+    Config = Settings(debug)
+    Config.print_start_time()
 
     #disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
     #disc_dir = "E:" # DEBUG
     #mozart_dir = disc_dir + "\\install\\data\\mozart"
-    mozart_dir = "D:\\Games\\Rythm\\ERDTV\\Mozart"  #TODO: Delete when done
-    songs_dir = mozart_dir + "\\song"
-    bands_dir = mozart_dir + "\\band"
-    discs_dir = mozart_dir + "\\disc"
-    work_dir = os.getcwd()
-    output_dir = os.getcwd() + "\\erdtv"
-    raw_dir = os.getcwd() + "\\raw"
+    mozart_dir = Config.dir_mozart
+    songs_dir = Config.dir_songs
+    bands_dir = Config.dir_bands
+    discs_dir = Config.dir_disc
+    work_dir = Config.dir_work
+    output_dir = Config.dir_out
+    raw_dir = Config.dir_raw
     
     print("Working dir:\t [", work_dir, "]")
 
@@ -269,7 +267,7 @@ if __name__ == "__main__":
             csv_writer = csv.writer(pulse_file)
             data_in = [ "time", 
                     "type" , 
-                    "DIFF" , 
+                    "DELTA" , 
                     "MIN",
                     "SEC",
                     "cht_nfo", 
@@ -318,15 +316,15 @@ if __name__ == "__main__":
             res = 0
             aux = 0
             i = 0
-            diff_pulse = []
+            delta_pulse = []
             for this_pulse in inst_pulse:
-                diff_pulse.append(this_pulse.time - aux)
+                delta_pulse.append(this_pulse.time - aux)
                 aux = this_pulse.time
 
-            diff_count = Counter(diff_pulse)
-            #aux = diff_count.most_common(1)[0]
+            delta_count = Counter(delta_pulse)
+            #aux = delta_count.most_common(1)[0]
             #res = 2*aux[0]
-            res = 2*diff_count.most_common(1)[0][0]
+            res = 2*delta_count.most_common(1)[0][0]
 
             csv_writer.writerows(csv_rows)
             pulse_file.close()
