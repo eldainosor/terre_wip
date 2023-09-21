@@ -2,7 +2,7 @@
 # Python script
 # Made by Envido32
 
-import os, re, shutil
+import os, shutil
 import subprocess
 import time
 import cbr, disc, band
@@ -27,103 +27,32 @@ def fixtiming(time):
 
 if __name__ == "__main__":
 
-    start_time = time.time()
-
     print(" >>> EXTRACTOR TODO EL ROCK (RECARGADO) <<< ")
 
     Config = Settings(debug)
     Config.print_start_time()
 
-    #disc_dir = input("Elegi la unidad del disco ERDTV: ")[0].upper() + ":"
-    #disc_dir = "E:" # DEBUG
-    #mozart_dir = disc_dir + "\\install\\data\\mozart"
-    mozart_dir = Config.dir_mozart
-    songs_dir = Config.dir_songs
-    bands_dir = Config.dir_bands
-    discs_dir = Config.dir_disc
-    work_dir = Config.dir_work
-    output_dir = Config.dir_out
-    raw_dir = Config.dir_raw
-    
-    print("Working dir:\t [", work_dir, "]")
+    print("Working dir:\t [", Config.dir_work, "]")
 
-    # Analize files
-    print(" > Analizing files... < " )
-    print("Songs dir:\t[", songs_dir ,"]")
-    os.chdir(songs_dir)
-
-    dir_files = os.listdir(songs_dir)
-    #print("Files in dir:\t",  dir_files)   # DEBUG
-
-    cbr_files = []
-    for filename in dir_files:
-        if re.search("\.cbr$", filename):
-            cbr_files.append(filename)
-
-    n = len(cbr_files)
-
-    # Create log file
-    if n > 0:
-        print("Songs found in dir:\t",  n)
-        os.chdir(work_dir)
-        csv_name = "songs.csv"
-        new_file = open(csv_name, "w", newline="")
-        csv_writer = csv.writer(new_file)
-        data_in = [ "Artista",
-                    "Canción",
-                    "Disco",
-                    "Año",
-                    "Song ID",
-                    "Band ID",
-                    "Disc ID",
-                    "Dif:G",
-                    "Dif:R",
-                    "Dif:D",
-                    "Dif:V",
-                    "Dif:B", 
-                    "Vol",
-                    "Info:G",
-                    "Info:R",
-                    "Info:D",
-                    "Info:V",
-                    "Info:B",
-                    #"S:G_0",
-                    #"S:G_1",
-                    #"S:G_2",
-                    #"S:R_0",
-                    #"S:R_1",
-                    #"S:R_2",
-                    #"S:D_0",
-                    #"S:D_1",
-                    #"S:D_2",
-                    #"S:V_0",
-                    "Res",
-                    "First tick",
-                    "Last tick",
-                    #"BPM:cal",
-        ]
-        
-        csv_writer.writerow(data_in)
-        new_file.close()
-
-    #print("Disk dir:\t", songs_dir)    # DEBUG
+    Playlist = AnalizeDir(Config, debug)
 
     # Output directories
     try:
-        os.mkdir(raw_dir)
+        os.mkdir(Config.dir_raw)
     except OSError as error:
-        print("Output dir:\t[", raw_dir, "] already exists")
+        print("Output dir:\t[", Config.dir_raw, "] already exists")
         
     # Raw extraction
-    for k, filename in enumerate(cbr_files):
+    for k, filename in enumerate(Playlist.cbr_files):
         k += 1
+        n = len(Playlist.cbr_files)
         start_song = time.time()
         local = time.strftime("%H:%M:%S", time.localtime(start_song))
         print("Song start: ", local)
 
         print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
-        os.chdir(songs_dir)
+        os.chdir(Config.dir_songs)
         #working_file = open(filename, "rb")
         #file_id, ext = os.path.splitext(filename)
         #print("File ID = " + file_id)  # DEBUG test Kaitai
@@ -170,7 +99,7 @@ if __name__ == "__main__":
         print("Diff. Band =\t" + str(difficulties[4]))  # DEBUG test Kaitai
     
         # Analize Bands
-        os.chdir(bands_dir)
+        os.chdir(Config.dir_bands)
 
         #dir_files = os.listdir(curr_dir) # DEBUG
         #print("Files in dir:", dir_files) # DEBUG
@@ -181,14 +110,14 @@ if __name__ == "__main__":
         print("Band = " + band_name)
         
         # Analize discs
-        os.chdir(discs_dir)
+        os.chdir(Config.dir_discs)
         file_disc = disc.Disc.from_file(disc_id + ".disc")
         disc_name = str(file_disc.disc_name).rstrip('\x00')
         print("Disc = " + disc_name)
         disc_img = file_disc.image.png
 
         # Analize Background
-        os.chdir(songs_dir)
+        os.chdir(Config.dir_songs)
         working_file = open(song_id + ".bgf", "rb")
         background_data = working_file.read(0x020C)
         background_img = working_file.read()
@@ -203,7 +132,7 @@ if __name__ == "__main__":
         working_file.close()
 
         # Output Files
-        new_song_dir = raw_dir + "\\" + band_name + " - " + song_name
+        new_song_dir = Config.dir_raw + "\\" + band_name + " - " + song_name
 
         try:
             os.mkdir(new_song_dir)
@@ -228,7 +157,7 @@ if __name__ == "__main__":
             new_file.close()
 
         # Copy preview
-        source = songs_dir + "\\" + song_id
+        source = Config.dir_songs + "\\" + song_id
         dest = new_song_dir
         try:
             print("Copying preview...")
@@ -245,7 +174,7 @@ if __name__ == "__main__":
 
         # Copy icon
         #TODO extract from Disk (.ico to .png)
-        source = work_dir
+        source = Config.dir_work
         dest = new_song_dir
         try:
             #print("Copying icon...")
@@ -754,7 +683,7 @@ if __name__ == "__main__":
         new_file.close()
 
         # Save to log
-        os.chdir(work_dir)
+        os.chdir(Config.dir_work)
         csv_name = "songs.csv"
         new_file = open(csv_name, "a", newline="")
         csv_writer = csv.writer(new_file)
@@ -799,10 +728,8 @@ if __name__ == "__main__":
         elapsed_tm = time.time() - start_song
         elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
         print("This song took:\t" , elapsed)
-        total_tm = time.time() - start_time
-        total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
-        print("Total time took:\t" , total)
-        eta_time = time.gmtime((total_tm / k ) * (n - k))
+        Config.print_elapsed_time()
+        eta_time = time.gmtime((Config.total_tm / k ) * (n - k))
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
@@ -810,18 +737,18 @@ if __name__ == "__main__":
     convert = 'Y'  # DEBUG
     #convert = 'N'  # DEBUG
     if convert == 'Y':
-        ffmpeg_file = work_dir + "\\ffmpeg.exe"
+        ffmpeg_file = Config.dir_work + "\\ffmpeg.exe"
 
         # Create output dir
-        os.chdir(work_dir)
+        os.chdir(Config.dir_work)
         try:
-            os.mkdir(output_dir)
+            os.mkdir(Config.dir_out)
         except OSError as error:
-            print("[", output_dir, "] already exists")
+            print("[", Config.dir_out, "] already exists")
 
         # Generate lists of songs extracted
-        os.chdir(raw_dir)
-        songs_list = os.listdir(raw_dir)
+        os.chdir(Config.dir_raw)
+        songs_list = os.listdir(Config.dir_raw)
         #n = len(songs_list)
 
         # Loof for each song
@@ -834,8 +761,8 @@ if __name__ == "__main__":
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
             print("Song start: ", local)
 
-            source_dir = raw_dir + "\\" + this_song
-            dest_dir = output_dir + "\\" + this_song
+            source_dir = Config.dir_raw + "\\" + this_song
+            dest_dir = Config.dir_out + "\\" + this_song
             try:
                 os.mkdir(dest_dir)
             except OSError as error:
@@ -957,12 +884,9 @@ if __name__ == "__main__":
             elapsed_tm = time.time() - start_song
             elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
             print("This song took:\t" , elapsed)
-            total_tm = time.time() - start_time
-            total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
-            print("Total time took:\t" , total)
-            eta_time = time.gmtime((total_tm / j ) * (n - j))
+            Config.print_elapsed_time()
+            eta_time = time.gmtime((Config.total_tm / j ) * (n - j))
             print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
-    total_tm = time.time() - start_time
-    total = time.strftime("%H:%M:%S", time.gmtime(total_tm))
-    print("All tasks took: " , total)
+    Config.print_elapsed_time()
+    
