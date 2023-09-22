@@ -5,6 +5,7 @@
 import os, re
 import csv
 import time
+import cbr, disc, band
 
 # Config Constants 
 #debug = True    #DEBUG
@@ -21,16 +22,17 @@ def promt(text, valids):
         input_char = input(str(text))[0].upper()
     return input_char
 
+def HexIDtoString(hex_id):    # String formating
+    str_id = str(hex(hex_id))
+    str_id = str_id.upper()
+    str_id = str_id.lstrip('0X')
+    #aux_id = str(hex(hex_id)).upper().lstrip('0X')    # String formating
+    return str_id
+
 class Settings(object):
     def __init__(self, debug = False):        
         self.start_time = time.time()        
         
-        self.localtime = time.localtime(self.start_time)
-        self.local = time.strftime("%H:%M:%S", self.localtime)
-        
-        self.total_tm = time.time() - self.start_time
-        self.total = time.strftime("%H:%M:%S", time.gmtime(self.total_tm))
-
         if debug:   #DEBUG
             self.dir_drive = "D:"
             self.dir_mozart = self.dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
@@ -60,16 +62,16 @@ class Settings(object):
         self.dir_out = os.getcwd() + "\\erdtv"
 
     def print_start_time(self):
-        self.localtime = time.localtime(self.start_time)
-        self.local = time.strftime("%H:%M:%S", self.localtime)
-        print("Start time: ", self.local)
-        return self.local
+        localtime = time.localtime(self.start_time)
+        strlocal = time.strftime("%H:%M:%S", localtime)
+        print("Start time: ", strlocal)
+        return localtime
 
     def print_elapsed_time(self):
-        self.total_tm = time.time() - self.start_time
-        self.total = time.strftime("%H:%M:%S", time.gmtime(self.total_tm))
-        print("Total time took:\t" , self.total)
-        return self.total
+        total_tm = time.time() - self.start_time
+        strtotal = time.strftime("%H:%M:%S", time.gmtime(total_tm))
+        print("Total time took:\t" , strtotal)
+        return total_tm
         
 class Playlist(object):
     def __init__(self, cfg, debug = False):
@@ -138,3 +140,49 @@ class Playlist(object):
 
         #print("Disk dir:\t", songs_dir)    # DEBUG
 
+class Song(object):
+    def __init__(self, cfg, file, debug = False):
+        self.start_time = time.time()
+        
+        os.chdir(cfg.dir_songs)
+        self.cbr = cbr.Cbr.from_file(file)
+
+        # Extract Metadata
+        self.song_id = HexIDtoString(self.cbr.info.song_id)
+        self.band_id = HexIDtoString(self.cbr.info.band_id)
+        self.disc_id = HexIDtoString(self.cbr.info.disc_id)
+        self.name = str(self.cbr.info.song_name).rstrip('\x00')
+        self.year = self.cbr.info.year
+        
+        # Extract Difficulty
+        self.diffs = self.cbr.tracks.diff_level
+        self.band_diff = int(0)
+        i = 0
+        for instrument in self.cbr.tracks.diff_level:
+            self.band_diff += instrument
+            if instrument > 0:
+                i += 1
+        self.diffs[i] = int(self.band_diff / i)
+        
+        self.track_info = self.cbr.tracks.trk_info[6]
+
+        if debug:   #DEBUG
+            print("Song ID = " + self.song_id)  # DEBUG test Kaitai
+            print("Band ID = " + self.band_id)  # DEBUG test Kaitai
+            print("Disc ID = " + self.disc_id)  # DEBUG test Kaitai
+            print("Year = " + str(self.year))  # DEBUG test Kaitai
+            print("Song = " + self.cbr.info.song_name)  # DEBUG test Kaitai
+            for i, instrument in enumerate(inst_order):
+                print("Diff. " + instrument +" =\t" + str(self.diffs[i]))  # DEBUG test Kaitai
+
+    def print_start_time(self):
+        localtime = time.localtime(self.start_time)
+        strlocal = time.strftime("%H:%M:%S", localtime)
+        print("Song start: ", strlocal)
+        return localtime
+
+    def print_elapsed_time(self):
+        total_tm = time.time() - self.start_time
+        strtotal = time.strftime("%H:%M:%S", time.gmtime(total_tm))
+        print("This song took:\t", strtotal)
+        return total_tm

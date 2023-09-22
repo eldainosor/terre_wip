@@ -46,58 +46,12 @@ if __name__ == "__main__":
     for k, filename in enumerate(pl.files):
         k += 1
         n = len(pl.files)
-        start_song = time.time()
-        local = time.strftime("%H:%M:%S", time.localtime(start_song))
-        print("Song start: ", local)
+
+        this_song = Song(cfg, filename, debug)
+        this_song.print_start_time()
 
         print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
-        os.chdir(cfg.dir_songs)
-        #working_file = open(filename, "rb")
-        #file_id, ext = os.path.splitext(filename)
-        #print("File ID = " + file_id)  # DEBUG test Kaitai
-
-        # Read CBR file
-        file_cbr = cbr.Cbr.from_file(filename)
-        
-        # Extract Song ID
-        song_id = file_cbr.info.song_id     # Int vble
-        song_id = str(hex(song_id)).upper().lstrip('0X')    # String formating
-        print("Song ID = " + song_id)  # DEBUG test Kaitai
-
-        # Extract Band ID
-        band_id = file_cbr.info.band_id     # Int vble
-        band_id = str(hex(band_id)).upper().lstrip('0X')    # String formating
-        print("Band ID = " + band_id)  # DEBUG test Kaitai
-        
-        # Extract Disc ID
-        disc_id = file_cbr.info.disc_id     # Int vble
-        disc_id = str(hex(disc_id)).upper().lstrip('0X')    # String formating
-        print("Disc ID = " + disc_id)  # DEBUG test Kaitai
-
-        # Extract Year
-        year = file_cbr.info.year
-        print("Year = " + str(year))  # DEBUG test Kaitai
-        
-        # Extract Song Name
-        song_name = str(file_cbr.info.song_name).rstrip('\x00')
-        print("Song = " + file_cbr.info.song_name)  # DEBUG test Kaitai
-
-        # Extract Difficulty
-        difficulties = file_cbr.tracks.diff_level
-        band_diff = int(0)
-        for instrument in difficulties:
-            band_diff += instrument
-        difficulties[4] = int(band_diff / 4)
-        
-        track_info = file_cbr.tracks.trk_info[6]
-
-        print("Diff. Guitar =\t" + str(difficulties[0]))  # DEBUG test Kaitai
-        print("Diff. Rythm =\t" + str(difficulties[1]))  # DEBUG test Kaitai
-        print("Diff. Drums =\t" + str(difficulties[2]))  # DEBUG test Kaitai
-        print("Diff. Vocal =\t" + str(difficulties[3]))  # DEBUG test Kaitai
-        print("Diff. Band =\t" + str(difficulties[4]))  # DEBUG test Kaitai
-    
         # Analize Bands
         os.chdir(cfg.dir_bands)
 
@@ -105,34 +59,34 @@ if __name__ == "__main__":
         #print("Files in dir:", dir_files) # DEBUG
 
         # Read Band file
-        file_band = band.Band.from_file(band_id + ".band")
+        file_band = band.Band.from_file(this_song.band_id + ".band")
         band_name = str(file_band.band_name).rstrip('\x00')
         print("Band = " + band_name)
         
         # Analize discs
         os.chdir(cfg.dir_discs)
-        file_disc = disc.Disc.from_file(disc_id + ".disc")
+        file_disc = disc.Disc.from_file(this_song.disc_id + ".disc")
         disc_name = str(file_disc.disc_name).rstrip('\x00')
         print("Disc = " + disc_name)
         disc_img = file_disc.image.png
 
         # Analize Background
         os.chdir(cfg.dir_songs)
-        working_file = open(song_id + ".bgf", "rb")
+        working_file = open(this_song.song_id + ".bgf", "rb")
         background_data = working_file.read(0x020C)
         background_img = working_file.read()
         working_file.close()
 
         # Analize Stems
         #print(" > Searching band... < " )
-        working_file = open(song_id + ".au", "rb")
+        working_file = open(this_song.song_id + ".au", "rb")
         song_data = working_file.read()
         flac_head = "fLaC".encode('U8')
         audio_data = song_data.split(flac_head)
         working_file.close()
 
         # Output Files
-        new_song_dir = cfg.dir_raw + "\\" + band_name + " - " + song_name
+        new_song_dir = cfg.dir_raw + "\\" + band_name + " - " + this_song.name
 
         try:
             os.mkdir(new_song_dir)
@@ -157,7 +111,7 @@ if __name__ == "__main__":
             new_file.close()
 
         # Copy preview
-        source = cfg.dir_songs + "\\" + song_id
+        source = cfg.dir_songs + "\\" + this_song.song_id
         dest = new_song_dir
         try:
             print("Copying preview...")
@@ -188,7 +142,7 @@ if __name__ == "__main__":
         # Extract Pulses (file_cbr)        
         head_lens = []
         chart_info = []
-        for this_inst in file_cbr.tracks.charts:
+        for this_inst in this_song.cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             chart_info.append(this_inst.head.chart_info)
             file_name = "pulse_" + this_inst_name + ".csv"
@@ -207,7 +161,7 @@ if __name__ == "__main__":
             inst_pulse = this_inst.head.pulse
 
             this_chart_info = this_inst.head.chart_info
-            this_trk_info = file_cbr.tracks.trk_info[6]
+            this_trk_info = this_song.cbr.tracks.trk_info[6]
                 
             head_lens.append(len(inst_pulse))
             #print(this_inst_name + " header len: " + str(int(len(inst_pulse))))       # DEBUG
@@ -258,9 +212,9 @@ if __name__ == "__main__":
             csv_writer.writerows(csv_rows)
             pulse_file.close()
 
-        chart_info.append(file_cbr.tracks.vocals.head.chart_info)
+        chart_info.append(this_song.cbr.tracks.vocals.head.chart_info)
         try:
-            chart_info.append(file_cbr.tracks.band.chart_info)
+            chart_info.append(this_song.cbr.tracks.band.chart_info)
         except:
             chart_info.append(int(0))
         
@@ -272,7 +226,7 @@ if __name__ == "__main__":
         # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
 
         diff_info = []
-        for this_inst in file_cbr.tracks.charts:
+        for this_inst in this_song.cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             for this_diff in this_inst.diff_charts:
                 this_diff_name = this_diff.diff.name
@@ -282,7 +236,7 @@ if __name__ == "__main__":
                 csv_writer = csv.writer(chart_file)
                 
                 this_chart_info = this_inst.head.chart_info
-                this_trk_info = file_cbr.tracks.trk_info[6]
+                this_trk_info = this_song.cbr.tracks.trk_info[6]
                 this_diff_info = this_diff.diff_info
                 
                 data_in = [ "time", 
@@ -323,7 +277,7 @@ if __name__ == "__main__":
 
                 csv_writer.writerows(csv_rows_sorted)
                 chart_file.close()
-        diff_info.append(file_cbr.tracks.vocals.vocal_info)
+        diff_info.append(this_song.cbr.tracks.vocals.vocal_info)
 
 
         file_name = "charts_vocals.csv"
@@ -351,7 +305,7 @@ if __name__ == "__main__":
         csv_rows = []
         csv_rows_sorted = []
                 
-        for this_wave in file_cbr.tracks.vocals.wave_form:
+        for this_wave in this_song.cbr.tracks.vocals.wave_form:
             # Pitch: [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
             this_note = this_wave.note
             #this_note %= 5
@@ -385,16 +339,16 @@ if __name__ == "__main__":
 
         new_file.write("[Song]")
         new_file.write("\n{")
-        new_file.write("\n  Name = \"" + song_name + "\"")
+        new_file.write("\n  Name = \"" + this_song.name + "\"")
         new_file.write("\n  Artist = \"" + band_name + "\"")
         new_file.write("\n  Charter = \"Next Level\"")
         new_file.write("\n  Album = \"" + disc_name + "\"")
-        new_file.write("\n  Year = \", " + str(year) + "\"")
+        new_file.write("\n  Year = \", " + str(this_song.year) + "\"")
         new_file.write("\n  Offset = 3")    #TODO: revome 3sec delay
         #new_file.write("\n  Offset = 0")    #TODO: revome 3sec delay
         new_file.write("\n  Resolution = " + str(int(res)))
         new_file.write("\n  Player2 = bass")
-        new_file.write("\n  Difficulty = " + str(difficulties[4]))
+        new_file.write("\n  Difficulty = " + str(this_song.diffs[4]))
         new_file.write("\n  Genre = \"Rock Argentino\"")
         new_file.write("\n  MusicStream = \"song.ogg\"")
         new_file.write("\n  GuitarStream = \"guitar.ogg\"")
@@ -427,7 +381,7 @@ if __name__ == "__main__":
         start_pulse_time = 0
         offset_pulse = 0
         #TODO fix sync
-        for this_pulse in file_cbr.tracks.charts[0].head.pulse:
+        for this_pulse in this_song.cbr.tracks.charts[0].head.pulse:
             #if offset_pulse > 0:
             if start_pulse_time > 0:
 
@@ -464,7 +418,7 @@ if __name__ == "__main__":
         new_file.write("\n{")
 
         # Lyrics extraction
-        for this_phrase in file_cbr.tracks.vocals.lyrics:
+        for this_phrase in this_song.cbr.tracks.vocals.lyrics:
             new_file.write("\n  " + str(this_phrase.info[0]) + " = E \"phrase_start\"")
             for this_syll in this_phrase.text_block:
                 new_file.write("\n  " + str(this_syll.time_start) + " = E \"lyric " + str(this_syll.text) + "\"")
@@ -479,7 +433,7 @@ if __name__ == "__main__":
         wave_list = []
         harm_list = []
         sp_list = []
-        for this_wave in file_cbr.tracks.vocals.wave_form:
+        for this_wave in this_song.cbr.tracks.vocals.wave_form:
             # Pitch: [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
             this_note = this_wave.note + 12 * this_wave.scale
             this_note_harm = this_wave.note_harm + 12 * this_wave.scale
@@ -500,7 +454,7 @@ if __name__ == "__main__":
 
         new_file.write("\n}\n")
         
-        for this_inst in file_cbr.tracks.charts:
+        for this_inst in this_song.cbr.tracks.charts:
             this_inst_name = this_inst.head.instrument_id.name
             
             match this_inst_name:
@@ -627,7 +581,7 @@ if __name__ == "__main__":
         new_file.write("\n{")
 
         notes_list = []
-        inst_pulse = file_cbr.tracks.charts[2].head.pulse
+        inst_pulse = this_song.cbr.tracks.charts[2].head.pulse
         for this_pulse in inst_pulse:
             #aux = 3 - block.type
             aux = this_pulse.type + 1
@@ -649,14 +603,14 @@ if __name__ == "__main__":
         config.add_section("song")
 
         config.set("song", "artist", band_name)
-        config.set("song", "name", song_name)
+        config.set("song", "name", this_song.name)
         config.set("song", "album", disc_name)
-        config.set("song", "year", str(year))
-        config.set("song", "diff_guitar", str(difficulties[0]))
-        config.set("song", "diff_bass", str(difficulties[1]))
-        config.set("song", "diff_drums", str(difficulties[2]))
-        config.set("song", "diff_vocals", str(difficulties[3]))
-        config.set("song", "diff_band", str(difficulties[4]))
+        config.set("song", "year", str(this_song.year))
+        config.set("song", "diff_guitar", str(this_song.diffs[0]))
+        config.set("song", "diff_bass", str(this_song.diffs[1]))
+        config.set("song", "diff_drums", str(this_song.diffs[2]))
+        config.set("song", "diff_vocals", str(this_song.diffs[3]))
+        config.set("song", "diff_band", str(this_song.diffs[4]))
         config.set("song", "icon", "erdtv")
         config.set("song", "genre", "Rock Argentino")
         config.set("song", "charter", "Next Level")
@@ -688,18 +642,18 @@ if __name__ == "__main__":
         new_file = open(csv_name, "a", newline="")
         csv_writer = csv.writer(new_file)
         data_in = [ band_name,
-                    song_name,
+                    this_song.name,
                     disc_name,
-                    year,
-                    song_id,
-                    band_id,
-                    disc_id,
-                    difficulties[0], # Guitar
-                    difficulties[1], # Rhythm
-                    difficulties[2], # Drums
-                    difficulties[3], # Vocal
-                    difficulties[4], # Band
-                    track_info,
+                    this_song.year,
+                    this_song.song_id,
+                    this_song.band_id,
+                    this_song.disc_id,
+                    this_song.diffs[0], # Guitar
+                    this_song.diffs[1], # Rhythm
+                    this_song.diffs[2], # Drums
+                    this_song.diffs[3], # Vocal
+                    this_song.diffs[4], # Band
+                    this_song.track_info,
                     chart_info[0],    # Guitar
                     chart_info[1],    # Rhythm
                     chart_info[2],    # Drums
@@ -725,11 +679,8 @@ if __name__ == "__main__":
         new_file.close()
 
         # Show time and ETA
-        elapsed_tm = time.time() - start_song
-        elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
-        print("This song took:\t" , elapsed)
-        cfg.print_elapsed_time()
-        eta_time = time.gmtime((cfg.total_tm / k ) * (n - k))
+        total_tm = this_song.print_elapsed_time()
+        eta_time = time.gmtime((total_tm / k ) * (n - k))
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
@@ -884,8 +835,8 @@ if __name__ == "__main__":
             elapsed_tm = time.time() - start_song
             elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
             print("This song took:\t" , elapsed)
-            cfg.print_elapsed_time()
-            eta_time = time.gmtime((cfg.total_tm / j ) * (n - j))
+            total_tm = cfg.print_elapsed_time()
+            eta_time = time.gmtime((total_tm / j ) * (n - j))
             print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
     cfg.print_elapsed_time()
