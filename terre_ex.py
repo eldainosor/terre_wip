@@ -71,24 +71,24 @@ class Settings(object):
         print("Total time took:\t" , self.total)
         return self.total
         
-class AnalizeDir(object):
+class Playlist(object):
     def __init__(self, cfg, debug = False):
         # Analize files
         print(" > Analizing files... < " )
         os.chdir(cfg.dir_songs)
         print("Songs dir:\t[" + cfg.dir_songs  +"]")
 
-        self.dir_files = os.listdir(cfg.dir_songs)
+        self.all_files = os.listdir(cfg.dir_songs)
         
-        self.cbr_files = []
-        for self.filename in self.dir_files:
+        self.files = []
+        for self.filename in self.all_files:
             if re.search("\.cbr$", self.filename):
-                self.cbr_files.append(self.filename)
-        del self.dir_files
+                self.files.append(self.filename)
+        del self.all_files
 
         # Create log file
-        if len(self.cbr_files) > 0:
-            print("Songs found in dir:\t",  len(self.cbr_files))
+        if len(self.files) > 0:
+            print("Songs found in dir:\t",  len(self.files))
             os.chdir(cfg.dir_work)
             self.log_file_name = "songs.csv"
             self.log_file = open(self.log_file_name, "w", newline="")

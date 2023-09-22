@@ -29,30 +29,30 @@ if __name__ == "__main__":
 
     print(" >>> EXTRACTOR TODO EL ROCK (RECARGADO) <<< ")
 
-    Config = Settings(debug)
-    Config.print_start_time()
+    cfg = Settings(debug)
+    cfg.print_start_time()
 
-    print("Working dir:\t [", Config.dir_work, "]")
+    print("Working dir:\t [", cfg.dir_work, "]")
 
-    Playlist = AnalizeDir(Config, debug)
+    pl = Playlist(cfg, debug)
 
     # Output directories
     try:
-        os.mkdir(Config.dir_raw)
+        os.mkdir(cfg.dir_raw)
     except OSError as error:
-        print("Output dir:\t[", Config.dir_raw, "] already exists")
+        print("Output dir:\t[", cfg.dir_raw, "] already exists")
         
     # Raw extraction
-    for k, filename in enumerate(Playlist.cbr_files):
+    for k, filename in enumerate(pl.files):
         k += 1
-        n = len(Playlist.cbr_files)
+        n = len(pl.files)
         start_song = time.time()
         local = time.strftime("%H:%M:%S", time.localtime(start_song))
         print("Song start: ", local)
 
         print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
-        os.chdir(Config.dir_songs)
+        os.chdir(cfg.dir_songs)
         #working_file = open(filename, "rb")
         #file_id, ext = os.path.splitext(filename)
         #print("File ID = " + file_id)  # DEBUG test Kaitai
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         print("Diff. Band =\t" + str(difficulties[4]))  # DEBUG test Kaitai
     
         # Analize Bands
-        os.chdir(Config.dir_bands)
+        os.chdir(cfg.dir_bands)
 
         #dir_files = os.listdir(curr_dir) # DEBUG
         #print("Files in dir:", dir_files) # DEBUG
@@ -110,14 +110,14 @@ if __name__ == "__main__":
         print("Band = " + band_name)
         
         # Analize discs
-        os.chdir(Config.dir_discs)
+        os.chdir(cfg.dir_discs)
         file_disc = disc.Disc.from_file(disc_id + ".disc")
         disc_name = str(file_disc.disc_name).rstrip('\x00')
         print("Disc = " + disc_name)
         disc_img = file_disc.image.png
 
         # Analize Background
-        os.chdir(Config.dir_songs)
+        os.chdir(cfg.dir_songs)
         working_file = open(song_id + ".bgf", "rb")
         background_data = working_file.read(0x020C)
         background_img = working_file.read()
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         working_file.close()
 
         # Output Files
-        new_song_dir = Config.dir_raw + "\\" + band_name + " - " + song_name
+        new_song_dir = cfg.dir_raw + "\\" + band_name + " - " + song_name
 
         try:
             os.mkdir(new_song_dir)
@@ -157,7 +157,7 @@ if __name__ == "__main__":
             new_file.close()
 
         # Copy preview
-        source = Config.dir_songs + "\\" + song_id
+        source = cfg.dir_songs + "\\" + song_id
         dest = new_song_dir
         try:
             print("Copying preview...")
@@ -174,7 +174,7 @@ if __name__ == "__main__":
 
         # Copy icon
         #TODO extract from Disk (.ico to .png)
-        source = Config.dir_work
+        source = cfg.dir_work
         dest = new_song_dir
         try:
             #print("Copying icon...")
@@ -683,7 +683,7 @@ if __name__ == "__main__":
         new_file.close()
 
         # Save to log
-        os.chdir(Config.dir_work)
+        os.chdir(cfg.dir_work)
         csv_name = "songs.csv"
         new_file = open(csv_name, "a", newline="")
         csv_writer = csv.writer(new_file)
@@ -728,8 +728,8 @@ if __name__ == "__main__":
         elapsed_tm = time.time() - start_song
         elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
         print("This song took:\t" , elapsed)
-        Config.print_elapsed_time()
-        eta_time = time.gmtime((Config.total_tm / k ) * (n - k))
+        cfg.print_elapsed_time()
+        eta_time = time.gmtime((cfg.total_tm / k ) * (n - k))
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
@@ -737,18 +737,18 @@ if __name__ == "__main__":
     convert = 'Y'  # DEBUG
     #convert = 'N'  # DEBUG
     if convert == 'Y':
-        ffmpeg_file = Config.dir_work + "\\ffmpeg.exe"
+        ffmpeg_file = cfg.dir_work + "\\ffmpeg.exe"
 
         # Create output dir
-        os.chdir(Config.dir_work)
+        os.chdir(cfg.dir_work)
         try:
-            os.mkdir(Config.dir_out)
+            os.mkdir(cfg.dir_out)
         except OSError as error:
-            print("[", Config.dir_out, "] already exists")
+            print("[", cfg.dir_out, "] already exists")
 
         # Generate lists of songs extracted
-        os.chdir(Config.dir_raw)
-        songs_list = os.listdir(Config.dir_raw)
+        os.chdir(cfg.dir_raw)
+        songs_list = os.listdir(cfg.dir_raw)
         #n = len(songs_list)
 
         # Loof for each song
@@ -761,8 +761,8 @@ if __name__ == "__main__":
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
             print("Song start: ", local)
 
-            source_dir = Config.dir_raw + "\\" + this_song
-            dest_dir = Config.dir_out + "\\" + this_song
+            source_dir = cfg.dir_raw + "\\" + this_song
+            dest_dir = cfg.dir_out + "\\" + this_song
             try:
                 os.mkdir(dest_dir)
             except OSError as error:
@@ -884,9 +884,9 @@ if __name__ == "__main__":
             elapsed_tm = time.time() - start_song
             elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
             print("This song took:\t" , elapsed)
-            Config.print_elapsed_time()
-            eta_time = time.gmtime((Config.total_tm / j ) * (n - j))
+            cfg.print_elapsed_time()
+            eta_time = time.gmtime((cfg.total_tm / j ) * (n - j))
             print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
-    Config.print_elapsed_time()
+    cfg.print_elapsed_time()
     
