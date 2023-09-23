@@ -2,8 +2,8 @@
 # Python script
 # Made by Envido32
 
-import os, re
-import csv
+import os, re, shutil
+import csv, configparser
 import time
 import cbr, disc, band
 
@@ -22,55 +22,48 @@ def promt(text, valids):
         input_char = input(str(text))[0].upper()
     return input_char
 
-def HexIDtoString(hex_id):    # String formating
-    str_id = str(hex(hex_id))
-    str_id = str_id.upper()
-    str_id = str_id.lstrip('0X')
-    #aux_id = str(hex(hex_id)).upper().lstrip('0X')    # String formating
-    return str_id
-
 class Settings(object):
     def __init__(self, debug = False):        
-        self.start_time = time.time()        
+        self.start_time = time.time()
+        self.print_start_time()
         
-        if debug:   #DEBUG
-            self.dir_drive = "D:"
-            self.dir_mozart = self.dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
-            #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"
-            self.convert = 'N'            
-            self.ext_videos = 'N'
-        else:
-            self.valids = []
-            for char in range(ord('A'), ord('Z')+1):
-                self.valids.append(chr(char))
-            self.text = "Elegi la unidad del disco de ERDTV: "
-            self.dir_drive = promt(self.text, self.valids)
-            self.dir_mozart = self.dir_drive + "\\install\\data\\mozart"
-            self.valids = ['Y', 'N']
-            self.text = "Convertir los archivos para usar en otros juegos? Esto puede tomar varios minutos: [Y/N] "
-            self.convert = promt(self.text, self.valids)
-            self.text = "Extraer videos? Esto puede tomar muchos minutos: [Y/N] "
-            self.ext_videos = promt(self.text, self.valids)
-            del self.valids
-            del self.text  
-        del self.dir_drive 
-        self.dir_songs = self.dir_mozart + "\\song"
-        self.dir_bands = self.dir_mozart + "\\band"
-        self.dir_discs = self.dir_mozart + "\\disc"
         self.dir_work = os.getcwd()
         self.dir_raw = os.getcwd() + "\\raw"
         self.dir_out = os.getcwd() + "\\erdtv"
 
+        if debug:   #DEBUG
+            print("Working dir:\t[", self.dir_work, "]")
+            dir_drive = "D:"
+            self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
+            #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
+            self.convert = 'N'            
+            self.ext_videos = 'N'
+        else:
+            valids = []
+            for char in range(ord('A'), ord('Z')+1):
+                valids.append(chr(char))
+            text = "Elegi la unidad del disco de ERDTV: "
+            dir_drive = promt(text, valids)
+            self.dir_mozart = dir_drive + "\\install\\data\\mozart"
+            valids = ['Y', 'N']
+            text = "Convertir los archivos para usar en otros juegos? Esto puede tomar varios minutos: [Y/N] "
+            self.convert = promt(text, valids)
+            text = "Extraer videos? Esto puede tomar muchos minutos: [Y/N] "
+            self.ext_videos = promt(text, valids) 
+        self.dir_songs = self.dir_mozart + "\\song"
+        self.dir_bands = self.dir_mozart + "\\band"
+        self.dir_discs = self.dir_mozart + "\\disc"
+
     def print_start_time(self):
         localtime = time.localtime(self.start_time)
         strlocal = time.strftime("%H:%M:%S", localtime)
-        print("Start time: ", strlocal)
+        print("Start time:", strlocal)
         return localtime
 
     def print_elapsed_time(self):
         total_tm = time.time() - self.start_time
         strtotal = time.strftime("%H:%M:%S", time.gmtime(total_tm))
-        print("Total time took:\t" , strtotal)
+        print("Total time took:\t", strtotal)
         return total_tm
         
 class Playlist(object):
@@ -78,24 +71,25 @@ class Playlist(object):
         # Analize files
         print(" > Analizing files... < " )
         os.chdir(cfg.dir_songs)
-        print("Songs dir:\t[" + cfg.dir_songs  +"]")
+        print("Songs dir:\t[", cfg.dir_songs , "]")
 
-        self.all_files = os.listdir(cfg.dir_songs)
+        all_files = os.listdir(cfg.dir_songs)
         
         self.files = []
-        for self.filename in self.all_files:
+        for self.filename in all_files:
             if re.search("\.cbr$", self.filename):
                 self.files.append(self.filename)
-        del self.all_files
+
+        self.Songs = []
 
         # Create log file
         if len(self.files) > 0:
             print("Songs found in dir:\t",  len(self.files))
             os.chdir(cfg.dir_work)
-            self.log_file_name = "songs.csv"
-            self.log_file = open(self.log_file_name, "w", newline="")
+            log_file_name = "songs.csv"
+            self.log_file = open(log_file_name, "w", newline="")
             self.log_writer = csv.writer(self.log_file)
-            self.data_in = [ "Artista",
+            data_in = [ "Artista",
                         "Canción",
                         "Disco",
                         "Año",
@@ -129,56 +123,184 @@ class Playlist(object):
                         #"BPM:cal",
             ]
             
-            self.log_writer.writerow(self.data_in)
+            self.log_writer.writerow(data_in)
             self.log_file.close()
 
-            del self.log_file_name
-            del self.data_in            
-
         else:
-            print("No songs found in dir")
+            print(" <ERROR>: No songs found in dir")
 
         #print("Disk dir:\t", songs_dir)    # DEBUG
+    def add(self, song,  debug = False):
+        self.Songs.append(song)
 
 class Song(object):
     def __init__(self, cfg, file, debug = False):
         self.start_time = time.time()
+        if debug:
+            self.print_start_time()
         
         os.chdir(cfg.dir_songs)
         self.cbr = cbr.Cbr.from_file(file)
 
         # Extract Metadata
-        self.song_id = HexIDtoString(self.cbr.info.song_id)
-        self.band_id = HexIDtoString(self.cbr.info.band_id)
-        self.disc_id = HexIDtoString(self.cbr.info.disc_id)
+        self.song_id = self.HexIDtoString(self.cbr.info.song_id)
+        self.band_id = self.HexIDtoString(self.cbr.info.band_id)
+        self.disc_id = self.HexIDtoString(self.cbr.info.disc_id)
         self.name = str(self.cbr.info.song_name).rstrip('\x00')
         self.year = self.cbr.info.year
         
         # Extract Difficulty
         self.diffs = self.cbr.tracks.diff_level
-        self.band_diff = int(0)
+        band_diff = int(0)
         i = 0
         for instrument in self.cbr.tracks.diff_level:
-            self.band_diff += instrument
+            band_diff += instrument
             if instrument > 0:
                 i += 1
-        self.diffs[i] = int(self.band_diff / i)
+        self.diffs[i] = int(band_diff / i)
         
         self.track_info = self.cbr.tracks.trk_info[6]
 
+        # Read band file
+        os.chdir(cfg.dir_bands)
+        file_band = band.Band.from_file(self.band_id + ".band")
+        self.band = str(file_band.band_name).rstrip('\x00')
+        
+        # Read disc file
+        os.chdir(cfg.dir_discs)
+        file_disc = disc.Disc.from_file(self.disc_id + ".disc")
+        self.disc = str(file_disc.disc_name).rstrip('\x00')
+
+        self.dest_dir = cfg.dir_raw + "\\" + self.band + " - " + self.name
+
         if debug:   #DEBUG
-            print("Song ID = " + self.song_id)  # DEBUG test Kaitai
-            print("Band ID = " + self.band_id)  # DEBUG test Kaitai
-            print("Disc ID = " + self.disc_id)  # DEBUG test Kaitai
-            print("Year = " + str(self.year))  # DEBUG test Kaitai
-            print("Song = " + self.cbr.info.song_name)  # DEBUG test Kaitai
+            print("Song:", self.cbr.info.song_name)  # DEBUG test Kaitai
+            print("Band:", self.band)
+            print("Disc:", self.disc)
+            print("Year:", self.year)  # DEBUG test Kaitai
+            print("Song ID:", self.song_id)  # DEBUG test Kaitai
+            print("Band ID:", self.band_id)  # DEBUG test Kaitai
+            print("Disc ID:", self.disc_id)  # DEBUG test Kaitai
             for i, instrument in enumerate(inst_order):
-                print("Diff. " + instrument +" =\t" + str(self.diffs[i]))  # DEBUG test Kaitai
+                print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
+
+    def extract_audio(self, cfg, debug = False):
+        os.chdir(cfg.dir_songs)
+
+        file_au = open(self.song_id + ".au", "rb")
+        song_data = file_au.read()
+        flac_head = "fLaC".encode('U8')
+        audio_data = song_data.split(flac_head)
+        file_au.close()
+
+        try:
+            os.mkdir(self.dest_dir)
+        except OSError as error:
+            #print("[", self.dest_dir , "] already exists")
+            pass
+        os.chdir(self.dest_dir)  
+
+        # Save steams
+        for i, audio in enumerate(audio_data):
+            new_file = open(data_order[i] + ".flac", "wb")
+            new_file.write(flac_head)
+            new_file.write(audio)
+            new_file.close()
+    
+    def extract_preview(self, cfg, debug = False):
+        source = cfg.dir_songs + "\\" + self.song_id
+        try:
+            print("Copying preview...")
+            shutil.copyfile(source + ".prv", self.dest_dir  + "\\preview.wav")
+        except:
+            print("File [ ", self.dest_dir,  "\\preview.wav ] already exists")
+
+    def extract_video(self, cfg, debug = False):
+        source = cfg.dir_songs + "\\" + self.song_id
+        try:
+            print("Copying video...")
+            shutil.copyfile(source + ".vid", self.dest_dir  + "\\video.asf")
+        except:
+            print("File [ ", self.dest_dir,  "\\video.asf ] already exists")
+
+    def extract_icon(self, cfg, debug = False):
+        source = cfg.dir_work   #TODO extract from Disk (.ico to .png)
+        try:
+            print("Copying icon...")
+            shutil.copyfile(source + "\\erdtv.png", self.dest_dir  + "\\erdtv.png")
+        except:
+            print("File [ ", self.dest_dir,  "\\erdtv.png ] already exists")
+
+    def extract_disc_img(self, cfg, debug = False):        
+        os.chdir(cfg.dir_discs)
+        file_disc = disc.Disc.from_file(self.disc_id + ".disc")
+        disc_img = file_disc.image.png
+
+        try:
+            os.mkdir(self.dest_dir)
+        except OSError as error:
+            #print("[", self.dest_dir , "] already exists")
+            pass
+        os.chdir(self.dest_dir)  
+        
+        new_file = open("album.png", "wb")
+        new_file.write(disc_img)
+        new_file.close()
+    
+    def extract_background(self, cfg, debug = False):
+        os.chdir(cfg.dir_songs)
+        file_bgf = open(self.song_id + ".bgf", "rb")
+        file_bgf.read(0x020C)
+        bgf_img = file_bgf.read()
+        
+        try:
+            os.mkdir(self.dest_dir)
+        except OSError as error:
+            #print("[", self.dest_dir , "] already exists")
+            pass
+        os.chdir(self.dest_dir)  
+        
+        new_file = open("background.png", "wb")
+        new_file.write(bgf_img)
+        new_file.close()
+
+    def create_ini(self, cfg, debug = False):
+        try:
+            os.mkdir(self.dest_dir)
+        except OSError as error:
+            #print("[", self.dest_dir , "] already exists")
+            pass
+        os.chdir(self.dest_dir)  
+        
+        config = configparser.ConfigParser()
+        config.add_section("song")
+
+        config.set("song", "artist", self.band)
+        config.set("song", "name", self.name)
+        config.set("song", "album", self.disc)
+        config.set("song", "year", str(self.year))
+        config.set("song", "diff_guitar", str(self.diffs[0]))
+        config.set("song", "diff_bass", str(self.diffs[1]))
+        config.set("song", "diff_drums", str(self.diffs[2]))
+        config.set("song", "diff_vocals", str(self.diffs[3]))
+        config.set("song", "diff_band", str(self.diffs[4]))
+        config.set("song", "icon", "erdtv")
+        config.set("song", "genre", "Rock Argentino")
+        config.set("song", "charter", "Next Level")
+        config.set("song", "banner_link_a", "http://www.elrockdetuvida.com/website/index.php")
+        config.set("song", "link_name_a", "Homepage")
+        config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
+        config.set("song", ";video_start_time" , "3000")    #TODO: remove 3sec delay
+        config.set("song", "delay", "3000")                 #TODO: remove 3sec delay
+
+        new_file = open("song.ini", "w", encoding='utf-8')
+        config.write(new_file)
+        new_file.close()
 
     def print_start_time(self):
         localtime = time.localtime(self.start_time)
         strlocal = time.strftime("%H:%M:%S", localtime)
-        print("Song start: ", strlocal)
+        print("Song start:", strlocal)
         return localtime
 
     def print_elapsed_time(self):
@@ -186,3 +308,9 @@ class Song(object):
         strtotal = time.strftime("%H:%M:%S", time.gmtime(total_tm))
         print("This song took:\t", strtotal)
         return total_tm
+    
+    def HexIDtoString(self, hex_id):    # String formating
+        str_id = str(hex(hex_id))
+        str_id = str_id.upper()
+        str_id = str_id.lstrip('0X')
+        return str_id

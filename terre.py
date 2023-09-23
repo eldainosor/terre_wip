@@ -5,11 +5,9 @@
 import os, shutil
 import subprocess
 import time
-import cbr, disc, band
-import csv, configparser
+import csv
 from terre_ex import *
 from collections import Counter
-# from chchart_parser.chart import Chart
 
 # Config Constants 
 debug = True       #DEBUG
@@ -30,10 +28,6 @@ if __name__ == "__main__":
     print(" >>> EXTRACTOR TODO EL ROCK (RECARGADO) <<< ")
 
     cfg = Settings(debug)
-    cfg.print_start_time()
-
-    print("Working dir:\t [", cfg.dir_work, "]")
-
     pl = Playlist(cfg, debug)
 
     # Output directories
@@ -46,95 +40,18 @@ if __name__ == "__main__":
     for k, filename in enumerate(pl.files):
         k += 1
         n = len(pl.files)
-
-        this_song = Song(cfg, filename, debug)
-        this_song.print_start_time()
-
         print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
-        # Analize Bands
-        os.chdir(cfg.dir_bands)
+        this_song = Song(cfg, filename, debug)
+        pl.add(this_song)
 
-        #dir_files = os.listdir(curr_dir) # DEBUG
-        #print("Files in dir:", dir_files) # DEBUG
-
-        # Read Band file
-        file_band = band.Band.from_file(this_song.band_id + ".band")
-        band_name = str(file_band.band_name).rstrip('\x00')
-        print("Band = " + band_name)
-        
-        # Analize discs
-        os.chdir(cfg.dir_discs)
-        file_disc = disc.Disc.from_file(this_song.disc_id + ".disc")
-        disc_name = str(file_disc.disc_name).rstrip('\x00')
-        print("Disc = " + disc_name)
-        disc_img = file_disc.image.png
-
-        # Analize Background
-        os.chdir(cfg.dir_songs)
-        working_file = open(this_song.song_id + ".bgf", "rb")
-        background_data = working_file.read(0x020C)
-        background_img = working_file.read()
-        working_file.close()
-
-        # Analize Stems
-        #print(" > Searching band... < " )
-        working_file = open(this_song.song_id + ".au", "rb")
-        song_data = working_file.read()
-        flac_head = "fLaC".encode('U8')
-        audio_data = song_data.split(flac_head)
-        working_file.close()
-
-        # Output Files
-        new_song_dir = cfg.dir_raw + "\\" + band_name + " - " + this_song.name
-
-        try:
-            os.mkdir(new_song_dir)
-        except OSError as error:
-            print("[", new_song_dir , "] already exists")
-        os.chdir(new_song_dir)
-
-        new_file = open("background.png", "wb")
-        new_file.write(background_img)
-        new_file.close()
-        
-        new_file = open("album.png", "wb")
-        new_file.write(disc_img)
-        new_file.close()
-
-        # Save steams
-        for i, audio in enumerate(audio_data):
-            data_order[i]
-            new_file = open(data_order[i] + ".flac", "wb")
-            new_file.write(flac_head)
-            new_file.write(audio)
-            new_file.close()
-
-        # Copy preview
-        source = cfg.dir_songs + "\\" + this_song.song_id
-        dest = new_song_dir
-        try:
-            print("Copying preview...")
-            shutil.copyfile(source + ".prv", dest  + "\\preview.wav")
-        except:
-            print("File [ ", dest,  "\\preview.wav ] already exists")
-
-        # Copy video (slow)
-        try:
-            print("Copying video... ")
-            #shutil.copyfile(source + ".vid", dest  + "\\video.asf")    #TODO do not comment
-        except:
-            print("File [ ", dest,  "\\video.asf ] already exists")
-
-        # Copy icon
-        #TODO extract from Disk (.ico to .png)
-        source = cfg.dir_work
-        dest = new_song_dir
-        try:
-            #print("Copying icon...")
-            shutil.copyfile(source + "\\erdtv.png", dest  + "\\erdtv.png")
-        except:
-            print("File [ ", dest,  "\\erdtv.png ] already exists")
+        this_song.extract_disc_img(cfg, debug)
+        this_song.extract_background(cfg, debug)
+        this_song.extract_audio(cfg, debug)
+        this_song.extract_preview(cfg, debug)
+        this_song.extract_video(cfg, debug)
+        this_song.extract_icon(cfg, debug)
+        this_song.create_ini(cfg, debug)
 
         # Save Kaitai Log
         # COMMON HEADER
@@ -340,9 +257,9 @@ if __name__ == "__main__":
         new_file.write("[Song]")
         new_file.write("\n{")
         new_file.write("\n  Name = \"" + this_song.name + "\"")
-        new_file.write("\n  Artist = \"" + band_name + "\"")
+        new_file.write("\n  Artist = \"" + this_song.band + "\"")
         new_file.write("\n  Charter = \"Next Level\"")
-        new_file.write("\n  Album = \"" + disc_name + "\"")
+        new_file.write("\n  Album = \"" + this_song.disc + "\"")
         new_file.write("\n  Year = \", " + str(this_song.year) + "\"")
         new_file.write("\n  Offset = 3")    #TODO: revome 3sec delay
         #new_file.write("\n  Offset = 0")    #TODO: revome 3sec delay
@@ -598,52 +515,14 @@ if __name__ == "__main__":
         
         new_file.close()
                 
-        # Save metadata
-        config = configparser.ConfigParser()
-        config.add_section("song")
-
-        config.set("song", "artist", band_name)
-        config.set("song", "name", this_song.name)
-        config.set("song", "album", disc_name)
-        config.set("song", "year", str(this_song.year))
-        config.set("song", "diff_guitar", str(this_song.diffs[0]))
-        config.set("song", "diff_bass", str(this_song.diffs[1]))
-        config.set("song", "diff_drums", str(this_song.diffs[2]))
-        config.set("song", "diff_vocals", str(this_song.diffs[3]))
-        config.set("song", "diff_band", str(this_song.diffs[4]))
-        config.set("song", "icon", "erdtv")
-        config.set("song", "genre", "Rock Argentino")
-        config.set("song", "charter", "Next Level")
-        config.set("song", "banner_link_a", "http://www.elrockdetuvida.com/website/index.php")
-        config.set("song", "link_name_a", "Homepage")
-        config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-        config.set("song", ";video_start_time" , "3000")    #TODO: remove 3sec delay
-        config.set("song", "delay", "3000")                 #TODO: remove 3sec delay
-
-        config.set("song", "diff_rhythm", "-1")
-        config.set("song", "diff_drums_real", "-1")
-        config.set("song", "diff_keys", "-1")
-        config.set("song", "diff_guitarghl", "-1")
-        config.set("song", "diff_bassghl", "-1")
-        config.set("song", "diff_rhythm_ghl", "-1")
-        config.set("song", "diff_guitar_coop_ghl", "-1")
-        config.set("song", "diff_guitar_coop", "-1")
-        config.set("song", "preview_start_time", "-1")
-        config.set("song", "pro_drums", "0")
-        config.set("song", "five_lane_drums", "0")
-
-        new_file = open("song.ini", "w", encoding='utf-8')
-        config.write(new_file)
-        new_file.close()
-
         # Save to log
         os.chdir(cfg.dir_work)
         csv_name = "songs.csv"
         new_file = open(csv_name, "a", newline="")
         csv_writer = csv.writer(new_file)
-        data_in = [ band_name,
+        data_in = [ this_song.band,
                     this_song.name,
-                    disc_name,
+                    this_song.disc,
                     this_song.year,
                     this_song.song_id,
                     this_song.band_id,
