@@ -1,8 +1,11 @@
-ffmpeg.exe
-__pycache__/band.cpython-311.pyc
-__pycache__/cbr.cpython-311.pyc
-__pycache__/disc.cpython-311.pyc
-songs.csv
+__pycache__/*.pyc
 test.py
 erdtv/
 raw/
+ffmpeg.exe
+songs.csv
+AUdata.ods
+erdtv-caja1.jpeg
+erdtv-caja2.jpeg
+songs_man.csv
+songs_man.osd
