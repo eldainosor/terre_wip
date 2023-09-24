@@ -13,6 +13,18 @@ data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
 
+def copy_file(source_dir, source_file, dest_dir, dest_file):
+        source = source_dir + "\\" + source_file
+        dest = dest_dir + "\\" + dest_file
+        name,ext = dest_file.split('.')
+        if name == "erdtv":
+            name = "icon"
+        try:
+            print("Copying", name, "...")
+            shutil.copyfile(source, dest)
+        except:
+            print("File [ ", dest, " ] already exists")
+
 def promt(text, valids):
     valids_caps = []
     for valid_char in valids:
@@ -31,7 +43,7 @@ class Settings(object):
         self.dir_raw = os.getcwd() + "\\raw"
         self.dir_out = os.getcwd() + "\\erdtv"
 
-        if debug:   #DEBUG
+        if debug:
             print("Working dir:\t[", self.dir_work, "]")
             dir_drive = "D:"
             self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
@@ -76,14 +88,15 @@ class Playlist(object):
         all_files = os.listdir(cfg.dir_songs)
         
         self.files = []
-        for self.filename in all_files:
-            if re.search("\.cbr$", self.filename):
-                self.files.append(self.filename)
+        for filename in all_files:
+            name,ext = filename.split('.')
+            if ext == "cbr":
+                self.files.append(name)
 
         self.Songs = []
 
         # Create log file
-        if len(self.files) > 0:
+        if len(self.files) > 0: #TODO move to extraction log tool
             print("Songs found in dir:\t",  len(self.files))
             os.chdir(cfg.dir_work)
             log_file_name = "songs.csv"
@@ -140,10 +153,13 @@ class Song(object):
             self.print_start_time()
         
         os.chdir(cfg.dir_songs)
-        self.cbr = cbr.Cbr.from_file(file)
+        self.cbr = cbr.Cbr.from_file(file + ".cbr")
 
-        # Extract Metadata
+        # Extract metadata
         self.song_id = self.HexIDtoString(self.cbr.info.song_id)
+        if debug:
+            if file != self.song_id:
+                print("<WARN>: File and ID does not match.")
         self.band_id = self.HexIDtoString(self.cbr.info.band_id)
         self.disc_id = self.HexIDtoString(self.cbr.info.disc_id)
         self.name = str(self.cbr.info.song_name).rstrip('\x00')
@@ -159,6 +175,9 @@ class Song(object):
                 i += 1
         self.diffs[i] = int(band_diff / i)
         
+        # Unused metadata
+        self.inst_num = self.cbr.info.instr_num
+        self.inst_mask = self.cbr.info.instr_mask
         self.track_info = self.cbr.tracks.trk_info[6]
 
         # Read band file
@@ -171,7 +190,12 @@ class Song(object):
         file_disc = disc.Disc.from_file(self.disc_id + ".disc")
         self.disc = str(file_disc.disc_name).rstrip('\x00')
 
-        self.dest_dir = cfg.dir_raw + "\\" + self.band + " - " + self.name
+        #self.dest_dir = cfg.dir_raw + "\\" + self.band + " - " + self.name
+        self.dest_dir = cfg.dir_raw
+        self.dest_dir += "\\"
+        self.dest_dir += self.band
+        self.dest_dir += " - "
+        self.dest_dir += self.name
 
         if debug:   #DEBUG
             print("Song:", self.cbr.info.song_name)  # DEBUG test Kaitai
@@ -206,31 +230,7 @@ class Song(object):
             new_file.write(flac_head)
             new_file.write(audio)
             new_file.close()
-    
-    def extract_preview(self, cfg, debug = False):
-        source = cfg.dir_songs + "\\" + self.song_id
-        try:
-            print("Copying preview...")
-            shutil.copyfile(source + ".prv", self.dest_dir  + "\\preview.wav")
-        except:
-            print("File [ ", self.dest_dir,  "\\preview.wav ] already exists")
-
-    def extract_video(self, cfg, debug = False):
-        source = cfg.dir_songs + "\\" + self.song_id
-        try:
-            print("Copying video...")
-            shutil.copyfile(source + ".vid", self.dest_dir  + "\\video.asf")
-        except:
-            print("File [ ", self.dest_dir,  "\\video.asf ] already exists")
-
-    def extract_icon(self, cfg, debug = False):
-        source = cfg.dir_work   #TODO extract from Disk (.ico to .png)
-        try:
-            print("Copying icon...")
-            shutil.copyfile(source + "\\erdtv.png", self.dest_dir  + "\\erdtv.png")
-        except:
-            print("File [ ", self.dest_dir,  "\\erdtv.png ] already exists")
-
+            
     def extract_disc_img(self, cfg, debug = False):        
         os.chdir(cfg.dir_discs)
         file_disc = disc.Disc.from_file(self.disc_id + ".disc")
@@ -263,6 +263,30 @@ class Song(object):
         new_file = open("background.png", "wb")
         new_file.write(bgf_img)
         new_file.close()
+    
+    def extract_preview(self, cfg, debug = False):
+        source_dir = cfg.dir_songs
+        source_file = self.song_id + ".prv"
+        dest_dir = self.dest_dir
+        dest_file = "preview.wav"
+        copy_file(source_dir, source_file, dest_dir, dest_file)
+
+    def extract_video(self, cfg, debug = False):       
+        source_dir = cfg.dir_songs
+        source_file = self.song_id + ".vid"
+        dest_dir = self.dest_dir
+        dest_file = "video.asf"
+        if cfg.ext_video == 'Y':
+            copy_file(source_dir, source_file, dest_dir, dest_file)
+        else:
+            print("Video extraction skiped")
+
+    def extract_icon(self, cfg, debug = False):
+        source_dir = cfg.dir_work
+        source_file = "erdtv.png"    #TODO extract from Disk (.ico to .png)
+        dest_dir = self.dest_dir
+        dest_file = "erdtv.png"
+        copy_file(source_dir, source_file, dest_dir, dest_file)
 
     def create_ini(self, cfg, debug = False):
         try:
