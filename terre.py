@@ -121,7 +121,7 @@ if __name__ == "__main__":
                 delta_pulse.append(this_pulse.time - aux)
                 aux = this_pulse.time
 
-            delta_count = Counter(delta_pulse)
+            delta_count = Counter(delta_pulse)      #TODO:Remove Counter?
             #aux = delta_count.most_common(1)[0]
             #res = 2*aux[0]
             res = 2*delta_count.most_common(1)[0][0]

@@ -2,8 +2,8 @@
 # Python script
 # Made by Envido32
 
-import os, re, shutil
-import csv, configparser
+import os, shutil
+import csv
 import time
 import cbr, disc, band
 
@@ -226,10 +226,10 @@ class Song(object):
 
         # Save steams
         for i, audio in enumerate(audio_data):
-            new_file = open(data_order[i] + ".flac", "wb")
-            new_file.write(flac_head)
-            new_file.write(audio)
-            new_file.close()
+            audio_file = open(data_order[i] + ".flac", "wb")
+            audio_file.write(flac_head)
+            audio_file.write(audio)
+            audio_file.close()
             
     def extract_disc_img(self, cfg, debug = False):        
         os.chdir(cfg.dir_discs)
@@ -243,15 +243,15 @@ class Song(object):
             pass
         os.chdir(self.dest_dir)  
         
-        new_file = open("album.png", "wb")
-        new_file.write(disc_img)
-        new_file.close()
+        album_file = open("album.png", "wb")
+        album_file.write(disc_img)
+        album_file.close()
     
     def extract_background(self, cfg, debug = False):
         os.chdir(cfg.dir_songs)
-        file_bgf = open(self.song_id + ".bgf", "rb")
-        file_bgf.read(0x020C)
-        bgf_img = file_bgf.read()
+        backgnd_data = open(self.song_id + ".bgf", "rb")
+        backgnd_data.read(0x020C)
+        backgnd_img = backgnd_data.read()
         
         try:
             os.mkdir(self.dest_dir)
@@ -260,9 +260,9 @@ class Song(object):
             pass
         os.chdir(self.dest_dir)  
         
-        new_file = open("background.png", "wb")
-        new_file.write(bgf_img)
-        new_file.close()
+        backgnd_file = open("background.png", "wb")
+        backgnd_file.write(backgnd_img)
+        backgnd_file.close()
     
     def extract_preview(self, cfg, debug = False):
         source_dir = cfg.dir_songs
@@ -276,7 +276,7 @@ class Song(object):
         source_file = self.song_id + ".vid"
         dest_dir = self.dest_dir
         dest_file = "video.asf"
-        if cfg.ext_video == 'Y':
+        if cfg.ext_videos == 'Y':
             copy_file(source_dir, source_file, dest_dir, dest_file)
         else:
             print("Video extraction skiped")
@@ -295,31 +295,29 @@ class Song(object):
             #print("[", self.dest_dir , "] already exists")
             pass
         os.chdir(self.dest_dir)  
+
+        ini_file = open("song.ini", "w", encoding='utf-8')
+        ini_file.write("[song]")
+
+        ini_file.write("\nartist = " + self.band)
+        ini_file.write("\nname = " + self.name)
+        ini_file.write("\nalbum = " + self.disc)
+        ini_file.write("\nyear = " + str(self.year))
+        ini_file.write("\ndiff_guitar = " + str(self.diffs[0]))
+        ini_file.write("\ndiff_bass = " + str(self.diffs[1]))
+        ini_file.write("\ndiff_drums = " + str(self.diffs[2]))
+        ini_file.write("\ndiff_vocals = " + str(self.diffs[3]))
+        ini_file.write("\ndiff_band = " + str(self.diffs[4]))
+        ini_file.write("\nicon = " + "erdtv")
+        ini_file.write("\ngenre = " + "Rock Argentino")
+        ini_file.write("\ncharter = " + "Next Level")
+        ini_file.write("\nbanner_link_a = " + "http://www.elrockdetuvida.com/website/index.php")
+        ini_file.write("\nlink_name_a = " + "Homepage")
+        ini_file.write("\nloading_phrase = " + "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
+        ini_file.write("\n;video_start_time = " + "3000")    #TODO: remove 3sec delay
+        ini_file.write("\ndelay = " + "3000")                 #TODO: remove 3sec delay
         
-        config = configparser.ConfigParser()
-        config.add_section("song")
-
-        config.set("song", "artist", self.band)
-        config.set("song", "name", self.name)
-        config.set("song", "album", self.disc)
-        config.set("song", "year", str(self.year))
-        config.set("song", "diff_guitar", str(self.diffs[0]))
-        config.set("song", "diff_bass", str(self.diffs[1]))
-        config.set("song", "diff_drums", str(self.diffs[2]))
-        config.set("song", "diff_vocals", str(self.diffs[3]))
-        config.set("song", "diff_band", str(self.diffs[4]))
-        config.set("song", "icon", "erdtv")
-        config.set("song", "genre", "Rock Argentino")
-        config.set("song", "charter", "Next Level")
-        config.set("song", "banner_link_a", "http://www.elrockdetuvida.com/website/index.php")
-        config.set("song", "link_name_a", "Homepage")
-        config.set("song", "loading_phrase", "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-        config.set("song", ";video_start_time" , "3000")    #TODO: remove 3sec delay
-        config.set("song", "delay", "3000")                 #TODO: remove 3sec delay
-
-        new_file = open("song.ini", "w", encoding='utf-8')
-        config.write(new_file)
-        new_file.close()
+        ini_file.close()
 
     def print_start_time(self):
         localtime = time.localtime(self.start_time)
