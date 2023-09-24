@@ -45,7 +45,7 @@ if __name__ == "__main__":
         this_song = Song(cfg, filename, debug)
         pl.add(this_song)
 
-        this_song.extract_disc_img(cfg, debug)
+        this_song.extract_album(cfg, debug)
         this_song.extract_background(cfg, debug)
         this_song.extract_audio(cfg, debug)
         this_song.extract_preview(cfg, debug)
@@ -581,7 +581,7 @@ if __name__ == "__main__":
         songs_list = os.listdir(cfg.dir_raw)
         #n = len(songs_list)
 
-        # Loof for each song
+        # Loop for each song
         for j, this_song in enumerate(songs_list):
             j += 1
             #i = songs_list.index(this_song) + 1
