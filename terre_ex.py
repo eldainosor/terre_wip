@@ -2,7 +2,7 @@
 # Python script
 # Made by Envido32
 
-import os, shutil
+import os, shutil, subprocess
 import csv
 import time
 import cbr, disc, band
@@ -14,13 +14,20 @@ inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
 
 def copy_file(source_dir, source_file, dest_dir, dest_file):
-        source = source_dir + "\\" + source_file
-        dest = dest_dir + "\\" + dest_file
-        try:
-            print("Copying", dest_file, "...")
-            shutil.copyfile(source, dest)
-        except:
-            print("File [ ", dest, " ] already exists")
+    # Create output dir
+    try:
+        os.makedirs(dest_dir)
+    except:
+        #print("[", dest_dir, "] already exists")
+        pass
+    
+    source = source_dir + "\\" + source_file
+    dest = dest_dir + "\\" + dest_file
+    try:
+        print("Copying", dest_file, "...")
+        shutil.copyfile(source, dest)
+    except:
+        print("File [", dest, "] already exists")
 
 def promt(text, valids):
     valids_caps = []
@@ -45,8 +52,8 @@ class Settings(object):
             dir_drive = "D:"
             self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
-            self.convert = 'N'            
-            self.ext_videos = 'N'
+            self.convert = 'Y'            
+            self.ext_videos = 'Y'
         else:
             valids = []
             for char in range(ord('A'), ord('Z')+1):
@@ -62,6 +69,7 @@ class Settings(object):
         self.dir_songs = self.dir_mozart + "\\song"
         self.dir_bands = self.dir_mozart + "\\band"
         self.dir_discs = self.dir_mozart + "\\disc"
+        self.ffmpeg_file = self.dir_work + "\\ffmpeg.exe"
 
     def print_start_time(self):
         localtime = time.localtime(self.start_time)
@@ -79,7 +87,7 @@ class Playlist(object):
     def __init__(self, cfg, debug = False):
         # Analize files
         print(" > Analizing files... < " )
-        os.chdir(cfg.dir_songs)
+        #os.chdir(cfg.dir_songs)
         print("Songs dir:\t[", cfg.dir_songs , "]")
 
         all_files = os.listdir(cfg.dir_songs)
@@ -95,9 +103,9 @@ class Playlist(object):
         # Create log file
         if len(self.files) > 0: #TODO move to extraction log tool
             print("Songs found in dir:\t",  len(self.files))
-            os.chdir(cfg.dir_work)
+            #os.chdir(cfg.dir_work)
             log_file_name = "songs.csv"
-            self.log_file = open(log_file_name, "w", newline="")
+            self.log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
             self.log_writer = csv.writer(self.log_file)
             data_in = [ "Artista",
                         "Canción",
@@ -150,8 +158,8 @@ class Song(object):
         if debug:
             self.print_start_time()
         
-        os.chdir(cfg.dir_songs)
-        self.cbr = cbr.Cbr.from_file(file + ".cbr")
+        #os.chdir(cfg.dir_songs)
+        self.cbr = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")
 
         # Extract metadata
         self.song_id = self.HexIDtoString(self.cbr.info.song_id)
@@ -179,13 +187,13 @@ class Song(object):
         self.track_info = self.cbr.tracks.trk_info[6]
 
         # Read band file
-        os.chdir(cfg.dir_bands)
-        file_band = band.Band.from_file(self.band_id + ".band")
+        #os.chdir(cfg.dir_bands)
+        file_band = band.Band.from_file(cfg.dir_bands + "\\" + self.band_id + ".band")
         self.band = str(file_band.band_name).rstrip('\x00')
         
         # Read disc file
-        os.chdir(cfg.dir_discs)
-        file_disc = disc.Disc.from_file(self.disc_id + ".disc")
+        #os.chdir(cfg.dir_discs)
+        file_disc = disc.Disc.from_file(cfg.dir_discs + "\\" + self.disc_id + ".disc")
         self.disc = str(file_disc.disc_name).rstrip('\x00')
 
         self.dir_extr = cfg.dir_raw
@@ -212,58 +220,58 @@ class Song(object):
                 print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
 
     def extract_audio(self, cfg, debug = False):
-        os.chdir(cfg.dir_songs)
+        #os.chdir(cfg.dir_songs)
 
-        file_au = open(self.song_id + ".au", "rb")
+        file_au = open(cfg.dir_songs + "\\"  + self.song_id + ".au", "rb")
         song_data = file_au.read()
         flac_head = "fLaC".encode('U8')
         audio_data = song_data.split(flac_head)
         file_au.close()
 
         try:
-            os.mkdir(self.dir_extr)
-        except OSError as error:
+            os.makedirs(self.dir_extr)
+        except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        os.chdir(self.dir_extr)  
+        #os.chdir(self.dir_extr)  
 
         # Save steams
         for i, audio in enumerate(audio_data):
-            audio_file = open(data_order[i] + ".flac", "wb")
+            audio_file = open(self.dir_extr + "\\" + data_order[i] + ".flac", "wb")
             audio_file.write(flac_head)
             audio_file.write(audio)
             audio_file.close()
             
     def extract_album(self, cfg, debug = False):        
-        os.chdir(cfg.dir_discs)
-        file_disc = disc.Disc.from_file(self.disc_id + ".disc")
+        #os.chdir(cfg.dir_discs)
+        file_disc = disc.Disc.from_file(cfg.dir_discs + "\\" + self.disc_id + ".disc")
         disc_img = file_disc.image.png
 
         try:
-            os.mkdir(self.dir_extr)
-        except OSError as error:
+            os.makedirs(self.dir_extr)
+        except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        os.chdir(self.dir_extr)  
+        #os.chdir(self.dir_extr)  
         
-        album_file = open("album.png", "wb")
+        album_file = open(self.dir_extr + "\\album.png", "wb")
         album_file.write(disc_img)
         album_file.close()
     
     def extract_background(self, cfg, debug = False):
-        os.chdir(cfg.dir_songs)
-        backgnd_data = open(self.song_id + ".bgf", "rb")
+        #os.chdir(cfg.dir_songs)
+        backgnd_data = open(cfg.dir_songs + "\\" + self.song_id + ".bgf", "rb")
         backgnd_data.read(0x020C)
         backgnd_img = backgnd_data.read()
         
         try:
-            os.mkdir(self.dir_extr)
-        except OSError as error:
+            os.makedirs(self.dir_extr)
+        except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        os.chdir(self.dir_extr)  
+        #os.chdir(self.dir_extr)  
         
-        backgnd_file = open("background.png", "wb")
+        backgnd_file = open(self.dir_extr + "\\background.png", "wb")
         backgnd_file.write(backgnd_img)
         backgnd_file.close()
     
@@ -291,17 +299,17 @@ class Song(object):
         dest_file = "erdtv.png"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-    def create_ini(self, cfg, debug = False):
+    def create_metadata(self, debug = False):
         try:
-            os.mkdir(self.dir_extr)
-        except OSError as error:
+            os.makedirs(self.dir_extr)
+        except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        os.chdir(self.dir_extr)  
+        #os.chdir(self.dir_extr)  
 
-        ini_file = open("song.ini", "w", encoding='utf-8')
+        ini_file = open(self.dir_extr + "\\song.ini", "w", encoding='utf-8')
+
         ini_file.write("[song]")
-
         ini_file.write("\nartist = " + self.band)
         ini_file.write("\nname = " + self.name)
         ini_file.write("\nalbum = " + self.disc)
@@ -318,7 +326,6 @@ class Song(object):
         ini_file.write("\ndelay = " + "3000")                 #TODO: remove 3sec delay
         
         ini_file.close()
-
         
     def extract_charts(self, cfg, debug = False):
         pass    #TODO
@@ -326,29 +333,28 @@ class Song(object):
     def convert_charts(self, cfg, debug = False):
         pass    #TODO
 
-    def convert_metadata(self, cfg, debug = False):
+    def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
         source_file = "song.ini"
         dest_dir = self.dir_conv
         dest_file = "song.ini"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-
-    def convert_album(self, cfg, debug = False):
+    def convert_album(self, debug = False):
         source_dir = self.dir_extr
         source_file = "album.png"
         dest_dir = self.dir_conv
         dest_file = "album.png"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-    def convert_background(self, cfg, debug = False):
+    def convert_background(self, debug = False):
         source_dir = self.dir_extr
         source_file = "background.png"
         dest_dir = self.dir_conv
         dest_file = "background.png"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-    def convert_icon(self, cfg, debug = False):
+    def convert_icon(self, debug = False):
         source_dir = self.dir_extr
         source_file = "erdtv.png"    #TODO extract from Disk (.ico to .png)
         dest_dir = self.dir_conv
@@ -359,7 +365,23 @@ class Song(object):
         pass    #TODO
 
     def convert_preview(self, cfg, debug = False):
-        pass    #TODO
+        print("Compressing preview audio file with FFMPEG (WAV to OGG)")
+        source_dir = self.dir_extr
+        source_file = "preview.wav"
+        dest_dir = self.dir_conv
+        dest_file = "preview.ogg"
+
+        try:
+            cmd = cfg.ffmpeg_file 
+            cmd += " -y -loglevel -8 -stats -i " 
+            #cmd += cmd + " -y -stats -i "    # DEBUG Verbose 
+            cmd += "\"" + source_dir + "\\" + source_file + "\""
+            cmd += " -c:a libvorbis -b:a 320k " 
+            cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
+            #print("Command:", cmd)    # DEBUG
+            subprocess.run(cmd)
+        except:
+                print("FFMPEG.exe not found")
 
     def convert_video(self, cfg, debug = False):
         pass    #TODO

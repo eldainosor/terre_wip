@@ -29,13 +29,7 @@ if __name__ == "__main__":
 
     cfg = Settings(debug)
     pl = Playlist(cfg, debug)
-
-    # Output directories
-    try:
-        os.mkdir(cfg.dir_raw)
-    except OSError as error:
-        print("Output dir:\t[", cfg.dir_raw, "] already exists")
-        
+  
     # Raw extraction
     for k, filename in enumerate(pl.files):
         k += 1
@@ -51,7 +45,16 @@ if __name__ == "__main__":
         this_song.extract_preview(cfg, debug)
         this_song.extract_video(cfg, debug)
         this_song.extract_icon(cfg, debug)
-        this_song.create_ini(cfg, debug)
+        this_song.create_metadata(debug)
+
+        if cfg.convert == 'Y':
+            this_song.convert_album(debug)
+            this_song.convert_background(debug)
+            #this_song.convert_audio(cfg, debug)
+            this_song.convert_preview(cfg, debug)
+            #this_song.convert_video(cfg, debug)
+            this_song.convert_icon(debug)
+            this_song.convert_metadata(debug)
 
         # Save Kaitai Log
         # COMMON HEADER
@@ -563,10 +566,8 @@ if __name__ == "__main__":
         print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
         
     # Convert to Clone Hero (needs FFMPEG)
-    #convert = input("Convertir a Clone Hero? (esto puede tomar bastante tiempo) [y/n]: ")[0].upper()
-    convert = 'Y'  # DEBUG
-    #convert = 'N'  # DEBUG
-    if convert == 'Y':
+    if cfg.convert == 'Y':
+
         ffmpeg_file = cfg.dir_work + "\\ffmpeg.exe"
 
         # Create output dir
@@ -593,6 +594,7 @@ if __name__ == "__main__":
 
             source_dir = cfg.dir_raw + "\\" + this_song
             dest_dir = cfg.dir_out + "\\" + this_song
+            '''
             try:
                 os.mkdir(dest_dir)
             except OSError as error:
@@ -627,6 +629,7 @@ if __name__ == "__main__":
                 shutil.copyfile(source_file, dest_file)
             except:
                 print("File [ ", dest_file, " ] already exists")
+            '''
 
             # Copy charts file
             try:
@@ -638,6 +641,7 @@ if __name__ == "__main__":
             except:
                 print("File [ ", dest_file, " ] already exists")
 
+            '''
             # Copy metadata file
             try:
                 #print("Copying metadata...")
@@ -665,6 +669,7 @@ if __name__ == "__main__":
                 subprocess.run(cmd)
             except:
                 print("FFMPEG.exe not found")
+            '''
 
             # Convert stems
             for instrument in data_order:
