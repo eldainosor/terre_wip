@@ -27,7 +27,7 @@ class Cbr(KaitaiStruct):
         me = 1
         hi = 2
 
-    class ColourId(Enum):
+    class ColorId(Enum):
         orange = 0
         blue = 1
         yellow = 2
@@ -60,7 +60,7 @@ class Cbr(KaitaiStruct):
 
             self.frets_on_fire = []
             for i in range(self.num_frets_pts):
-                self.frets_on_fire.append(Cbr.Colour(self._io, self, self._root))
+                self.frets_on_fire.append(Cbr.Color(self._io, self, self._root))
 
 
 
@@ -72,9 +72,9 @@ class Cbr(KaitaiStruct):
             self._read()
 
         def _read(self):
-            self.magic = self._io.read_bytes(8)
-            if not self.magic == b"\x00\x08\x00\x00\x00\x00\x00\x00":
-                raise kaitaistruct.ValidationNotEqualError(b"\x00\x08\x00\x00\x00\x00\x00\x00", self.magic, self._io, u"/types/track/seq/0")
+            self.magic4 = self._io.read_bytes(8)
+            if not self.magic4 == b"\x00\x08\x00\x00\x00\x00\x00\x00":
+                raise kaitaistruct.ValidationNotEqualError(b"\x00\x08\x00\x00\x00\x00\x00\x00", self.magic4, self._io, u"/types/track/seq/0")
             self.trk_pts = []
             for i in range(5):
                 self.trk_pts.append(self._io.read_u8le())
@@ -150,6 +150,22 @@ class Cbr(KaitaiStruct):
             self.text = (self._io.read_bytes_term(0, False, True, True)).decode(u"WINDOWS-1252")
 
 
+    class Color(KaitaiStruct):
+        def __init__(self, _io, _parent=None, _root=None):
+            self._io = _io
+            self._parent = _parent
+            self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
+            self.num_frets_wave = self._io.read_u4le()
+            self.start_wave_pos = self._io.read_u8le()
+            self.frets_wave = []
+            for i in range(self.num_frets_wave):
+                self.frets_wave.append(Cbr.Note(self._io, self, self._root))
+
+
+
     class Tick(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
             self._io = _io
@@ -173,22 +189,6 @@ class Cbr(KaitaiStruct):
             self.time = self._io.read_u4le()
             self.len = self._io.read_u4le()
             self.mods = self._io.read_u4le()
-
-
-    class Colour(KaitaiStruct):
-        def __init__(self, _io, _parent=None, _root=None):
-            self._io = _io
-            self._parent = _parent
-            self._root = _root if _root else self
-            self._read()
-
-        def _read(self):
-            self.num_frets_wave = self._io.read_u4le()
-            self.pts_start_wave = self._io.read_u8le()
-            self.frets_wave = []
-            for i in range(self.num_frets_wave):
-                self.frets_wave.append(Cbr.Note(self._io, self, self._root))
-
 
 
     class Verse(KaitaiStruct):

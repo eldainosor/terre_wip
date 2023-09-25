@@ -21,7 +21,7 @@ enums:
     1: me
     2: hi
     
-  colour_id:
+  color_id:
     0: orange
     1: blue
     2: yellow
@@ -62,7 +62,7 @@ types:
         
   track:
     seq:
-      - id: magic
+      - id: magic4
         contents: [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
       
       - id: trk_pts
@@ -177,16 +177,16 @@ types:
         repeat-expr: num_frets_pts
         
       - id: frets_on_fire
-        type: colour
+        type: color
         repeat: expr
         repeat-expr: num_frets_pts
         
-  colour:
+  color:
     seq:
       - id: num_frets_wave
         type: u4
         
-      - id: pts_start_wave
+      - id: start_wave_pos
         type: u8
         
       - id: frets_wave

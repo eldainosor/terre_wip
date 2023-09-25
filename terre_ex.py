@@ -44,8 +44,8 @@ class Settings(object):
         self.print_start_time()
         
         self.dir_work = os.getcwd()
-        self.dir_raw = os.getcwd() + "\\raw"
-        self.dir_out = os.getcwd() + "\\erdtv"
+        self.dir_raw = self.dir_work + "\\raw"
+        self.dir_out = self.dir_work + "\\erdtv"
 
         if debug:
             print("Working dir:\t[", self.dir_work, "]")
@@ -147,7 +147,7 @@ class Playlist(object):
 
         #print("Disk dir:\t", songs_dir)    # DEBUG
 
-    def add(self, song,  debug = False):
+    def append(self, song,  debug = False):
         self.Songs.append(song)
 
 class Song(object):
@@ -168,7 +168,7 @@ class Song(object):
         self.name = str(self.cbr.info.song_name).rstrip('\x00')
         self.year = self.cbr.info.year
         
-        # Extract Difficulty
+        # Extract Difficulty Level
         self.diffs = self.cbr.tracks.diff_level
         band_diff = int(0)
         i = 0
@@ -203,6 +203,14 @@ class Song(object):
         self.dir_conv += " - "
         self.dir_conv += self.name
 
+        self.Instruments = []
+        for inst_raw in self.cbr.tracks.charts:
+            inst_clean = Instrument(inst_raw)
+            self.Instruments.append(inst_clean)
+        self.Vocals = self.cbr.tracks.vocals
+        #self.Lyrics = 
+        #self.Pulse = self.cbr.tracks.band
+
         if debug:   #DEBUG
             print("Song:", self.cbr.info.song_name)  # DEBUG test Kaitai
             print("Band:", self.band)
@@ -213,6 +221,9 @@ class Song(object):
             print("Disc ID:", self.disc_id)  # DEBUG test Kaitai
             for i, instrument in enumerate(inst_order):
                 print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
+
+    def append(self, inst,  debug = False):
+        self.Instruments.append(inst)
 
     def extract_audio(self, cfg, debug = False):
         file_au = open(cfg.dir_songs + "\\"  + self.song_id + ".au", "rb")
@@ -310,14 +321,14 @@ class Song(object):
         ini_file.write("\nlink_name_a = " + "Homepage")
         ini_file.write("\nloading_phrase = " + "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
         ini_file.write("\n;video_start_time = " + "3000")    #TODO: remove 3sec delay
-        ini_file.write("\ndelay = " + "3000")                 #TODO: remove 3sec delay
+        ini_file.write("\ndelay = " + "3000")                #TODO: remove 3sec delay
         
         ini_file.close()
         
     def extract_charts(self, cfg, debug = False):
         pass    #TODO
     
-    def convert_charts(self, cfg, debug = False):
+    def convert_charts(self, debug = False):
         source_dir = self.dir_extr
         source_file = "notes.chart"
         dest_dir = self.dir_conv
@@ -434,3 +445,40 @@ class Song(object):
         str_id = str_id.upper()
         str_id = str_id.lstrip('0X')
         return str_id
+
+class Instrument(object):
+    def __init__(self, cbr_chart, debug = False):
+        #self.id_num = cbr_chart.head.instrument_id.value
+        self.name = cbr_chart.head.instrument_id.name
+        self.info = cbr_chart.head.chart_info   #Unknown usage
+        unsorted_pulse = []
+        for this_pulse in cbr_chart.head.pulse:
+            pulse_dict = {
+                "time": this_pulse.time,
+                "type": this_pulse.type
+            }
+            unsorted_pulse.append(pulse_dict)
+        self.pulse = sorted(unsorted_pulse, key=lambda item: item['time'])
+
+        self.Diffs = []
+        for diff_raw in cbr_chart.diff_charts:
+            diff_clean = Chart(diff_raw)
+            self.Diffs.append(diff_clean)
+
+class Chart(object):
+    def __init__(self, cbr_diff, debug = False):
+        #self.id_num = cbr_diff.diff.vaule
+        self.name = cbr_diff.diff.name
+        self.info = cbr_diff.diff_info  #Unknown usage
+        self.max_note = cbr_diff.num_frets_pts #TODO: Verify if always 5
+        unsorted_notes = []
+        for i, this_color in enumerate(cbr_diff.frets_on_fire):
+            for this_note in this_color.frets_wave:
+                note_dict = {
+                    "time": this_note.time,
+                    "len": this_note.len,
+                    "mods": this_note.mods,
+                    "color": i
+                }
+                unsorted_notes.append(note_dict)
+        self.notes = sorted(unsorted_notes, key=lambda item: item['time'])

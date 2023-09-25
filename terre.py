@@ -36,7 +36,7 @@ if __name__ == "__main__":
         print("Analizing (", int(k) , "/" , int(n) , ")")   # DEBUG
 
         this_song = Song(cfg, filename, debug)
-        pl.add(this_song)
+        pl.append(this_song)
 
         this_song.create_metadata(debug)
         this_song.extract_icon(cfg, debug)
@@ -45,15 +45,6 @@ if __name__ == "__main__":
         this_song.extract_album(cfg, debug)
         this_song.extract_background(cfg, debug)
         this_song.extract_video(cfg, debug)
-
-        if cfg.convert == 'Y':
-            this_song.convert_metadata(debug)
-            this_song.convert_icon(debug)
-            this_song.convert_preview(cfg, debug)
-            this_song.convert_audio(cfg, debug)
-            this_song.convert_album(debug)
-            this_song.convert_background(debug)
-            this_song.convert_video(cfg, debug)
 
         # Save Kaitai Log
         # COMMON HEADER
@@ -173,8 +164,8 @@ if __name__ == "__main__":
                 
                 csv_rows = []
                 csv_rows_sorted = []
-                for i, this_colour in enumerate(this_diff.frets_on_fire):
-                    for this_note in this_colour.frets_wave:
+                for i, this_color in enumerate(this_diff.frets_on_fire):
+                    for this_note in this_color.frets_wave:
                         #TODO: Find real Rsolution, BPM and TS.
                         sec = ( this_note.time ) / ( sec_tick )
                         #sec *= 60
@@ -398,15 +389,15 @@ if __name__ == "__main__":
                 hopo_list = []
                 strum_list = []
                 mods_list = []
-                for i, this_colour in enumerate(this_diff.frets_on_fire):
-                    for this_note in this_colour.frets_wave:
+                for i, this_color in enumerate(this_diff.frets_on_fire):
+                    for this_note in this_color.frets_wave:
                         if this_inst_name == "Drums":
-                            note_colour = i
+                            note_color = i
                         else:
-                            note_colour = 4 - i
+                            note_color = 4 - i
                         
                         #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN, 0x02 ???
-                        notes_list.append([this_note.time, "N", note_colour, this_note.len])
+                        notes_list.append([this_note.time, "N", note_color, this_note.len])
 
                         has_sp = this_note.mods & 0x01
                         has_hopo = this_note.mods & 0x10
@@ -414,7 +405,7 @@ if __name__ == "__main__":
                         has_other = this_note.mods & 0x0E  #DEBUG
 
                         if has_sp:
-                            sp_list.append([this_note.time, "S", note_colour, this_note.len])
+                            sp_list.append([this_note.time, "S", note_color, this_note.len])
                             #sp_list.append([this_note.time, "S", 2, this_note.len])
                         
                         if has_hopo:
@@ -567,37 +558,30 @@ if __name__ == "__main__":
         
     # Convert to Clone Hero (needs FFMPEG)
     if cfg.convert == 'Y':
-
-        ffmpeg_file = cfg.dir_work + "\\ffmpeg.exe"
-
-        # Create output dir
-        os.chdir(cfg.dir_work)
-        try:
-            os.mkdir(cfg.dir_out)
-        except OSError as error:
-            print("[", cfg.dir_out, "] already exists")
-
-        # Generate lists of songs extracted
-        os.chdir(cfg.dir_raw)
-        songs_list = os.listdir(cfg.dir_raw)
-        #n = len(songs_list)
-
         # Loop for each song
-        for j, this_song in enumerate(songs_list):
-            j += 1
-            #i = songs_list.index(this_song) + 1
-            print(" >> Converting (", int(j) , "/" , int(len(songs_list)) , "): ", this_song) 
+        for k, this_song in enumerate(pl.Songs):
+            k += 1
+            n = len(pl.Songs)
+            print(" >> Converting (", int(k) , "/" , int(n) , "): ", this_song.name) 
 
             start_song = time.time()
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
             print("Song start: ", local)
+
+            this_song.convert_metadata(debug)
+            this_song.convert_icon(debug)
+            this_song.convert_preview(cfg, debug)
+            this_song.convert_audio(cfg, debug)
+            this_song.convert_album(debug)
+            this_song.convert_background(debug)
+            this_song.convert_video(cfg, debug)
 
             # Show time and ETA
             elapsed_tm = time.time() - start_song
             elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_tm))
             print("This song took:\t" , elapsed)
             total_tm = cfg.print_elapsed_time()
-            eta_time = time.gmtime((total_tm / j ) * (n - j))
+            eta_time = time.gmtime((total_tm / k ) * (n - k))
             print("ETA:\t" , time.strftime("%H:%M:%S", eta_time))
 
     cfg.print_elapsed_time()
