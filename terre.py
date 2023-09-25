@@ -2,8 +2,7 @@
 # Python script
 # Made by Envido32
 
-import os, shutil
-import subprocess
+import os
 import time
 import csv
 from terre_ex import *
@@ -39,27 +38,28 @@ if __name__ == "__main__":
         this_song = Song(cfg, filename, debug)
         pl.add(this_song)
 
+        this_song.create_metadata(debug)
+        this_song.extract_icon(cfg, debug)
+        this_song.extract_preview(cfg, debug)
+        this_song.extract_audio(cfg, debug)
         this_song.extract_album(cfg, debug)
         this_song.extract_background(cfg, debug)
-        this_song.extract_audio(cfg, debug)
-        this_song.extract_preview(cfg, debug)
         this_song.extract_video(cfg, debug)
-        this_song.extract_icon(cfg, debug)
-        this_song.create_metadata(debug)
 
         if cfg.convert == 'Y':
+            this_song.convert_metadata(debug)
+            this_song.convert_icon(debug)
+            this_song.convert_preview(cfg, debug)
+            this_song.convert_audio(cfg, debug)
             this_song.convert_album(debug)
             this_song.convert_background(debug)
-            #this_song.convert_audio(cfg, debug)
-            this_song.convert_preview(cfg, debug)
-            #this_song.convert_video(cfg, debug)
-            this_song.convert_icon(debug)
-            this_song.convert_metadata(debug)
+            this_song.convert_video(cfg, debug)
 
         # Save Kaitai Log
         # COMMON HEADER
 
         # Extract Pulses (file_cbr)        
+        os.chdir(this_song.dir_extr)  
         head_lens = []
         chart_info = []
         for this_inst in this_song.cbr.tracks.charts:
@@ -591,129 +591,6 @@ if __name__ == "__main__":
             start_song = time.time()
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
             print("Song start: ", local)
-
-            source_dir = cfg.dir_raw + "\\" + this_song
-            dest_dir = cfg.dir_out + "\\" + this_song
-            '''
-            try:
-                os.mkdir(dest_dir)
-            except OSError as error:
-                print("[", dest_dir, "] already exists")
-
-            # Copy album image
-            try:
-                #print("Copying album...")
-                copy_file = "\\album.png"
-                source_file = source_dir + copy_file
-                dest_file = dest_dir + copy_file
-                shutil.copyfile(source_file, dest_file)
-            except:
-                print("File [ ", dest_file, " ] already exists")
-
-            # Copy background image
-            #print("Copying background...")
-            try:
-                copy_file = "\\background.png"
-                source_file = source_dir + copy_file
-                dest_file = dest_dir + copy_file
-                shutil.copyfile(source_file, dest_file)
-            except:
-                print("File [ ", dest_file, " ] already exists")
-
-            # Copy icon image
-            try:
-                #print("Copying icon...")
-                copy_file = "\\erdtv.png"
-                source_file = source_dir + copy_file
-                dest_file = dest_dir + copy_file
-                shutil.copyfile(source_file, dest_file)
-            except:
-                print("File [ ", dest_file, " ] already exists")
-            '''
-
-            # Copy charts file
-            try:
-                #print("Copying metadata...")
-                copy_file = "\\notes.chart"
-                source_file = source_dir + copy_file
-                dest_file = dest_dir + copy_file
-                shutil.copyfile(source_file, dest_file)
-            except:
-                print("File [ ", dest_file, " ] already exists")
-
-            '''
-            # Copy metadata file
-            try:
-                #print("Copying metadata...")
-                copy_file = "\\song.ini"
-                source_file = source_dir + copy_file
-                dest_file = dest_dir + copy_file
-                shutil.copyfile(source_file, dest_file)
-            except:
-                print("File [ ", dest_file, " ] already exists")
-
-            # Convert preview audio
-            try:
-                print("Compressing preview audio file with FFMPEG (Wav to OGG)")
-                copy_file = "\\preview"
-                source_file = source_dir + copy_file + ".wav"
-                dest_file = dest_dir + copy_file + ".ogg"
-
-                cmd = ffmpeg_file 
-                cmd = cmd + " -y -loglevel -8 -stats -i " 
-                #cmd = cmd + " -y -stats -i "    # DEBUG Verbose 
-                cmd = cmd + "\"" + source_file + "\""
-                cmd = cmd + " -c:a libvorbis -b:a 320k " 
-                cmd = cmd + "\"" + dest_file + "\""
-                #print("Command: " + cmd)    # DEBUG
-                subprocess.run(cmd)
-            except:
-                print("FFMPEG.exe not found")
-            '''
-
-            # Convert stems
-            for instrument in data_order:
-                try:
-                    print("Compressing ", instrument , " audio file with FFMPEG (Flac to OGG)")
-                    copy_file = "\\" + instrument
-                    source_file = source_dir + copy_file + ".flac"
-                    dest_file = dest_dir + copy_file + ".ogg"
-
-                    cmd = ffmpeg_file
-                    cmd = cmd + " -y -loglevel -8 -stats -i " 
-                    #cmd = cmd + " -y -stats -i "    #DEBUG Verbose 
-                    cmd = cmd + "\"" + source_file + "\""
-                    cmd = cmd + " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
-                    #cmd = cmd + " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
-                    cmd = cmd + "\"" + dest_file + "\""
-                    #print("Command: " + cmd)    #DEBUG
-                    subprocess.run(cmd)
-                except:
-                    print("FFMPEG.exe not found")
-
-            # Convert video (VERY slow)
-            try:
-                print("Compressing video file with FFMPEG (ASF to WEBM)")
-                copy_file = "\\video"
-                source_file = source_dir + copy_file + ".asf"
-                dest_file = dest_dir + copy_file + ".webm"
-                
-                cmd = ffmpeg_file 
-                cmd = cmd + " -y -loglevel -8 -stats -hwaccel auto -i "
-                cmd = cmd + "\"" + source_file + "\""
-                for i, instrument in enumerate(data_order):
-                    audio_in = dest_dir + "\\" + instrument + ".ogg"
-                    if os.path.exists(audio_in):
-                        cmd = cmd + " -i \"" + audio_in + "\""
-                #cmd = cmd + " -ss 3000ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
-                cmd = cmd + " -filter_complex amix=inputs="                 # Intro Skip #TODO: remove 3sec delay
-                cmd = cmd + str(int(i)) 
-                cmd = cmd + ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
-                cmd = cmd + "\"" + dest_file + "\""
-                print("Command: " + cmd)    # DEBUG
-                subprocess.run(cmd)
-            except:
-                print("FFMPEG.exe not found")
 
             # Show time and ETA
             elapsed_tm = time.time() - start_song

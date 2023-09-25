@@ -87,7 +87,6 @@ class Playlist(object):
     def __init__(self, cfg, debug = False):
         # Analize files
         print(" > Analizing files... < " )
-        #os.chdir(cfg.dir_songs)
         print("Songs dir:\t[", cfg.dir_songs , "]")
 
         all_files = os.listdir(cfg.dir_songs)
@@ -103,7 +102,6 @@ class Playlist(object):
         # Create log file
         if len(self.files) > 0: #TODO move to extraction log tool
             print("Songs found in dir:\t",  len(self.files))
-            #os.chdir(cfg.dir_work)
             log_file_name = "songs.csv"
             self.log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
             self.log_writer = csv.writer(self.log_file)
@@ -158,7 +156,6 @@ class Song(object):
         if debug:
             self.print_start_time()
         
-        #os.chdir(cfg.dir_songs)
         self.cbr = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")
 
         # Extract metadata
@@ -187,12 +184,10 @@ class Song(object):
         self.track_info = self.cbr.tracks.trk_info[6]
 
         # Read band file
-        #os.chdir(cfg.dir_bands)
         file_band = band.Band.from_file(cfg.dir_bands + "\\" + self.band_id + ".band")
         self.band = str(file_band.band_name).rstrip('\x00')
         
         # Read disc file
-        #os.chdir(cfg.dir_discs)
         file_disc = disc.Disc.from_file(cfg.dir_discs + "\\" + self.disc_id + ".disc")
         self.disc = str(file_disc.disc_name).rstrip('\x00')
 
@@ -220,8 +215,6 @@ class Song(object):
                 print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
 
     def extract_audio(self, cfg, debug = False):
-        #os.chdir(cfg.dir_songs)
-
         file_au = open(cfg.dir_songs + "\\"  + self.song_id + ".au", "rb")
         song_data = file_au.read()
         flac_head = "fLaC".encode('U8')
@@ -233,7 +226,6 @@ class Song(object):
         except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        #os.chdir(self.dir_extr)  
 
         # Save steams
         for i, audio in enumerate(audio_data):
@@ -243,7 +235,6 @@ class Song(object):
             audio_file.close()
             
     def extract_album(self, cfg, debug = False):        
-        #os.chdir(cfg.dir_discs)
         file_disc = disc.Disc.from_file(cfg.dir_discs + "\\" + self.disc_id + ".disc")
         disc_img = file_disc.image.png
 
@@ -252,14 +243,12 @@ class Song(object):
         except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        #os.chdir(self.dir_extr)  
         
         album_file = open(self.dir_extr + "\\album.png", "wb")
         album_file.write(disc_img)
         album_file.close()
     
     def extract_background(self, cfg, debug = False):
-        #os.chdir(cfg.dir_songs)
         backgnd_data = open(cfg.dir_songs + "\\" + self.song_id + ".bgf", "rb")
         backgnd_data.read(0x020C)
         backgnd_img = backgnd_data.read()
@@ -269,7 +258,6 @@ class Song(object):
         except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        #os.chdir(self.dir_extr)  
         
         backgnd_file = open(self.dir_extr + "\\background.png", "wb")
         backgnd_file.write(backgnd_img)
@@ -305,8 +293,7 @@ class Song(object):
         except:
             #print("[", self.dir_extr , "] already exists")
             pass
-        #os.chdir(self.dir_extr)  
-
+        
         ini_file = open(self.dir_extr + "\\song.ini", "w", encoding='utf-8')
 
         ini_file.write("[song]")
@@ -331,7 +318,11 @@ class Song(object):
         pass    #TODO
     
     def convert_charts(self, cfg, debug = False):
-        pass    #TODO
+        source_dir = self.dir_extr
+        source_file = "notes.chart"
+        dest_dir = self.dir_conv
+        dest_file = "notes.chart"
+        copy_file(source_dir, source_file, dest_dir, dest_file)
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
@@ -362,7 +353,25 @@ class Song(object):
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
     def convert_audio(self, cfg, debug = False):
-        pass    #TODO
+        for instrument in data_order:
+            print("Compressing", instrument, "audio file with FFMPEG (Flac to OGG)")
+            source_dir = self.dir_extr
+            source_file = instrument + ".flac"
+            dest_dir = self.dir_conv
+            dest_file =  instrument + ".ogg"
+
+            try:
+                cmd = cfg.ffmpeg_file 
+                cmd += " -y -loglevel -8 -stats -i " 
+                #cmd += cmd + " -y -stats -i "    # DEBUG Verbose 
+                cmd += "\"" + source_dir + "\\" + source_file + "\""
+                cmd += " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
+                #cmd += " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
+                cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
+                #print("Command:", cmd)    # DEBUG
+                subprocess.run(cmd)
+            except:
+                print("FFMPEG.exe not found")
 
     def convert_preview(self, cfg, debug = False):
         print("Compressing preview audio file with FFMPEG (WAV to OGG)")
@@ -381,10 +390,32 @@ class Song(object):
             #print("Command:", cmd)    # DEBUG
             subprocess.run(cmd)
         except:
-                print("FFMPEG.exe not found")
+            print("FFMPEG.exe not found")
 
     def convert_video(self, cfg, debug = False):
-        pass    #TODO
+        print("Compressing video file with FFMPEG (ASF to WEBM)")
+        source_dir = self.dir_extr
+        source_file = "video.asf"
+        dest_dir = self.dir_conv
+        dest_file = "video.webm"
+
+        try:
+            cmd = cfg.ffmpeg_file 
+            cmd += " -y -loglevel -8 -stats -hwaccel auto -i "
+            cmd += "\"" + source_dir + "\\" + source_file + "\""
+            for i, instrument in enumerate(data_order):
+                audio_in = dest_dir + "\\" + instrument + ".ogg"
+                if os.path.exists(audio_in):
+                    cmd += " -i \"" + audio_in + "\""
+            #cmd += " -ss 3000ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
+            cmd += " -filter_complex amix=inputs="                 # Intro Skip #TODO: remove 3sec delay
+            cmd += str(int(i)) 
+            cmd += ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
+            cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
+            #print("Command: " + cmd)    # DEBUG
+            subprocess.run(cmd)
+        except:
+            print("FFMPEG.exe not found")
 
     def print_start_time(self):
         localtime = time.localtime(self.start_time)
