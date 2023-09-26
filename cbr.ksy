@@ -4,35 +4,19 @@ meta:
   endian: le
         
 enums:
-  inst_id:
-    0: guitar
-    1: rhythm
-    2: drums
-    3: vocals
-    4: band
-
   diff_lvl:
     0: easy
     1: medium
     2: hard
-    
-  pos_id:
-    0: lo
-    1: me
-    2: hi
-    
-  color_id:
-    0: orange
-    1: blue
-    2: yellow
-    3: red
-    4: green
-    
+
 seq:
   - id: info
     type: meta_data
-  - id: tracks
+    
+  - id: charts
     type: track
+    repeat: expr
+    repeat-expr: info.instr_num 
     
 types:
   meta_data:
@@ -60,10 +44,10 @@ types:
         size: 256
         encoding: UTF-16
         
-  track:
-    seq:
       - id: magic4
-        contents: [0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        contents: [0x00, 0x08, 0x00, 0x00]
+      - id: magic5
+        contents: [0x00, 0x00, 0x00, 0x00]
       
       - id: trk_pts
         type: u8
@@ -79,31 +63,30 @@ types:
       - id: trk_info
         type: u4
         repeat: expr
-        repeat-expr: 7
+        repeat-expr: 6
         doc: Variable not decoded yet
         
-      - id: nulos  
+      - id: meta_end  
         terminator: 0
-        size: 1656
+        size: 1660
         
-      - id: charts
+  track:
+    seq:
+      - id: head
+        type: header
+      
+      - id: inst
+        if: head.inst_id < 3
         type: instrument
-        repeat: expr
-        repeat-expr: 3
         
       - id: vocals
+        if: head.inst_id == 3
         type: voice
-        if: trk_info[3] == 3
-        
-      - id: band
-        type: header
-        if: trk_info[4] == 4
         
   header:
     seq:
-      - id: instrument_id
+      - id: inst_id
         type: u4
-        enum: inst_id
 
       - id: magic
         contents: [0x00, 0x02, 0x00, 0x00]
@@ -118,12 +101,9 @@ types:
         type: u8
              
       - id: chart_info
-        type: u4
         doc: Variable not decoded yet
-        
-      - id: nulos
         terminator: 0
-        size: 480
+        size: 484
         
       - id: pulse
         type: tick
@@ -140,9 +120,6 @@ types:
         
   instrument:
     seq:
-      - id: head
-        type: header
-      
       - id: magic_1
         contents: [0x02, 0x00, 0x00, 0x00]
       - id: magic_2
@@ -207,9 +184,6 @@ types:
         
   voice:
     seq:
-      - id: head
-        type: header
-      
       - id: magic
         contents: [0x05, 0x00, 0x00, 0x00]
         
@@ -226,13 +200,10 @@ types:
         type: u8
         
       - id: vocal_info
-        type: u4
+        size: 100
+        terminator: 0
         doc: Variable not decoded yet
 
-      - id: nulos
-        terminator: 0
-        size: 96
-        
       - id: pts_wave
         type: u8
         repeat: expr
