@@ -9,84 +9,87 @@ enums:
     1: medium
     2: hard
 
+  instrum_id:
+    0: guitar
+    1: rhythm
+    2: drums
+    3: vocals
+    4: band
+    
+  pos_id:
+    0: lo
+    1: me
+    2: hi
+    
+  color_id:
+    0: orange
+    1: blue
+    2: yellow
+    3: red
+    4: green
+    
 seq:
-  - id: info
-    type: meta_data
+  - id: magic_1
+    contents: [0x76, 0x98, 0xCD, 0xAB]
+  - id: magic_2
+    contents: [0x00, 0x00, 0x04, 0x00]
+  - id: magic_3
+    contents: [0x00, 0x08, 0x00, 0x00]
+    
+  - id: song_id
+    type: u8
+  - id: instr_num
+    type: u4
+  - id: instr_mask
+    type: u4
+  - id: band_id
+    type: u8
+  - id: disc_id
+    type: u8
+  - id: year
+    type: u4
+  - id: song_name
+    type: str
+    size: 256
+    encoding: UTF-16
+    
+  - id: magic4
+    contents: [0x00, 0x08, 0x00, 0x00]
+  - id: magic5
+    contents: [0x00, 0x00, 0x00, 0x00]
+  
+  - id: trk_pts
+    type: u8
+    repeat: expr
+    repeat-expr: 5
+    
+  - id: diff_level
+    type: u2
+    repeat: expr
+    repeat-expr: 6
+  
+  - id: trk_info
+    type: u4
+    repeat: expr
+    repeat-expr: 6
+    doc: Variable not decoded yet
+    
+  - id: meta_end  
+    terminator: 0
+    size: 1660  
+    doc: Variable not decoded yet
     
   - id: charts
     type: track
     repeat: expr
-    repeat-expr: info.instr_num 
+    repeat-expr: instr_num 
     
 types:
-  meta_data:
-    seq:
-      - id: magic_1
-        contents: [0x76, 0x98, 0xCD, 0xAB]
-      - id: magic_2
-        contents: [0x00, 0x00, 0x04, 0x00]
-      - id: magic_3
-        contents: [0x00, 0x08, 0x00, 0x00]
-      - id: song_id
-        type: u8
-      - id: instr_num
-        type: u4
-      - id: instr_mask
-        type: u4
-      - id: band_id
-        type: u8
-      - id: disc_id
-        type: u8
-      - id: year
-        type: u4
-      - id: song_name
-        type: str
-        size: 256
-        encoding: UTF-16
-        
-      - id: magic4
-        contents: [0x00, 0x08, 0x00, 0x00]
-      - id: magic5
-        contents: [0x00, 0x00, 0x00, 0x00]
-      
-      - id: trk_pts
-        type: u8
-        repeat: expr
-        repeat-expr: 5
-        doc: pointers to the END of each instrument's tracks
-      
-      - id: diff_level
-        type: u2
-        repeat: expr
-        repeat-expr: 6
-      
-      - id: trk_info
-        type: u4
-        repeat: expr
-        repeat-expr: 6
-        doc: Variable not decoded yet
-        
-      - id: meta_end  
-        terminator: 0
-        size: 1660
-        
   track:
-    seq:
-      - id: head
-        type: header
-      
-      - id: inst
-        if: head.inst_id < 3
-        type: instrument
-        
-      - id: vocals
-        if: head.inst_id == 3
-        type: voice
-        
-  header:
     seq:
       - id: inst_id
         type: u4
+        enum: instrum_id
 
       - id: magic
         contents: [0x00, 0x02, 0x00, 0x00]
@@ -101,20 +104,27 @@ types:
         type: u8
              
       - id: chart_info
-        doc: Variable not decoded yet
         terminator: 0
         size: 484
+        doc: Variable not decoded yet
         
       - id: pulse
         type: tick
         repeat: expr
         repeat-expr: num_pulse
+      
+      - id: inst
+        if: inst_id.to_i < 3
+        type: instrument
+        
+      - id: vocals
+        if: inst_id == instrum_id::vocals
+        type: voice
 
   tick:
     seq:
       - id: time
         type: u4
-        
       - id: type
         type: u4
         
@@ -129,7 +139,6 @@ types:
         type: u8
         repeat: expr
         repeat-expr: 15
-        doc: pointers to the END of each difficulty chart for this instrument
 
       - id: diff_charts
         type: charts
@@ -175,10 +184,8 @@ types:
     seq:
       - id: time
         type: u4
-        
       - id: len
         type: u4
-        
       - id: mods
         type: u4
         
@@ -189,13 +196,10 @@ types:
         
       - id: num_waves_pts
         type: u4
-        
       - id: start_wave_pos
         type: u8
-        
       - id: num_lyrics_pts
         type: u4
-        
       - id: start_lyrics_pos
         type: u8
         
@@ -274,13 +278,10 @@ types:
     seq:        
       - id: time_start
         type: u4
-        
       - id: time_end
         type: u4
-        
       - id: type
         type: u4
-        
       - id: text
         type: strz
         encoding: WINDOWS-1252

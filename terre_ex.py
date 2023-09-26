@@ -159,29 +159,29 @@ class Song(object):
         self.cbr = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")
 
         # Extract metadata
-        self.song_id = self.HexIDtoString(self.cbr.info.song_id)
+        self.song_id = self.HexIDtoString(self.cbr.song_id)
         if debug:
             if file != self.song_id:
                 print("<WARN>: File and ID does not match.")
-        self.band_id = self.HexIDtoString(self.cbr.info.band_id)
-        self.disc_id = self.HexIDtoString(self.cbr.info.disc_id)
-        self.name = str(self.cbr.info.song_name).rstrip('\x00')
-        self.year = self.cbr.info.year
+        self.band_id = self.HexIDtoString(self.cbr.band_id)
+        self.disc_id = self.HexIDtoString(self.cbr.disc_id)
+        self.name = str(self.cbr.song_name).rstrip('\x00')
+        self.year = self.cbr.year
         
         # Extract Difficulty Level
-        self.diffs = self.cbr.tracks.diff_level
+        self.diffs = self.cbr.diff_level
         band_diff = int(0)
         i = 0
-        for instrument in self.cbr.tracks.diff_level:
+        for instrument in self.cbr.diff_level:
             band_diff += instrument
             if instrument > 0:
                 i += 1
         self.diffs[i] = int(band_diff / i)
         
         # Unused metadata
-        self.inst_num = self.cbr.info.instr_num
-        self.inst_mask = self.cbr.info.instr_mask
-        self.track_info = self.cbr.tracks.trk_info[6]
+        self.inst_num = self.cbr.instr_num
+        self.inst_mask = self.cbr.instr_mask
+        self.track_info = self.cbr.meta_end
 
         # Read band file
         file_band = band.Band.from_file(cfg.dir_bands + "\\" + self.band_id + ".band")
@@ -203,16 +203,17 @@ class Song(object):
         self.dir_conv += " - "
         self.dir_conv += self.name
 
-        self.Instruments = []
-        for inst_raw in self.cbr.tracks.charts:
-            inst_clean = Instrument(inst_raw)
-            self.Instruments.append(inst_clean)
-        self.Vocals = self.cbr.tracks.vocals
+        self.Tracks = []
+        for inst_raw in self.cbr.charts:
+            if inst_raw.inst_id.value < 3:
+                inst_clean = Track(inst_raw)
+                self.Tracks.append(inst_clean)
+        self.Vocals = self.cbr.charts[3]
         #self.Lyrics = 
-        #self.Pulse = self.cbr.tracks.band
+        self.Pulse = self.cbr.charts[0]
 
         if debug:   #DEBUG
-            print("Song:", self.cbr.info.song_name)  # DEBUG test Kaitai
+            print("Song:", self.cbr.song_name)  # DEBUG test Kaitai
             print("Band:", self.band)
             print("Disc:", self.disc)
             print("Year:", self.year)  # DEBUG test Kaitai
@@ -221,9 +222,6 @@ class Song(object):
             print("Disc ID:", self.disc_id)  # DEBUG test Kaitai
             for i, instrument in enumerate(inst_order):
                 print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
-
-    def append(self, inst,  debug = False):
-        self.Instruments.append(inst)
 
     def extract_audio(self, cfg, debug = False):
         file_au = open(cfg.dir_songs + "\\"  + self.song_id + ".au", "rb")
@@ -446,13 +444,13 @@ class Song(object):
         str_id = str_id.lstrip('0X')
         return str_id
 
-class Instrument(object):
+class Track(object):
     def __init__(self, cbr_chart, debug = False):
-        #self.id_num = cbr_chart.head.instrument_id.value
-        self.name = cbr_chart.head.instrument_id.name
-        self.info = cbr_chart.head.chart_info   #Unknown usage
+        self.id_num = cbr_chart.inst_id.value
+        self.name = cbr_chart.inst_id.name
+        self.info = cbr_chart.chart_info   #Unknown usage
         unsorted_pulse = []
-        for this_pulse in cbr_chart.head.pulse:
+        for this_pulse in cbr_chart.pulse:
             pulse_dict = {
                 "time": this_pulse.time,
                 "type": this_pulse.type
@@ -460,17 +458,21 @@ class Instrument(object):
             unsorted_pulse.append(pulse_dict)
         self.pulse = sorted(unsorted_pulse, key=lambda item: item['time'])
 
-        self.Diffs = []
-        for diff_raw in cbr_chart.diff_charts:
-            diff_clean = Chart(diff_raw)
-            self.Diffs.append(diff_clean)
+        if self.id_num < 3:
+            self.Diffs = []
+            for diff_raw in cbr_chart.inst.diff_charts:
+                diff_clean = Chart(diff_raw, debug)
+                self.Diffs.append(diff_clean)
 
 class Chart(object):
     def __init__(self, cbr_diff, debug = False):
-        #self.id_num = cbr_diff.diff.vaule
+        self.id_num = cbr_diff.diff.value
         self.name = cbr_diff.diff.name
         self.info = cbr_diff.diff_info  #Unknown usage
         self.max_note = cbr_diff.num_frets_pts #TODO: Verify if always 5
+        if debug:
+            if self.max_note != 5:  #DEBUG
+                print("<WARN>: Frets number is", self.max_note)
         unsorted_notes = []
         for i, this_color in enumerate(cbr_diff.frets_on_fire):
             for this_note in this_color.frets_wave:
