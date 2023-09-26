@@ -227,10 +227,11 @@ class Cbr(KaitaiStruct):
 
         def _read(self):
             self.num_text = self._io.read_u4le()
-            self.info = []
-            for i in range(6):
-                self.info.append(self._io.read_u4le())
-
+            self.time_start = self._io.read_u4le()
+            self.time_end = self._io.read_u4le()
+            self.pts_to_pts = self._io.read_u8le()
+            self.mods = self._io.read_u4le()
+            self.len = self._io.read_u4le()
             self.pts_text = []
             for i in range(self.num_text):
                 self.pts_text.append(self._io.read_u8le())

@@ -205,12 +205,8 @@ class Song(object):
 
         self.Tracks = []
         for inst_raw in self.cbr.charts:
-            if inst_raw.inst_id.value < 3:
-                inst_clean = Track(inst_raw)
-                self.Tracks.append(inst_clean)
-        self.Vocals = self.cbr.charts[3]
-        #self.Lyrics = 
-        self.Pulse = self.cbr.charts[0]
+            inst_clean = Track(inst_raw)
+            self.Tracks.append(inst_clean)
 
         if debug:   #DEBUG
             print("Song:", self.cbr.song_name)  # DEBUG test Kaitai
@@ -457,30 +453,81 @@ class Track(object):
             }
             unsorted_pulse.append(pulse_dict)
         self.pulse = sorted(unsorted_pulse, key=lambda item: item['time'])
-
+        
         if self.id_num < 3:
             self.Diffs = []
             for diff_raw in cbr_chart.inst.diff_charts:
                 diff_clean = Chart(diff_raw, debug)
                 self.Diffs.append(diff_clean)
 
+        if self.name == "vocals":   #TODO: move to a class
+            #self.Lyrics = cbr_chart.vocals.lyrics
+
+            unsorted_verse = []
+            for this_verse in cbr_chart.vocals.lyrics:
+                unsorted_syll = []
+                for this_syll in this_verse.text_block:
+                    syll_dict = {
+                        "time": this_syll.time_start,
+                        "len": (this_syll.time_end - this_syll.time_start),
+                        "color": this_syll.text,
+                        "mods": this_syll.type
+                    }
+                    unsorted_syll.append(syll_dict)
+                syllables = sorted(unsorted_syll, key=lambda item: item['time'])
+                    
+                verse_dict = {
+                    "time": this_verse.time_start,
+                    "len": (this_verse.time_end - this_syll.time_start),
+                    "color": syllables,
+                    "mods": this_verse.mods,
+                    "dur": this_verse.len   #TODO verify dur vs SUM(syll.len)
+                }
+                unsorted_verse.append(verse_dict)
+            self.Lyrics = sorted(unsorted_verse, key=lambda item: item['time'])
+            
+            unsorted_pitch = []
+            unsorted_harm = []
+            for this_wave in cbr_chart.vocals.wave_form:
+                pitch_dict = {
+                    "time": this_wave.start,
+                    "len": (this_wave.end - this_wave.start),
+                    "color": this_wave.note,
+                    "mods": this_wave.mod,
+                    "scale": this_wave.scale,
+                }
+                unsorted_pitch.append(pitch_dict)
+
+                harm_dict = {
+                    "time": this_wave.start_harm,
+                    "len": (this_wave.end_harm - this_wave.start_harm),
+                    "color": this_wave.note_harm,
+                    "mods": this_wave.mod,
+                    "scale": this_wave.scale,
+                }
+                unsorted_harm.append(harm_dict)
+            self.pitch = sorted(unsorted_harm, key=lambda item: item['time'])
+            self.harm = sorted(unsorted_harm, key=lambda item: item['time'])
+
 class Chart(object):
     def __init__(self, cbr_diff, debug = False):
         self.id_num = cbr_diff.diff.value
         self.name = cbr_diff.diff.name
         self.info = cbr_diff.diff_info  #Unknown usage
-        self.max_note = cbr_diff.num_frets_pts #TODO: Verify if always 5
+
+        self.max_note = cbr_diff.num_frets_pts
         if debug:
             if self.max_note != 5:  #DEBUG
                 print("<WARN>: Frets number is", self.max_note)
         unsorted_notes = []
+
         for i, this_color in enumerate(cbr_diff.frets_on_fire):
             for this_note in this_color.frets_wave:
                 note_dict = {
                     "time": this_note.time,
                     "len": this_note.len,
-                    "mods": this_note.mods,
-                    "color": i
+                    "color": i,
+                    "mods": this_note.mods
                 }
                 unsorted_notes.append(note_dict)
         self.notes = sorted(unsorted_notes, key=lambda item: item['time'])

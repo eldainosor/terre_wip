@@ -259,11 +259,20 @@ types:
       - id: num_text
         type: u4
       
-      - id: info
+      - id: time_start
         type: u4
-        repeat: expr
-        repeat-expr: 6
+      - id: time_end
+        type: u4
       
+      - id: pts_to_pts
+        type: u8
+        
+      - id: mods
+        type: u4
+      
+      - id: len
+        type: u4
+        
       - id: pts_text
         type: u8
         repeat: expr
