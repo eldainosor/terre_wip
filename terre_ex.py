@@ -156,32 +156,36 @@ class Song(object):
         if debug:
             self.print_start_time()
         
-        self.cbr = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")
+        self.cbr = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")  #TODO: Delete when Methons are is done
+        chart_band_record = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")
 
         # Extract metadata
-        self.song_id = self.HexIDtoString(self.cbr.song_id)
+        self.song_id = self.HexIDtoString(chart_band_record.song_id)
         if debug:
             if file != self.song_id:
-                print("<WARN>: File and ID does not match.")
-        self.band_id = self.HexIDtoString(self.cbr.band_id)
-        self.disc_id = self.HexIDtoString(self.cbr.disc_id)
-        self.name = str(self.cbr.song_name).rstrip('\x00')
-        self.year = self.cbr.year
+                print("<WARN>: File and ID are diferent")
+        self.band_id = self.HexIDtoString(chart_band_record.band_id)
+        self.disc_id = self.HexIDtoString(chart_band_record.disc_id)
+        self.name = str(chart_band_record.song_name).rstrip('\x00')
+        self.year = chart_band_record.year
         
         # Extract Difficulty Level
-        self.diffs = self.cbr.diff_level
+        self.diffs = []
         band_diff = int(0)
         i = 0
-        for instrument in self.cbr.diff_level:
-            band_diff += instrument
+        for instrument in chart_band_record.diff_level:
             if instrument > 0:
+                band_diff += instrument
+                self.diffs.append(instrument)
                 i += 1
-        self.diffs[i] = int(band_diff / i)
+            #else:
+            #    print("<WARN>: Diff is ZERO")
+        self.diffs.append(int(band_diff / i))
         
         # Unused metadata
-        self.inst_num = self.cbr.instr_num
-        self.inst_mask = self.cbr.instr_mask
-        self.track_info = self.cbr.meta_end
+        self.inst_num = chart_band_record.instr_num
+        self.inst_mask = chart_band_record.instr_mask
+        self.track_info = chart_band_record.meta_end
 
         # Read band file
         file_band = band.Band.from_file(cfg.dir_bands + "\\" + self.band_id + ".band")
@@ -203,13 +207,8 @@ class Song(object):
         self.dir_conv += " - "
         self.dir_conv += self.name
 
-        self.Tracks = []
-        for inst_raw in self.cbr.charts:
-            inst_clean = Track(inst_raw, debug)
-            self.Tracks.append(inst_clean)
-
         if debug:   #DEBUG
-            print("Song:", self.cbr.song_name)  # DEBUG test Kaitai
+            print("Song:", self.name)  # DEBUG test Kaitai
             print("Band:", self.band)
             print("Disc:", self.disc)
             print("Year:", self.year)  # DEBUG test Kaitai
@@ -320,9 +319,15 @@ class Song(object):
         ini_file.close()
         
     def extract_charts(self, cfg, debug = False):
-        pass    #TODO
-    
-    def convert_charts(self, debug = False):
+        #TODO: export files to CVS
+        self.Tracks = []
+        chart_band_record = cbr.Cbr.from_file(cfg.dir_songs + "\\" + self.song_id + ".cbr")
+        for inst_raw in chart_band_record.charts:
+            inst_clean = Track(inst_raw, debug)
+            self.Tracks.append(inst_clean)
+            
+    def convert_charts(self, cfg, debug = False):
+        #TODO: from CSV to CHART using self.Tracks
         source_dir = self.dir_extr
         source_file = "notes.chart"
         dest_dir = self.dir_conv
@@ -463,7 +468,6 @@ class Track(object):
         if self.name == "vocals":
             self.Lyrics = Lyrics(cbr_chart.vocals, debug)
             
-
 class Chart(object):
     def __init__(self, cbr_diff, debug = False):
         self.id_num = cbr_diff.diff.value
@@ -489,38 +493,16 @@ class Chart(object):
 
 class Lyrics(object):
     def __init__(self, cbr_vocal, debug = False):
-        self.info = cbr_vocal.vocal_info  #Unknown usage
-
-        unsorted_verse = []
-        for this_verse in cbr_vocal.lyrics:
-            unsorted_syll = []
-            test = 0
-            for this_syll in this_verse.text_block:
-                syll_dict = {
-                    "time": this_syll.time_start,
-                    "len": (this_syll.time_end - this_syll.time_start),
-                    "note": this_syll.text,
-                    "mods": this_syll.type
-                }
-                test += syll_dict["len"]
-                unsorted_syll.append(syll_dict)
-            syllables = sorted(unsorted_syll, key=lambda item: item['time'])
-                
-            verse_dict = {
-                "time": this_verse.time_start,
-                "note": syllables,
-                "mods": this_verse.mods,
-                "len": (this_verse.time_end - this_syll.time_start),
-                "dur": this_verse.len
-            }
-            if debug:
-                if verse_dict["dur"] != test:
-                    print("<WARN>: Dur and Len not equal")
-            unsorted_verse.append(verse_dict)
-        self.lyrics = sorted(unsorted_verse, key=lambda item: item['time'])
-        
         unsorted_pitch = []
         unsorted_harm = []
+        unsorted_verses = []
+
+        self.info = cbr_vocal.vocal_info  #Unknown usage
+
+        for verse_raw in cbr_vocal.lyrics:
+            verse_clean = Verse(verse_raw, debug)
+            unsorted_verses.append(verse_clean)
+        
         for this_wave in cbr_vocal.wave_form:
             pitch_dict = {
                 "time": this_wave.start,
@@ -529,7 +511,6 @@ class Lyrics(object):
                 "mods": this_wave.mod,
                 "scale": this_wave.scale,
             }
-            unsorted_pitch.append(pitch_dict)
 
             harm_dict = {
                 "time": this_wave.start_harm,
@@ -538,6 +519,38 @@ class Lyrics(object):
                 "mods": this_wave.mod,
                 "scale": this_wave.scale,
             }
+
+            if debug:
+                if pitch_dict != harm_dict:
+                    print("<WARN>: Pitch and Harm are diferent")
+
+            unsorted_pitch.append(pitch_dict)
             unsorted_harm.append(harm_dict)
+
+        self.verses = sorted(unsorted_verses, key=lambda item: item.time)
         self.pitch = sorted(unsorted_harm, key=lambda item: item['time'])
         self.harm = sorted(unsorted_harm, key=lambda item: item['time'])
+
+class Verse(object):
+    def __init__(self, cbr_verse, debug = False):
+        self.time = cbr_verse.time_start
+        self.mods = cbr_verse.mods
+        self.len = cbr_verse.time_end - cbr_verse.time_start
+        
+        dur_sum = 0
+        unsorted_syll = []
+        for this_syll in cbr_verse.text_block:
+            syll_dict = {
+                "time": this_syll.time_start,
+                "len": (this_syll.time_end - this_syll.time_start),
+                "note": this_syll.text,
+                "mods": this_syll.type
+            }
+            dur_sum += syll_dict["len"]
+            unsorted_syll.append(syll_dict)
+        self.syllables = sorted(unsorted_syll, key=lambda item: item['time'])
+
+        if debug:
+            if dur_sum != cbr_verse.len:
+                print("<WARN>: Dur and Len are diferent")
+            

@@ -45,6 +45,7 @@ if __name__ == "__main__":
         this_song.extract_album(cfg, debug)
         this_song.extract_background(cfg, debug)
         this_song.extract_video(cfg, debug)
+        this_song.extract_charts(cfg, debug)
 
         # Save Kaitai Log
         # COMMON HEADER
@@ -581,6 +582,7 @@ if __name__ == "__main__":
             this_song.convert_album(debug)
             this_song.convert_background(debug)
             this_song.convert_video(cfg, debug)
+            this_song.convert_charts(cfg, debug)
 
             # Show time and ETA
             elapsed_tm = time.time() - start_song
