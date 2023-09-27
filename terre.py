@@ -57,6 +57,7 @@ if __name__ == "__main__":
         for this_inst in this_song.cbr.charts:
             this_inst_name = this_inst.inst_id.name
             chart_info.append(this_inst.chart_info)
+            '''
             file_name = "pulse_" + this_inst_name + ".csv"
             pulse_file = open(file_name, "w", newline="")
             csv_writer = csv.writer(pulse_file)
@@ -69,6 +70,7 @@ if __name__ == "__main__":
                     "trk_nfo",
                       ]
             csv_writer.writerow(data_in)
+            '''
             
             inst_pulse = this_inst.pulse
 
@@ -121,16 +123,15 @@ if __name__ == "__main__":
             #res = 2*aux[0]
             res = 2*delta_count.most_common(1)[0][0]
 
+        '''
             csv_writer.writerows(csv_rows)
             pulse_file.close()
 
-        '''
         chart_info.append(this_song.cbr.vocals.head.chart_info)
         try:
             chart_info.append(this_song.cbr.band.chart_info)
         except:
             chart_info.append(int(0))
-        '''
         
         largest_number = head_lens[0]
         for number in head_lens:
@@ -192,7 +193,6 @@ if __name__ == "__main__":
 
                     csv_writer.writerows(csv_rows_sorted)
                     chart_file.close()
-        '''
         diff_info.append(this_song.cbr.vocals.vocal_info)
 
         file_name = "charts_vocals.csv"

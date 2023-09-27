@@ -297,8 +297,6 @@ class Song(object):
         for inst_raw in chart_band_record.charts:
             inst_clean = Track(inst_raw, debug)
             self.Tracks.append(inst_clean)
-        
-        #TODO: export files to CSV
         for this_track in self.Tracks:
             this_track.extract(self.dir_extr, debug)
             
@@ -511,16 +509,29 @@ class Track(object):
         if self.name == "vocals":
             self.Lyrics = Lyrics(cbr_chart.vocals, debug)
 
-    def extract(self, dir_extr, debug = False):
-
+    def extract(self, dir_extr:str, debug = False):
         file = dir_extr
-        file += "\\pulse_"
+        file += "\\"
         file += self.name
+        file += "_"
+        file += "pulse"
         file += "-"
         file += str(self.info)
         file += ".csv"
-
         dicts_to_csv(file, self.pulse)
+
+        if self.id_num < 3:
+            for this_diff in self.Diffs:
+                this_dir = dir_extr
+                this_dir += "\\"
+                this_dir += self.name
+                this_diff.extract(this_dir, debug)
+        
+        if self.name == "vocals":
+            this_dir = dir_extr
+            this_dir += "\\"
+            this_dir += self.name
+            self.Lyrics.extract(dir_extr, debug)     
 
 class Chart(object):
     def __init__(self, cbr_diff:cbr.Cbr.Instrument, debug = False):
@@ -544,6 +555,15 @@ class Chart(object):
                 }
                 unsorted_notes.append(note_dict)
         self.notes = sorted(unsorted_notes, key=lambda item: item['time'])
+ 
+    def extract(self, dir_extr, debug = False):
+        file = dir_extr
+        file += "_"
+        file += self.name
+        file += "-"
+        file += str(self.info)
+        file += ".csv"
+        dicts_to_csv(file, self.notes)
 
 class Lyrics(object):
     def __init__(self, cbr_vocal:cbr.Cbr.Voice, debug = False):
@@ -584,6 +604,39 @@ class Lyrics(object):
         self.pitch = sorted(unsorted_harm, key=lambda item: item['time'])
         self.harm = sorted(unsorted_harm, key=lambda item: item['time'])
 
+    def extract(self, dir_extr:str, debug = False):
+        file = dir_extr
+        file += "\\"
+        file += "vocals"
+        file += "_"
+        file += "pitch"
+        file += "-"
+        file += str(self.info)
+        file += ".csv"
+        dicts_to_csv(file, self.pitch)
+        
+        file = dir_extr
+        file += "\\"
+        file += "vocals"
+        file += "_"
+        file += "harm"
+        file += "-"
+        file += str(self.info)
+        file += ".csv"
+        dicts_to_csv(file, self.harm)
+
+        file = dir_extr
+        file += "\\"
+        file += "vocals"
+        file += "_"
+        file += "lyrics"    
+        file += "-"
+        file += str(self.info)
+        file += ".csv"
+        #TODO: How to extract Lyrics?
+        for this_verse in self.verses:
+            this_verse.extract(file, debug)
+
 class Verse(object):
     def __init__(self, cbr_verse:cbr.Cbr.Verse, debug = False):
         self.time = cbr_verse.time_start
@@ -606,4 +659,11 @@ class Verse(object):
         if debug:
             if dur_sum != cbr_verse.len:
                 print("<WARN>: Dur and Len are diferent")
+
+    def extract(self, dir_extr:str, debug = False):
+        file = dir_extr
+        file += "\\"
+        file += str(self.time)
+        file += ".csv"
+        #dicts_to_csv(file, self.syllables)
             
