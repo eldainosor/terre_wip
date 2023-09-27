@@ -38,6 +38,26 @@ def promt(text, valids):
         input_char = input(str(text))[0].upper()
     return input_char
 
+def dicts_to_csv(file:str, dict:list, debug = False):
+    keys = list(dict[0].keys())
+    csv_line = ""
+    for col in keys:
+        csv_line += col
+        csv_line += ","
+    csv_line += "\n"
+
+    new_csv = open(file, "w", encoding='utf-8')
+    new_csv.write(csv_line)
+
+    for this_dict in dict:
+        csv_line = ""
+        for col in keys:
+            csv_line += str(this_dict[col])
+            csv_line += ","
+        csv_line += "\n"
+        new_csv.write(str(csv_line))
+    new_csv.close()
+    
 class Settings(object):
     def __init__(self, debug = False):        
         self.start_time = time.time()
@@ -53,7 +73,7 @@ class Settings(object):
             self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
             self.convert = 'Y'            
-            self.ext_videos = 'Y'
+            self.ext_videos = 'N'
         else:
             valids = []
             for char in range(ord('A'), ord('Z')+1):
@@ -156,8 +176,12 @@ class Song(object):
         if debug:
             self.print_start_time()
         
-        self.cbr = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")  #TODO: Delete when Methons are is done
-        chart_band_record = cbr.Cbr.from_file(cfg.dir_songs + "\\" + file + ".cbr")
+        kaitai = cfg.dir_songs
+        kaitai += "\\"
+        kaitai += file
+        kaitai += ".cbr"
+        self.cbr = cbr.Cbr.from_file(kaitai)  #TODO: Delete when Methons are is done
+        chart_band_record = cbr.Cbr.from_file(kaitai)
 
         # Extract metadata
         self.song_id = self.HexIDtoString(chart_band_record.song_id)
@@ -185,14 +209,22 @@ class Song(object):
         # Unused metadata
         self.inst_num = chart_band_record.instr_num
         self.inst_mask = chart_band_record.instr_mask
-        self.track_info = chart_band_record.meta_end
+        self.track_info = int.from_bytes(chart_band_record.meta_end)
 
         # Read band file
-        file_band = band.Band.from_file(cfg.dir_bands + "\\" + self.band_id + ".band")
+        kaitai = cfg.dir_bands
+        kaitai += "\\"
+        kaitai += self.band_id
+        kaitai += ".band"
+        file_band = band.Band.from_file(kaitai)
         self.band = str(file_band.band_name).rstrip('\x00')
         
         # Read disc file
-        file_disc = disc.Disc.from_file(cfg.dir_discs + "\\" + self.disc_id + ".disc")
+        kaitai = cfg.dir_discs
+        kaitai += "\\"
+        kaitai += self.disc_id
+        kaitai += ".disc"
+        file_disc = disc.Disc.from_file(kaitai)
         self.disc = str(file_disc.disc_name).rstrip('\x00')
 
         self.dir_extr = cfg.dir_raw
@@ -238,8 +270,12 @@ class Song(object):
             audio_file.write(audio)
             audio_file.close()
             
-    def extract_album(self, cfg, debug = False):        
-        file_disc = disc.Disc.from_file(cfg.dir_discs + "\\" + self.disc_id + ".disc")
+    def extract_album(self, cfg, debug = False):
+        kaitai = cfg.dir_discs
+        kaitai += "\\"
+        kaitai += self.disc_id
+        kaitai += ".disc"
+        file_disc = disc.Disc.from_file(kaitai)
         disc_img = file_disc.image.png
 
         try:
@@ -319,12 +355,19 @@ class Song(object):
         ini_file.close()
         
     def extract_charts(self, cfg, debug = False):
-        #TODO: export files to CVS
         self.Tracks = []
-        chart_band_record = cbr.Cbr.from_file(cfg.dir_songs + "\\" + self.song_id + ".cbr")
+        kaitai = cfg.dir_songs
+        kaitai += "\\"
+        kaitai += self.song_id
+        kaitai += ".cbr"
+        chart_band_record = cbr.Cbr.from_file(kaitai)
         for inst_raw in chart_band_record.charts:
             inst_clean = Track(inst_raw, debug)
             self.Tracks.append(inst_clean)
+        
+        #TODO: export files to CSV
+        for this_track in self.Tracks:
+            this_track.extract(self.dir_extr, debug)
             
     def convert_charts(self, cfg, debug = False):
         #TODO: from CSV to CHART using self.Tracks
@@ -449,7 +492,7 @@ class Track(object):
     def __init__(self, cbr_chart, debug = False):
         self.id_num = cbr_chart.inst_id.value
         self.name = cbr_chart.inst_id.name
-        self.info = cbr_chart.chart_info   #Unknown usage
+        self.info = int.from_bytes(cbr_chart.chart_info)   #Unknown usage
         unsorted_pulse = []
         for this_pulse in cbr_chart.pulse:
             pulse_dict = {
@@ -467,7 +510,18 @@ class Track(object):
 
         if self.name == "vocals":
             self.Lyrics = Lyrics(cbr_chart.vocals, debug)
-            
+
+    def extract(self, dir_extr, debug = False):
+
+        file = dir_extr
+        file += "\\pulse_"
+        file += self.name
+        file += "-"
+        file += str(self.info)
+        file += ".csv"
+
+        dicts_to_csv(file, self.pulse)
+
 class Chart(object):
     def __init__(self, cbr_diff, debug = False):
         self.id_num = cbr_diff.diff.value
@@ -496,8 +550,7 @@ class Lyrics(object):
         unsorted_pitch = []
         unsorted_harm = []
         unsorted_verses = []
-
-        self.info = cbr_vocal.vocal_info  #Unknown usage
+        self.info = int.from_bytes(cbr_vocal.vocal_info)  #Unknown usage
 
         for verse_raw in cbr_vocal.lyrics:
             verse_clean = Verse(verse_raw, debug)

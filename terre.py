@@ -330,10 +330,10 @@ if __name__ == "__main__":
             prev_pulse_type = this_pulse.type
         new_file.write("\n}\n")
 
+        '''
         new_file.write("[Events]")
         new_file.write("\n{")
 
-        '''
         # Lyrics extraction
         for this_phrase in this_song.cbr.vocals.lyrics:
             new_file.write("\n  " + str(this_phrase.info[0]) + " = E \"phrase_start\"")
