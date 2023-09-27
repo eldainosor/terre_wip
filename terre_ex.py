@@ -13,7 +13,7 @@ data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
 
-def copy_file(source_dir, source_file, dest_dir, dest_file):
+def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
     try:
         os.makedirs(dest_dir)
@@ -29,7 +29,7 @@ def copy_file(source_dir, source_file, dest_dir, dest_file):
     except:
         print("File [", dest, "] already exists")
 
-def promt(text, valids):
+def promt(text:str, valids:str):
     valids_caps = []
     for valid_char in valids:
         valids_caps.append(valid_char.upper())
@@ -38,7 +38,7 @@ def promt(text, valids):
         input_char = input(str(text))[0].upper()
     return input_char
 
-def dicts_to_csv(file:str, dict:list, debug = False):
+def dicts_to_csv(file:str, dict:dict, debug = False):
     keys = list(dict[0].keys())
     csv_line = ""
     for col in keys:
@@ -57,7 +57,7 @@ def dicts_to_csv(file:str, dict:list, debug = False):
         csv_line += "\n"
         new_csv.write(str(csv_line))
     new_csv.close()
-    
+
 class Settings(object):
     def __init__(self, debug = False):        
         self.start_time = time.time()
@@ -103,75 +103,8 @@ class Settings(object):
         print("Total time took:\t", strtotal)
         return total_tm
         
-class Playlist(object):
-    def __init__(self, cfg, debug = False):
-        # Analize files
-        print(" > Analizing files... < " )
-        print("Songs dir:\t[", cfg.dir_songs , "]")
-
-        all_files = os.listdir(cfg.dir_songs)
-        
-        self.files = []
-        for filename in all_files:
-            name,ext = filename.split('.')
-            if ext == "cbr":
-                self.files.append(name)
-
-        self.Songs = []
-
-        # Create log file
-        if len(self.files) > 0: #TODO move to extraction log tool
-            print("Songs found in dir:\t",  len(self.files))
-            log_file_name = "songs.csv"
-            self.log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
-            self.log_writer = csv.writer(self.log_file)
-            data_in = [ "Artista",
-                        "Canción",
-                        "Disco",
-                        "Año",
-                        "Song ID",
-                        "Band ID",
-                        "Disc ID",
-                        "Dif:G",
-                        "Dif:R",
-                        "Dif:D",
-                        "Dif:V",
-                        "Dif:B", 
-                        "Vol",
-                        "Info:G",
-                        "Info:R",
-                        "Info:D",
-                        "Info:V",
-                        "Info:B",
-                        #"S:G_0",
-                        #"S:G_1",
-                        #"S:G_2",
-                        #"S:R_0",
-                        #"S:R_1",
-                        #"S:R_2",
-                        #"S:D_0",
-                        #"S:D_1",
-                        #"S:D_2",
-                        #"S:V_0",
-                        "Res",
-                        "First tick",
-                        "Last tick",
-                        #"BPM:cal",
-            ]
-            
-            self.log_writer.writerow(data_in)
-            self.log_file.close()
-
-        else:
-            print(" <ERROR>: No songs found in dir")
-
-        #print("Disk dir:\t", songs_dir)    # DEBUG
-
-    def append(self, song,  debug = False):
-        self.Songs.append(song)
-
 class Song(object):
-    def __init__(self, cfg, file, debug = False):
+    def __init__(self, cfg:Settings, file:str, debug = False):
         self.start_time = time.time()
         if debug:
             self.print_start_time()
@@ -250,7 +183,7 @@ class Song(object):
             for i, instrument in enumerate(inst_order):
                 print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
 
-    def extract_audio(self, cfg, debug = False):
+    def extract_audio(self, cfg:Settings, debug = False):
         file_au = open(cfg.dir_songs + "\\"  + self.song_id + ".au", "rb")
         song_data = file_au.read()
         flac_head = "fLaC".encode('U8')
@@ -270,7 +203,7 @@ class Song(object):
             audio_file.write(audio)
             audio_file.close()
             
-    def extract_album(self, cfg, debug = False):
+    def extract_album(self, cfg:Settings, debug = False):
         kaitai = cfg.dir_discs
         kaitai += "\\"
         kaitai += self.disc_id
@@ -288,7 +221,7 @@ class Song(object):
         album_file.write(disc_img)
         album_file.close()
     
-    def extract_background(self, cfg, debug = False):
+    def extract_background(self, cfg:Settings, debug = False):
         backgnd_data = open(cfg.dir_songs + "\\" + self.song_id + ".bgf", "rb")
         backgnd_data.read(0x020C)
         backgnd_img = backgnd_data.read()
@@ -303,14 +236,14 @@ class Song(object):
         backgnd_file.write(backgnd_img)
         backgnd_file.close()
     
-    def extract_preview(self, cfg, debug = False):
+    def extract_preview(self, cfg:Settings, debug = False):
         source_dir = cfg.dir_songs
         source_file = self.song_id + ".prv"
         dest_dir = self.dir_extr
         dest_file = "preview.wav"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-    def extract_video(self, cfg, debug = False):       
+    def extract_video(self, cfg:Settings, debug = False):       
         source_dir = cfg.dir_songs
         source_file = self.song_id + ".vid"
         dest_dir = self.dir_extr
@@ -320,7 +253,7 @@ class Song(object):
         else:
             print("Video extraction skiped")
 
-    def extract_icon(self, cfg, debug = False):
+    def extract_icon(self, cfg:Settings, debug = False):
         source_dir = cfg.dir_work
         source_file = "erdtv.png"    #TODO extract from Disk (.ico to .png)
         dest_dir = self.dir_extr
@@ -354,7 +287,7 @@ class Song(object):
         
         ini_file.close()
         
-    def extract_charts(self, cfg, debug = False):
+    def extract_charts(self, cfg:Settings, debug = False):
         self.Tracks = []
         kaitai = cfg.dir_songs
         kaitai += "\\"
@@ -369,7 +302,7 @@ class Song(object):
         for this_track in self.Tracks:
             this_track.extract(self.dir_extr, debug)
             
-    def convert_charts(self, cfg, debug = False):
+    def convert_charts(self, cfg:Settings, debug = False):
         #TODO: from CSV to CHART using self.Tracks
         source_dir = self.dir_extr
         source_file = "notes.chart"
@@ -405,7 +338,7 @@ class Song(object):
         dest_file = "erdtv.png"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-    def convert_audio(self, cfg, debug = False):
+    def convert_audio(self, cfg:Settings, debug = False):
         for instrument in data_order:
             print("Compressing", instrument, "audio file with FFMPEG (Flac to OGG)")
             source_dir = self.dir_extr
@@ -426,7 +359,7 @@ class Song(object):
             except:
                 print("FFMPEG.exe not found")
 
-    def convert_preview(self, cfg, debug = False):
+    def convert_preview(self, cfg:Settings, debug = False):
         print("Compressing preview audio file with FFMPEG (WAV to OGG)")
         source_dir = self.dir_extr
         source_file = "preview.wav"
@@ -445,7 +378,7 @@ class Song(object):
         except:
             print("FFMPEG.exe not found")
 
-    def convert_video(self, cfg, debug = False):
+    def convert_video(self, cfg:Settings, debug = False):
         print("Compressing video file with FFMPEG (ASF to WEBM)")
         source_dir = self.dir_extr
         source_file = "video.asf"
@@ -488,8 +421,75 @@ class Song(object):
         str_id = str_id.lstrip('0X')
         return str_id
 
+class Playlist(object):
+    def __init__(self, cfg:Settings, debug = False):
+        # Analize files
+        print(" > Analizing files... < " )
+        print("Songs dir:\t[", cfg.dir_songs , "]")
+
+        all_files = os.listdir(cfg.dir_songs)
+        
+        self.files = []
+        for filename in all_files:
+            name,ext = filename.split('.')
+            if ext == "cbr":
+                self.files.append(name)
+
+        self.Songs = []
+
+        # Create log file
+        if len(self.files) > 0: #TODO move to extraction log tool
+            print("Songs found in dir:\t",  len(self.files))
+            log_file_name = "songs.csv"
+            self.log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
+            self.log_writer = csv.writer(self.log_file)
+            data_in = [ "Artista",
+                        "Canción",
+                        "Disco",
+                        "Año",
+                        "Song ID",
+                        "Band ID",
+                        "Disc ID",
+                        "Dif:G",
+                        "Dif:R",
+                        "Dif:D",
+                        "Dif:V",
+                        "Dif:B", 
+                        "Vol",
+                        "Info:G",
+                        "Info:R",
+                        "Info:D",
+                        "Info:V",
+                        "Info:B",
+                        #"S:G_0",
+                        #"S:G_1",
+                        #"S:G_2",
+                        #"S:R_0",
+                        #"S:R_1",
+                        #"S:R_2",
+                        #"S:D_0",
+                        #"S:D_1",
+                        #"S:D_2",
+                        #"S:V_0",
+                        "Res",
+                        "First tick",
+                        "Last tick",
+                        #"BPM:cal",
+            ]
+            
+            self.log_writer.writerow(data_in)
+            self.log_file.close()
+
+        else:
+            print(" <ERROR>: No songs found in dir")
+
+        #print("Disk dir:\t", songs_dir)    # DEBUG
+
+    def append(self, song:Song,  debug = False):
+        self.Songs.append(song)
+
 class Track(object):
-    def __init__(self, cbr_chart, debug = False):
+    def __init__(self, cbr_chart:cbr.Cbr.Charts, debug = False):
         self.id_num = cbr_chart.inst_id.value
         self.name = cbr_chart.inst_id.name
         self.info = int.from_bytes(cbr_chart.chart_info)   #Unknown usage
@@ -523,7 +523,7 @@ class Track(object):
         dicts_to_csv(file, self.pulse)
 
 class Chart(object):
-    def __init__(self, cbr_diff, debug = False):
+    def __init__(self, cbr_diff:cbr.Cbr.Instrument, debug = False):
         self.id_num = cbr_diff.diff.value
         self.name = cbr_diff.diff.name
         self.info = cbr_diff.diff_info  #Unknown usage
@@ -546,7 +546,7 @@ class Chart(object):
         self.notes = sorted(unsorted_notes, key=lambda item: item['time'])
 
 class Lyrics(object):
-    def __init__(self, cbr_vocal, debug = False):
+    def __init__(self, cbr_vocal:cbr.Cbr.Voice, debug = False):
         unsorted_pitch = []
         unsorted_harm = []
         unsorted_verses = []
@@ -585,7 +585,7 @@ class Lyrics(object):
         self.harm = sorted(unsorted_harm, key=lambda item: item['time'])
 
 class Verse(object):
-    def __init__(self, cbr_verse, debug = False):
+    def __init__(self, cbr_verse:cbr.Cbr.Verse, debug = False):
         self.time = cbr_verse.time_start
         self.mods = cbr_verse.mods
         self.len = cbr_verse.time_end - cbr_verse.time_start
