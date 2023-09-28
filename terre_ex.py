@@ -297,6 +297,16 @@ class Song(object):
         for inst_raw in chart_band_record.charts:
             inst_clean = Track(inst_raw, debug)
             self.Tracks.append(inst_clean)
+
+        '''
+        if debug:
+            test_pulse = self.Tracks[0].pulse
+            for this_track in self.Tracks:
+                for i in test_pulse:
+                    if i not in this_track.pulse:
+                        print("<WARN>: Pulses not match", i)
+        '''
+
         for this_track in self.Tracks:
             this_track.extract(self.dir_extr, debug)
             
@@ -632,10 +642,21 @@ class Lyrics(object):
         file += "lyrics"    
         file += "-"
         file += str(self.info)
-        file += ".csv"
-        #TODO: How to extract Lyrics?
+        file += ".lrc"
+        
+        lrc_file = open(file, "w", encoding='utf-8')
+
+        #lrc_file.write("[ar: " + self.band + "]\n")
+        #lrc_file.write("[al: " + self.disc + "]\n")
+        #lrc_file.write("[ty: " + self.name + "]\n")
+
         for this_verse in self.verses:
+            lrc_file.write("\n[" + str(this_verse.time) + "]")
+            for this_syll in this_verse.syllables:
+                lrc_file.write(" <" + str(this_syll['time']) + "> " + str(this_syll['note']))
             this_verse.extract(file, debug)
+
+        lrc_file.close()
 
 class Verse(object):
     def __init__(self, cbr_verse:cbr.Cbr.Verse, debug = False):

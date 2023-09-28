@@ -57,21 +57,6 @@ if __name__ == "__main__":
         for this_inst in this_song.cbr.charts:
             this_inst_name = this_inst.inst_id.name
             chart_info.append(this_inst.chart_info)
-            '''
-            file_name = "pulse_" + this_inst_name + ".csv"
-            pulse_file = open(file_name, "w", newline="")
-            csv_writer = csv.writer(pulse_file)
-            data_in = [ "time", 
-                    "type" , 
-                    "DELTA" , 
-                    "MIN",
-                    "SEC",
-                    "cht_nfo", 
-                    "trk_nfo",
-                      ]
-            csv_writer.writerow(data_in)
-            '''
-            
             inst_pulse = this_inst.pulse
 
             this_chart_info = this_inst.chart_info
@@ -123,128 +108,7 @@ if __name__ == "__main__":
             #res = 2*aux[0]
             res = 2*delta_count.most_common(1)[0][0]
 
-        '''
-            csv_writer.writerows(csv_rows)
-            pulse_file.close()
-
-        chart_info.append(this_song.cbr.vocals.head.chart_info)
-        try:
-            chart_info.append(this_song.cbr.band.chart_info)
-        except:
-            chart_info.append(int(0))
         
-        largest_number = head_lens[0]
-        for number in head_lens:
-            if number > largest_number:
-                largest_number = number
-        
-        # print(" > BIGGER header len:" + str(largest_number))  # DEBUG
-
-        diff_info = []
-        for this_inst in this_song.cbr.charts:
-            this_inst_name = this_inst.inst_id.name
-            if this_inst.inst_id.value < 3:
-                for this_diff in this_inst.inst.diff_charts:
-                    this_diff_name = this_diff.diff.name
-                    diff_info.append(this_diff.diff_info)
-                    file_name = "charts_" + this_inst_name + "_" + this_diff_name + ".csv"
-                    chart_file = open(file_name, "w", newline="")
-                    csv_writer = csv.writer(chart_file)
-                    
-                    this_chart_info = this_inst.chart_info
-                    this_trk_info = this_song.cbr.meta_end
-                    this_diff_info = this_diff.diff_info
-                    
-                    data_in = [ "time", 
-                            "len", 
-                            "type", 
-                            "fret", 
-                            "MIN", 
-                            "SEC",
-                            "cht_nfo",
-                            "trk_nfo",
-                            "diff_nfo"
-                            ]
-                    csv_writer.writerow(data_in)
-                    
-                    csv_rows = []
-                    csv_rows_sorted = []
-                    for i, this_color in enumerate(this_diff.frets_on_fire):
-                        for this_note in this_color.frets_wave:
-                            #TODO: Find real Rsolution, BPM and TS.
-                            sec = ( this_note.time ) / ( sec_tick )
-                            #sec *= 60
-                            #sec /= bpm
-                            min = int(sec / 60)
-                            sec %= 60
-                            data_in = [ this_note.time, 
-                                    this_note.len, 
-                                    this_note.mods, 
-                                    i, 
-                                    min, 
-                                    sec,
-                                    this_chart_info,
-                                    this_trk_info,
-                                    this_diff_info,
-                                    ]
-                            csv_rows.append(data_in)
-                    
-                    csv_rows_sorted = sorted(csv_rows, key=lambda item: item[0])
-
-                    csv_writer.writerows(csv_rows_sorted)
-                    chart_file.close()
-        diff_info.append(this_song.cbr.vocals.vocal_info)
-
-        file_name = "charts_vocals.csv"
-        chart_file = open(file_name, "w", newline="")
-        csv_writer = csv.writer(chart_file)
-        
-        #   0       1       2   3       4    5       6       7
-        # [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
-        data_in = [ "TIME", 
-                    "LEN", 
-                    "mod", 
-                    "scale", 
-                    "noteA",
-                    "noteB",
-                    "NULL",
-                    "startA",
-                    "startB",
-                    "NULL",
-                    "endA",
-                    "endB",
-                    "NULL",
-                    ]
-        csv_writer.writerow(data_in)
-
-        csv_rows = []
-        csv_rows_sorted = []
-                
-        for this_wave in this_song.cbr.vocals.wave_form:
-            # Pitch: [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
-            this_note = this_wave.note
-            #this_note %= 5
-            data_in = [ this_wave.start,     # Time
-                        this_wave.end - this_wave.start,   #Len
-                        this_wave.mod,     # Mod
-                        this_wave.scale,     # Scale
-                        this_wave.note,     # NoteA
-                        this_wave.note_harm,     # NoteB
-                        this_wave.note_harm - this_wave.note,    # NULL
-                        this_wave.start,     # StartA
-                        this_wave.start_harm,     # StartB
-                        this_wave.start_harm - this_wave.start,    # NULL
-                        this_wave.end,     # EndA
-                        this_wave.end_harm,     # EndB
-                        this_wave.end_harm - this_wave.end    # NULL
-                        ]
-            csv_rows.append(data_in)
-
-        csv_rows_sorted = sorted(csv_rows, key=lambda item: item[0])
-
-        csv_writer.writerows(csv_rows_sorted)
-        chart_file.close()
-        '''
 
         # Create chart file
         ts_num = 4  #TODO: Find real ts (time signature - compas)
@@ -330,7 +194,6 @@ if __name__ == "__main__":
             prev_pulse_type = this_pulse.type
         new_file.write("\n}\n")
 
-        '''
         new_file.write("[Events]")
         new_file.write("\n{")
 
@@ -342,35 +205,6 @@ if __name__ == "__main__":
             new_file.write("\n  " + str(this_phrase.info[1]) + " = E \"phrase_end\"")
                 
         new_file.write("\n}\n")
-
-        new_file.write("[HardKeyboard]")    #DEBUG Vocals test
-        #new_file.write("[Vocals]")    #DEBUG Vocals test
-        new_file.write("\n{")
-
-        wave_list = []
-        harm_list = []
-        sp_list = []
-        for this_wave in this_song.cbr.vocals.wave_form:
-            # Pitch: [Scale, StartA, EndA, Mod, NoteA, StartB, NoteB, EndB]
-            this_note = this_wave.note + 12 * this_wave.scale
-            this_note_harm = this_wave.note_harm + 12 * this_wave.scale
-            #this_note %= 5
-            wave_list.append([this_wave.start, "N", this_note, this_wave.end - this_wave.start]) 
-            harm_list.append([this_wave.start_harm, "E", this_note_harm, this_wave.end_harm - this_wave.start_harm]) 
-            if this_wave.mod:
-                wave_list.append([this_wave.start, "S", this_note, this_wave.end - this_wave.start]) 
-                #wave_list.append([this_wave.start, "S", 2, this_wave.end - this_wave.start]) 
-            
-        harm_list.extend(wave_list)
-        harm_list.extend(sp_list)
-        sorted_harms = []
-        sorted_harms = sorted(harm_list, key=lambda item: item[0])
-        
-        for this_sorted_notes in sorted_harms:
-            new_file.write("\n  " + str(this_sorted_notes[0]) + " = " + str(this_sorted_notes[1])  + " " + str(this_sorted_notes[2]) + " " + str(this_sorted_notes[3]))
-
-        new_file.write("\n}\n")
-        '''
         
         for this_inst in this_song.cbr.charts:
             if this_inst.inst_id.value < 3:
