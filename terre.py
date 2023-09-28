@@ -29,6 +29,52 @@ if __name__ == "__main__":
     cfg = Settings(debug)
     pl = Playlist(cfg, debug)
   
+    # Create log file
+    if len(pl.files) > 0: #TODO move to extraction log tool
+        print("Songs found in dir:\t",  len(pl.files))
+        log_file_name = "songs.csv"
+        log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
+        log_writer = csv.writer(log_file)
+        data_in = [ "Artista",
+                    "Canción",
+                    "Disco",
+                    "Año",
+                    "Song ID",
+                    "Band ID",
+                    "Disc ID",
+                    "Dif:G",
+                    "Dif:R",
+                    "Dif:D",
+                    "Dif:V",
+                    "Dif:B", 
+                    "Vol",
+                    "Info:G",
+                    "Info:R",
+                    "Info:D",
+                    "Info:V",
+                    "Info:B",
+                    #"S:G_0",
+                    #"S:G_1",
+                    #"S:G_2",
+                    #"S:R_0",
+                    #"S:R_1",
+                    #"S:R_2",
+                    #"S:D_0",
+                    #"S:D_1",
+                    #"S:D_2",
+                    #"S:V_0",
+                    "Res",
+                    "First tick",
+                    "Last tick",
+                    #"BPM:cal",
+        ]
+        
+        log_writer.writerow(data_in)
+        log_file.close()
+
+    else:
+        print(" <ERROR>: No songs found in dir")
+
     # Raw extraction
     for k, filename in enumerate(pl.files):
         k += 1
@@ -198,11 +244,11 @@ if __name__ == "__main__":
         new_file.write("\n{")
 
         # Lyrics extraction
-        for this_phrase in this_song.cbr.vocals.lyrics:
-            new_file.write("\n  " + str(this_phrase.info[0]) + " = E \"phrase_start\"")
-            for this_syll in this_phrase.text_block:
-                new_file.write("\n  " + str(this_syll.time_start) + " = E \"lyric " + str(this_syll.text) + "\"")
-            new_file.write("\n  " + str(this_phrase.info[1]) + " = E \"phrase_end\"")
+        for this_phrase in this_song.Tracks[3].Lyrics.verses:
+            new_file.write("\n  " + str(this_phrase.time) + " = E \"phrase_start\"")
+            for this_syll in this_phrase.syllables:
+                new_file.write("\n  " + str(this_syll['time']) + " = E \"lyric " + str(this_syll['note']) + "\"")
+            new_file.write("\n  " + str(this_phrase.len) + " = E \"phrase_end\"")
                 
         new_file.write("\n}\n")
         

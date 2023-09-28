@@ -444,53 +444,6 @@ class Playlist(object):
                 self.files.append(name)
 
         self.Songs = []
-
-        # Create log file
-        if len(self.files) > 0: #TODO move to extraction log tool
-            print("Songs found in dir:\t",  len(self.files))
-            log_file_name = "songs.csv"
-            self.log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
-            self.log_writer = csv.writer(self.log_file)
-            data_in = [ "Artista",
-                        "Canción",
-                        "Disco",
-                        "Año",
-                        "Song ID",
-                        "Band ID",
-                        "Disc ID",
-                        "Dif:G",
-                        "Dif:R",
-                        "Dif:D",
-                        "Dif:V",
-                        "Dif:B", 
-                        "Vol",
-                        "Info:G",
-                        "Info:R",
-                        "Info:D",
-                        "Info:V",
-                        "Info:B",
-                        #"S:G_0",
-                        #"S:G_1",
-                        #"S:G_2",
-                        #"S:R_0",
-                        #"S:R_1",
-                        #"S:R_2",
-                        #"S:D_0",
-                        #"S:D_1",
-                        #"S:D_2",
-                        #"S:V_0",
-                        "Res",
-                        "First tick",
-                        "Last tick",
-                        #"BPM:cal",
-            ]
-            
-            self.log_writer.writerow(data_in)
-            self.log_file.close()
-
-        else:
-            print(" <ERROR>: No songs found in dir")
-
         #print("Disk dir:\t", songs_dir)    # DEBUG
 
     def append(self, song:Song,  debug = False):
@@ -651,9 +604,20 @@ class Lyrics(object):
         #lrc_file.write("[ty: " + self.name + "]\n")
 
         for this_verse in self.verses:
-            lrc_file.write("\n[" + str(this_verse.time) + "]")
+            lrc_line = "[" 
+            lrc_line += str(this_verse.time)
+            #TODO Fix timing
+            #lrc_line += time.strftime("%H:%M:%S", time.gmtime(this_verse.time))
+            lrc_line += "] "
+            lrc_file.write(lrc_line)
             for this_syll in this_verse.syllables:
-                lrc_file.write(" <" + str(this_syll['time']) + "> " + str(this_syll['note']))
+                lrc_line = " <" 
+                lrc_line += str(this_syll['time'])
+                lrc_line += "> "
+                lrc_line += str(this_syll['note'])
+                lrc_file.write(lrc_line)
+            lrc_line += "\n"
+            lrc_file.write(lrc_line)
             this_verse.extract(file, debug)
 
         lrc_file.close()
