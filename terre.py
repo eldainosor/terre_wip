@@ -15,65 +15,18 @@ const_res = 480     #Like RB
 #const_res = 192    #Like GH
 #TODO: Res=480000 a recalc ticks with variable BPM from [event]
 
-'''
-def fixtiming(time):
-    this_bpm = 1000*60*sec_tick/this_res
-    res = 2*diff_count.most_common(1)[0][0]
-    return time
-'''
-
 if __name__ == "__main__":
 
     print(" >>> EXTRACTOR TODO EL ROCK (RECARGADO) <<< ")
 
     cfg = Settings(debug)
     pl = Playlist(cfg, debug)
-  
+    pl.log_start(cfg, debug)
     # Create log file
     if len(pl.files) > 0: #TODO move to extraction log tool
-        print("Songs found in dir:\t",  len(pl.files))
-        log_file_name = "songs.csv"
-        log_file = open(cfg.dir_work + "\\" + log_file_name, "w", newline="")
-        log_writer = csv.writer(log_file)
-        data_in = [ "Artista",
-                    "Canción",
-                    "Disco",
-                    "Año",
-                    "Song ID",
-                    "Band ID",
-                    "Disc ID",
-                    "Dif:G",
-                    "Dif:R",
-                    "Dif:D",
-                    "Dif:V",
-                    "Dif:B", 
-                    "Vol",
-                    "Info:G",
-                    "Info:R",
-                    "Info:D",
-                    "Info:V",
-                    "Info:B",
-                    #"S:G_0",
-                    #"S:G_1",
-                    #"S:G_2",
-                    #"S:R_0",
-                    #"S:R_1",
-                    #"S:R_2",
-                    #"S:D_0",
-                    #"S:D_1",
-                    #"S:D_2",
-                    #"S:V_0",
-                    "Res",
-                    "First tick",
-                    "Last tick",
-                    #"BPM:cal",
-        ]
-        
-        log_writer.writerow(data_in)
-        log_file.close()
-
+        print("Songs found in dir:\t",  len(pl.files))   
     else:
-        print(" <ERROR>: No songs found in dir")
+        print("<ERROR>: No songs found in dir")
 
     # Raw extraction
     for k, filename in enumerate(pl.files):
@@ -394,48 +347,6 @@ if __name__ == "__main__":
 
         new_file.write("\n}\n")
         
-        new_file.close()
-                
-        # Save to log
-        os.chdir(cfg.dir_work)
-        csv_name = "songs.csv"
-        new_file = open(csv_name, "a", newline="")
-        csv_writer = csv.writer(new_file)
-        data_in = [ this_song.band,
-                    this_song.name,
-                    this_song.disc,
-                    this_song.year,
-                    this_song.song_id,
-                    this_song.band_id,
-                    this_song.disc_id,
-                    this_song.diffs[0], # Guitar
-                    this_song.diffs[1], # Rhythm
-                    this_song.diffs[2], # Drums
-                    this_song.diffs[3], # Vocal
-                    this_song.diffs[4], # Band
-                    this_song.track_info,
-                    chart_info[0],    # Guitar
-                    chart_info[1],    # Rhythm
-                    chart_info[2],    # Drums
-                    chart_info[3],    # Vocal
-                    #chart_info[4],    # Band
-                    #diff_info[0],  # Guitar-Easy
-                    #diff_info[1],  # Guitar-Norm
-                    #diff_info[2],  # Guitar-Hard
-                    #diff_info[3],  # Rhythm-Easy
-                    #diff_info[4],  # Rhythm-Norm
-                    #diff_info[5],  # Rhythm-Hard
-                    #diff_info[6],  # Drums-Easy
-                    #diff_info[7],  # Drums-Norm
-                    #diff_info[8],  # Drums-Hard
-                    #diff_info[9],  # Vocals
-                    res,
-                    first_tick,
-                    last_tick,
-                    #this_chart_info,
-        ]
-
-        csv_writer.writerow(data_in)
         new_file.close()
 
         # Show time and ETA

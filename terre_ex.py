@@ -3,7 +3,6 @@
 # Made by Envido32
 
 import os, shutil, subprocess
-import csv
 import time
 import cbr, disc, band
 
@@ -195,6 +194,23 @@ class Song(object):
             for i, instrument in enumerate(inst_order):
                 print("Diff.", instrument ,":\t" ,self.diffs[i])  # DEBUG test Kaitai
 
+        log_file = open(cfg.log_file, "a", newline="")
+
+        log_line = ""
+        log_line += "\"" + self.band + "\","
+        log_line += "\"" + self.name + "\","
+        log_line += "\"" + self.disc + "\","
+        log_line += str(self.year) + ","
+        log_line += self.song_id + ","
+        log_line += self.band_id + ","
+        log_line += self.disc_id + ","
+        for i, instrument in enumerate(inst_order):
+            log_line += str(self.diffs[i]) + ","
+        log_line += "\n"
+            
+        log_file.write(log_line)
+        log_file.close()
+
     def extract_audio(self, cfg:Settings, debug = False):
         file_au = open(cfg.dir_songs + "\\"  + self.song_id + ".au", "rb")
         song_data = file_au.read()
@@ -310,6 +326,7 @@ class Song(object):
             inst_clean = Track(inst_raw, debug)
             self.Tracks.append(inst_clean)
 
+        #TODO: Create one CSV for all Pulses
         '''
         if debug:
             test_pulse = self.Tracks[0].pulse
@@ -318,6 +335,9 @@ class Song(object):
                     if i not in this_track.pulse:
                         print("<WARN>: Pulses not match", i)
         '''
+        if debug:
+            for this_track in self.Tracks:
+                print("Pulses len for", this_track.name ,len(this_track.pulse))
 
         for this_track in self.Tracks:
             this_track.extract(self, debug)
@@ -460,6 +480,30 @@ class Playlist(object):
 
     def append(self, song:Song,  debug = False):
         self.Songs.append(song)
+
+    def log_start(self, cfg:Settings, debug = False):
+        cfg.log_file = cfg.dir_work
+        cfg.log_file += "\\"
+        cfg.log_file += "songs.csv"
+
+        log_file = open(cfg.log_file, "w", newline="")
+        log_line = ""
+        log_line += "Artista,"
+        log_line += "Canción,"
+        log_line += "Disco,"
+        log_line += "Año,"
+        log_line += "Song ID,"
+        log_line += "Band ID,"
+        log_line += "Disc ID,"
+        log_line += "Dif:G,"
+        log_line += "Dif:R,"
+        log_line += "Dif:D,"
+        log_line += "Dif:V,"
+        log_line += "Dif:B,"
+        log_line += "\n"
+
+        log_file.write(log_line)
+        log_file.close()
 
 class Track(object):
     def __init__(self, cbr_chart:cbr.Cbr.Charts, debug = False):
@@ -611,11 +655,12 @@ class Lyrics(object):
         
         lrc_file = open(file, "w", encoding='utf-8')
 
-        lrc_file.write("[ar: " + song.band + "]\n")
-        lrc_file.write("[al: " + song.disc + "]\n")
-        lrc_file.write("[ti: " + song.name + "]\n")
-        offset = +3000
-        lrc_file.write("[offset: " + str(offset) + "]\n") #TODO: remove offset
+        lrc_file.write("[ar:" + song.band + "]\n")
+        lrc_file.write("[al:" + song.disc + "]\n")
+        lrc_file.write("[ti:" + song.name + "]\n")
+        #offset = +3000
+        offset = +0000
+        lrc_file.write("[offset:" + str(offset) + "]\n") #TODO: remove offset
 
         for this_verse in self.verses:
             lrc_line = "[" 
@@ -630,7 +675,6 @@ class Lyrics(object):
                 lrc_file.write(lrc_line)
             lrc_line = "\n"
             lrc_file.write(lrc_line)
-            this_verse.extract(file, debug)
 
         lrc_file.close()
 
@@ -656,11 +700,3 @@ class Verse(object):
         if debug:
             if dur_sum != cbr_verse.len:
                 print("<WARN>: Dur and Len are diferent")
-
-    def extract(self, dir_extr:str, debug = False):
-        file = dir_extr
-        file += "\\"
-        file += str(self.time)
-        file += ".csv"
-        #dicts_to_csv(file, self.syllables)
-            
