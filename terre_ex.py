@@ -13,6 +13,10 @@ data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
 
+sec_tick = 44092    #TODO: find if it can be fixed or calibrated
+const_res = 480     #Like RB
+#const_res = 192    #Like GH
+
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
     try:
@@ -57,6 +61,14 @@ def dicts_to_csv(file:str, dict:dict, debug = False):
         csv_line += "\n"
         new_csv.write(str(csv_line))
     new_csv.close()
+
+def ticks_to_clock(ticks:int, rate:int):
+    secs = ticks / rate
+    min = int(secs // 60)
+    sec = int(secs % 60)
+    dec = int((secs % 1) * 100)
+    clock = f"{min:02d}:{sec:02d}.{dec:02d}"
+    return clock
 
 class Settings(object):
     def __init__(self, debug = False):        
@@ -308,7 +320,7 @@ class Song(object):
         '''
 
         for this_track in self.Tracks:
-            this_track.extract(self.dir_extr, debug)
+            this_track.extract(self, debug)
             
     def convert_charts(self, cfg:Settings, debug = False):
         #TODO: from CSV to CHART using self.Tracks
@@ -472,8 +484,8 @@ class Track(object):
         if self.name == "vocals":
             self.Lyrics = Lyrics(cbr_chart.vocals, debug)
 
-    def extract(self, dir_extr:str, debug = False):
-        file = dir_extr
+    def extract(self, song:Song, debug = False):
+        file = song.dir_extr
         file += "\\"
         file += self.name
         file += "_"
@@ -485,16 +497,16 @@ class Track(object):
 
         if self.id_num < 3:
             for this_diff in self.Diffs:
-                this_dir = dir_extr
+                this_dir = song.dir_extr
                 this_dir += "\\"
                 this_dir += self.name
                 this_diff.extract(this_dir, debug)
         
         if self.name == "vocals":
-            this_dir = dir_extr
+            this_dir = song.dir_extr
             this_dir += "\\"
             this_dir += self.name
-            self.Lyrics.extract(dir_extr, debug)     
+            self.Lyrics.extract(song, debug)
 
 class Chart(object):
     def __init__(self, cbr_diff:cbr.Cbr.Instrument, debug = False):
@@ -567,8 +579,8 @@ class Lyrics(object):
         self.pitch = sorted(unsorted_harm, key=lambda item: item['time'])
         self.harm = sorted(unsorted_harm, key=lambda item: item['time'])
 
-    def extract(self, dir_extr:str, debug = False):
-        file = dir_extr
+    def extract(self, song:Song, debug = False):
+        file = song.dir_extr
         file += "\\"
         file += "vocals"
         file += "_"
@@ -578,7 +590,7 @@ class Lyrics(object):
         file += ".csv"
         dicts_to_csv(file, self.pitch)
         
-        file = dir_extr
+        file = song.dir_extr
         file += "\\"
         file += "vocals"
         file += "_"
@@ -588,35 +600,35 @@ class Lyrics(object):
         file += ".csv"
         dicts_to_csv(file, self.harm)
 
-        file = dir_extr
+        file = song.dir_extr
         file += "\\"
         file += "vocals"
         file += "_"
         file += "lyrics"    
         file += "-"
         file += str(self.info)
-        file += ".lrc"
+        file += ".lrc"  
         
         lrc_file = open(file, "w", encoding='utf-8')
 
-        #lrc_file.write("[ar: " + self.band + "]\n")
-        #lrc_file.write("[al: " + self.disc + "]\n")
-        #lrc_file.write("[ty: " + self.name + "]\n")
+        lrc_file.write("[ar: " + song.band + "]\n")
+        lrc_file.write("[al: " + song.disc + "]\n")
+        lrc_file.write("[ti: " + song.name + "]\n")
+        offset = +3000
+        lrc_file.write("[offset: " + str(offset) + "]\n") #TODO: remove offset
 
         for this_verse in self.verses:
             lrc_line = "[" 
-            lrc_line += str(this_verse.time)
-            #TODO Fix timing
-            #lrc_line += time.strftime("%H:%M:%S", time.gmtime(this_verse.time))
-            lrc_line += "] "
+            lrc_line += ticks_to_clock(this_verse.time, sec_tick)
+            lrc_line += "]"
             lrc_file.write(lrc_line)
             for this_syll in this_verse.syllables:
                 lrc_line = " <" 
-                lrc_line += str(this_syll['time'])
+                lrc_line += ticks_to_clock(this_syll['time'], sec_tick)
                 lrc_line += "> "
                 lrc_line += str(this_syll['note'])
                 lrc_file.write(lrc_line)
-            lrc_line += "\n"
+            lrc_line = "\n"
             lrc_file.write(lrc_line)
             this_verse.extract(file, debug)
 
@@ -637,7 +649,7 @@ class Verse(object):
                 "note": this_syll.text,
                 "mods": this_syll.type
             }
-            dur_sum += syll_dict["len"]
+            dur_sum += syll_dict['len']
             unsorted_syll.append(syll_dict)
         self.syllables = sorted(unsorted_syll, key=lambda item: item['time'])
 
