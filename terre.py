@@ -4,7 +4,7 @@
 
 import os
 import time
-from terre_ex import *
+from terre_ext import *
 from collections import Counter
 
 # Config Constants 
@@ -45,6 +45,7 @@ if __name__ == "__main__":
         this_song.extract_video(cfg, debug)
         this_song.extract_charts(cfg, debug)
 
+        this_song.convert_charts(cfg, debug)
         # Save Kaitai Log
         # COMMON HEADER
 
@@ -70,6 +71,7 @@ if __name__ == "__main__":
             first_tick = 0
             last_tick = 0
             aux = 0
+            '''
             for this_pulse in inst_pulse:
                 
                 sec = ( this_pulse.time ) / ( sec_tick )
@@ -92,6 +94,7 @@ if __name__ == "__main__":
                               ]
                 aux = this_pulse.time
                 csv_rows.append(data_in)
+            '''
             
             res = 0
             aux = 0
@@ -159,7 +162,7 @@ if __name__ == "__main__":
         start_pulse_time = 0
         offset_pulse = 0
         #TODO fix sync
-        for this_pulse in this_song.cbr.charts[0].pulse:
+        for this_pulse in this_song.cbr.charts[2].pulse:
             #if offset_pulse > 0:
             if start_pulse_time > 0:
 

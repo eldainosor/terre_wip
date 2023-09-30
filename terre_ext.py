@@ -5,17 +5,15 @@
 import os, shutil, subprocess
 import time
 import cbr, disc, band
+from terre_conv import *
 
 from itertools import zip_longest
+from collections import Counter
 # Config Constants 
 #debug = True    #DEBUG
 data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
-
-sec_tick = 44092    #TODO: find if it can be fixed or calibrated
-const_res = 480     #Like RB
-#const_res = 192    #Like GH
 
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
@@ -84,7 +82,7 @@ class Settings(object):
             dir_drive = "D:"
             self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
-            self.convert = 'N'            
+            self.convert = 'N'
             self.ext_videos = 'N'
         else:
             valids = []
@@ -136,7 +134,7 @@ class Song(object):
         self.band_id = self.HexIDtoString(chart_band_record.band_id)
         self.disc_id = self.HexIDtoString(chart_band_record.disc_id)
         self.name = str(chart_band_record.song_name).rstrip('\x00')
-        self.year = chart_band_record.year
+        self.year = int(chart_band_record.year)
         
         # Extract Difficulty Level
         self.diffs = []
@@ -155,6 +153,7 @@ class Song(object):
         self.inst_num = chart_band_record.instr_num
         self.inst_mask = chart_band_record.instr_mask
         self.track_info = int.from_bytes(chart_band_record.meta_end)
+        self.delay = 3000   #TODO: remove 3sec delay
 
         # Read band file
         kaitai = cfg.dir_bands
@@ -311,10 +310,11 @@ class Song(object):
         ini_file.write("\nbanner_link_a = " + "http://www.elrockdetuvida.com/website/index.php")
         ini_file.write("\nlink_name_a = " + "Homepage")
         ini_file.write("\nloading_phrase = " + "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-        ini_file.write("\n;video_start_time = " + "3000")    #TODO: remove 3sec delay
-        ini_file.write("\ndelay = " + "3000")                #TODO: remove 3sec delay
+        ini_file.write("\n;video_start_time = " + str(int(self.delay)))    #TODO: remove 3sec delay
+        ini_file.write("\ndelay = " + str(int(self.delay)))                #TODO: remove 3sec delay
         
         ini_file.close()
+    
     def extract_charts(self, cfg:Settings, debug = False):
         self.Tracks = []
         kaitai = cfg.dir_songs
@@ -338,9 +338,9 @@ class Song(object):
         file += "_"
         file += "all"
         file += ".csv"
-        csv_new = open(file, "w", encoding='utf-8')
         lines_all = []
         for this_track in self.Tracks:
+            print("Pulse len for", this_track.name, ":",len(this_track.pulse))
             keys = list(this_track.pulse[0].keys())
             for this_key in keys:
                 csv_line = [ this_key ] 
@@ -350,6 +350,7 @@ class Song(object):
 
         trans_data = list(zip_longest(*lines_all, fillvalue=''))
         
+        csv_new = open(file, "w", encoding='utf-8')
         for this_line in trans_data:
             csv_line = ""
             for this_data in this_line:
@@ -360,12 +361,79 @@ class Song(object):
         csv_new.close()
             
     def convert_charts(self, cfg:Settings, debug = False):
-        #TODO: from CSV to CHART using self.Tracks
-        source_dir = self.dir_extr
-        source_file = "notes.chart"
-        dest_dir = self.dir_conv
-        dest_file = "notes.chart"
-        copy_file(source_dir, source_file, dest_dir, dest_file)
+        self.chart_file = self.dir_conv
+        self.chart_file += "\\"
+        self.chart_file += "notes.chart"
+        
+        inst_pulse = self.Tracks[2].pulse
+        bmp_data, res = analize_pulse(inst_pulse, debug)
+
+        aux = 0
+        delta_pulse = []
+        for this_pulse in inst_pulse:
+            delta_pulse.append(this_pulse['time'] - aux)
+            aux = this_pulse['time']
+
+        delta_count = Counter(delta_pulse)      #TODO:Remove Counter?
+        #aux = delta_count.most_common(1)[0]
+        #res = 2*aux[0]
+        res = 2*delta_count.most_common(1)[0][0]
+
+        # Create chart file
+        ts_num = 4  #TODO: Find real ts (time signature - compas)
+        ts_dem = 2  # this is 2^ts_dem
+        #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
+        bpm = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
+        chart_file = open(self.chart_file, "w", encoding='utf-8')
+
+        chart_file.write("[Song]")
+        chart_file.write("\n{")
+        chart_file.write("\n  Name = \"" + self.name + "\"")
+        chart_file.write("\n  Artist = \"" + self.band + "\"")
+        chart_file.write("\n  Charter = \"Next Level\"")
+        chart_file.write("\n  Album = \"" + self.disc + "\"")
+        chart_file.write("\n  Year = \", " + str(self.year) + "\"")
+        chart_file.write("\n  Offset = " + str(int(self.delay / 1000)) )    #TODO: revome 3sec delay
+        #chart_file.write("\n  Offset = 0")    #TODO: revome 3sec delay
+        chart_file.write("\n  Resolution = " + str(int(res)))
+        chart_file.write("\n  Player2 = bass")
+        chart_file.write("\n  Difficulty = " + str(self.diffs[4]))  #Band dificulty
+        chart_file.write("\n  Genre = \"Rock Argentino\"")
+        chart_file.write("\n  MusicStream = \"song.ogg\"")
+        chart_file.write("\n  GuitarStream = \"guitar.ogg\"")
+        chart_file.write("\n  RhythmStream = \"rhythm.ogg\"")
+        chart_file.write("\n  DrumStream = \"drums.ogg\"")
+        chart_file.write("\n  VocalStream = \"vocals.ogg\"")
+        chart_file.write("\n}\n")
+        chart_file.close()
+
+
+        chart_file = open(self.chart_file, "a", encoding='utf-8')
+        chart_file.write("[SyncTrack]")
+        chart_file.write("\n{")
+        for data in bmp_data:
+            line_data = "\n  "
+            line_data += str(data['time'])
+            line_data += " = "
+            line_data += str(data['type'])
+            line_data += " "
+            line_data += str(data['value'])
+            chart_file.write(line_data)
+        chart_file.write("\n}\n")
+        chart_file.close()
+
+        # Lyrics extraction
+        chart_file = open(self.chart_file, "a", encoding='utf-8')
+        chart_file.write("[Events]")
+        chart_file.write("\n{")
+        for this_phrase in self.Tracks[3].Lyrics.verses:
+            chart_file.write("\n  " + str(this_phrase.time) + " = E \"phrase_start\"")
+            for this_syll in this_phrase.syllables:
+                chart_file.write("\n  " + str(this_syll['time']) + " = E \"lyric " + str(this_syll['note']) + "\"")
+            chart_file.write("\n  " + str(this_phrase.len) + " = E \"phrase_end\"")
+                
+        chart_file.write("\n}\n")
+        chart_file.close()
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
@@ -408,7 +476,7 @@ class Song(object):
                 cmd += " -y -loglevel -8 -stats -i " 
                 #cmd += cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd += "\"" + source_dir + "\\" + source_file + "\""
-                cmd += " -af adelay=3000:all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
+                cmd += " -af adelay=" + str(self.delay) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
                 #cmd += " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
                 cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
                 #print("Command:", cmd)    # DEBUG
@@ -450,7 +518,7 @@ class Song(object):
                 audio_in = dest_dir + "\\" + instrument + ".ogg"
                 if os.path.exists(audio_in):
                     cmd += " -i \"" + audio_in + "\""
-            #cmd += " -ss 3000ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
+            #cmd += " -ss " + str(self.delay) + "ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
             cmd += " -filter_complex amix=inputs="                 # Intro Skip #TODO: remove 3sec delay
             cmd += str(int(i)) 
             cmd += ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
