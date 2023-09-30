@@ -4,7 +4,6 @@
 
 import os
 import time
-import csv
 from terre_ex import *
 from collections import Counter
 

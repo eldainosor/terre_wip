@@ -6,6 +6,7 @@ import os, shutil, subprocess
 import time
 import cbr, disc, band
 
+from itertools import zip_longest
 # Config Constants 
 #debug = True    #DEBUG
 data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
@@ -49,8 +50,8 @@ def dicts_to_csv(file:str, dict:dict, debug = False):
         csv_line += ","
     csv_line += "\n"
 
-    new_csv = open(file, "w", encoding='utf-8')
-    new_csv.write(csv_line)
+    csv_new = open(file, "w", encoding='utf-8')
+    csv_new.write(csv_line)
 
     for this_dict in dict:
         csv_line = ""
@@ -58,8 +59,8 @@ def dicts_to_csv(file:str, dict:dict, debug = False):
             csv_line += str(this_dict[col])
             csv_line += ","
         csv_line += "\n"
-        new_csv.write(str(csv_line))
-    new_csv.close()
+        csv_new.write(csv_line)
+    csv_new.close()
 
 def ticks_to_clock(ticks:int, rate:int):
     secs = ticks / rate
@@ -83,7 +84,7 @@ class Settings(object):
             dir_drive = "D:"
             self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
-            self.convert = 'Y'            
+            self.convert = 'N'            
             self.ext_videos = 'N'
         else:
             valids = []
@@ -314,7 +315,6 @@ class Song(object):
         ini_file.write("\ndelay = " + "3000")                #TODO: remove 3sec delay
         
         ini_file.close()
-        
     def extract_charts(self, cfg:Settings, debug = False):
         self.Tracks = []
         kaitai = cfg.dir_songs
@@ -325,22 +325,39 @@ class Song(object):
         for inst_raw in chart_band_record.charts:
             inst_clean = Track(inst_raw, debug)
             self.Tracks.append(inst_clean)
-
-        #TODO: Create one CSV for all Pulses
-        '''
-        if debug:
-            test_pulse = self.Tracks[0].pulse
-            for this_track in self.Tracks:
-                for i in test_pulse:
-                    if i not in this_track.pulse:
-                        print("<WARN>: Pulses not match", i)
-        '''
-        if debug:
-            for this_track in self.Tracks:
-                print("Pulses len for", this_track.name ,len(this_track.pulse))
-
         for this_track in self.Tracks:
             this_track.extract(self, debug)
+
+        if debug:
+            self.test_unify_pulses(debug)
+        
+    def test_unify_pulses(self, debug = False):
+        file = self.dir_extr
+        file += "\\"
+        file += "pulse"
+        file += "_"
+        file += "all"
+        file += ".csv"
+        csv_new = open(file, "w", encoding='utf-8')
+        lines_all = []
+        for this_track in self.Tracks:
+            keys = list(this_track.pulse[0].keys())
+            for this_key in keys:
+                csv_line = [ this_key ] 
+                for this_pulse in this_track.pulse:
+                    csv_line.append(this_pulse[this_key])
+                lines_all.append(csv_line)
+
+        trans_data = list(zip_longest(*lines_all, fillvalue=''))
+        
+        for this_line in trans_data:
+            csv_line = ""
+            for this_data in this_line:
+                csv_line += str(this_data)
+                csv_line += ','
+            csv_line += '\n'
+            csv_new.write(csv_line)
+        csv_new.close()
             
     def convert_charts(self, cfg:Settings, debug = False):
         #TODO: from CSV to CHART using self.Tracks
@@ -668,10 +685,19 @@ class Lyrics(object):
             lrc_line += "]"
             lrc_file.write(lrc_line)
             for this_syll in this_verse.syllables:
-                lrc_line = " <" 
+                lrc_line = "<"
                 lrc_line += ticks_to_clock(this_syll['time'], sec_tick)
-                lrc_line += "> "
-                lrc_line += str(this_syll['note'])
+                lrc_line += ">"
+                text = this_syll['note']
+                if text.endswith('- '):
+                    text = text[:-2]
+                elif text.endswith('-'):
+                    text = text[:-1]
+                else:
+                    text = text + ' '
+                while text.find("  ") > 0:
+                    text = text.replace("  ", " ")
+                lrc_line += text
                 lrc_file.write(lrc_line)
             lrc_line = "\n"
             lrc_file.write(lrc_line)
