@@ -422,17 +422,50 @@ class Song(object):
         chart_file.write("\n}\n")
         chart_file.close()
 
-        # Lyrics extraction
+        # Lyrics convertion
         chart_file = open(self.chart_file, "a", encoding='utf-8')
         chart_file.write("[Events]")
         chart_file.write("\n{")
         for this_phrase in self.Tracks[3].Lyrics.verses:
-            chart_file.write("\n  " + str(this_phrase.time) + " = E \"phrase_start\"")
+            event_line = "\n  "
+            event_line += str(this_phrase.time)
+            event_line += " = E \"phrase_start\""
+            chart_file.write(event_line)
             for this_syll in this_phrase.syllables:
-                chart_file.write("\n  " + str(this_syll['time']) + " = E \"lyric " + str(this_syll['note']) + "\"")
-            chart_file.write("\n  " + str(this_phrase.len) + " = E \"phrase_end\"")
-                
+                event_line = "\n  "
+                event_line += str(this_syll['time'])
+                event_line += " = E \"lyric "
+                event_line += str(this_syll['note'])
+                event_line += "\""
+                chart_file.write(event_line)
+            event_line = "\n  "
+            event_line += str(this_phrase.time + this_phrase.len)
+            event_line += " = E \"phrase_end\""
+            chart_file.write(event_line)
         chart_file.write("\n}\n")
+        chart_file.close()
+
+        # Charts convertion
+        chart_file = open(self.chart_file, "a", encoding='utf-8')
+        for this_inst in self.Tracks:
+            if this_inst.id_num < 3:
+                this_inst_name = this_inst.name
+                match this_inst_name:
+                    case "guitar":
+                        this_inst_name = "Single"
+                    case "rhythm":
+                        this_inst_name = "DoubleBass"
+                    case "drums":
+                        this_inst_name = "Drums"
+                    case _:
+                        this_inst_name = ""
+            
+                for this_diff in this_inst.Diffs:
+                    this_diff_name = this_diff.name
+                    chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
+                    chart_file.write("\n{")
+                    #TODO: Analize charts
+                    chart_file.write("\n}\n")
         chart_file.close()
 
     def convert_metadata(self, debug = False):
