@@ -82,7 +82,7 @@ class Settings(object):
             dir_drive = "D:"
             self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
-            self.convert = 'N'
+            self.convert = 'Y'
             self.ext_videos = 'N'
         else:
             valids = []
@@ -372,8 +372,15 @@ class Song(object):
         self.charts_sync_track(bmp_data, debug)
         self.charts_lyrics(bmp_data, debug)
         self.charts_inst(bmp_data, debug)
+        if debug:
+            self.charts_pulse(bmp_data, inst_pulse, debug)
 
     def save_charts_meta(self, res:int, debug = False):
+        try:
+            os.makedirs(self.dir_conv)
+        except:
+            #print("[", self.dir_conv , "] already exists")
+            pass
         chart_file = open(self.chart_file, "w", encoding='utf-8')
         chart_file.write("[Song]")
         chart_file.write("\n{")
@@ -401,6 +408,38 @@ class Song(object):
         chart_file.write("[SyncTrack]")
         chart_file.write("\n{")
         for data in bmp_data:
+            line_data = "\n  "
+            line_data += str(data['time'])
+            line_data += " = "
+            line_data += str(data['type'])
+            line_data += " "
+            line_data += str(data['value'])
+            chart_file.write(line_data)
+        chart_file.write("\n}\n")
+        chart_file.close()
+
+    def charts_pulse(self, bmp_data:dict, inst_pulse:dict, debug = False):
+        chart_file = open(self.chart_file, "a", encoding='utf-8')
+
+        chart_file.write("[ExpertDrums]")
+        chart_file.write("\n{")
+
+        notes_list = []
+        for this_pulse in inst_pulse:
+            #aux = 3 - this_pulse['type']
+            aux = this_pulse['type'] + 1
+            #aux += 2
+            #aux %= 4
+            note_in = {
+                "time":     int(this_pulse['time']),
+                "type":     "N " + str(int(aux)),
+                "value":    int(0)
+            }
+            notes_list.append(note_in)
+        notes_list = sorted(notes_list, key=lambda item: item['time'])
+        #sorted_notes = sorted(notes_list, key=lambda item: item[0])
+
+        for data in notes_list:
             line_data = "\n  "
             line_data += str(data['time'])
             line_data += " = "
@@ -449,7 +488,7 @@ class Song(object):
                     case _:
                         this_inst_name = ""
             
-                for this_diff in this_inst.Diffs:
+                for this_diff in reversed(this_inst.Diffs):
                     this_diff_name = this_diff.name
                     chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
                     chart_file.write("\n{")
@@ -626,14 +665,14 @@ class Track(object):
         self.id_num = cbr_chart.inst_id.value
         self.name = cbr_chart.inst_id.name
         self.info = int.from_bytes(cbr_chart.chart_info)   #Unknown usage
-        unsorted_pulse = []
+        pulse = []
         for this_pulse in cbr_chart.pulse:
             pulse_dict = {
                 "time": this_pulse.time,
                 "type": this_pulse.type
             }
-            unsorted_pulse.append(pulse_dict)
-        self.pulse = sorted(unsorted_pulse, key=lambda item: item['time'])
+            pulse.append(pulse_dict)
+        self.pulse = sorted(pulse, key=lambda item: item['time'])
         
         if self.id_num < 3:
             self.Diffs = []
@@ -678,13 +717,13 @@ class Chart(object):
         if debug:
             if self.max_note != 5:  #DEBUG
                 print("<WARN>: Frets number is", self.max_note)
-        unsorted_notes = []
+        notes = []
 
         for i, this_color in enumerate(cbr_diff.frets_on_fire):
             for this_note in this_color.frets_wave:
                 if inst_id_num < 2:
                     fixed_note = 4 - i
-                else:
+                else:   #TODO Double check if drums ok
                     fixed_note = i
                 #TODO: if len == 2000: then len = 0
 
@@ -694,8 +733,8 @@ class Chart(object):
                     "note": fixed_note,
                     "mods": this_note.mods
                 }
-                unsorted_notes.append(note_dict)
-        self.notes = sorted(unsorted_notes, key=lambda item: item['time'])
+                notes.append(note_dict)
+        self.notes = sorted(notes, key=lambda item: item['time'])
  
     def extract(self, dir_extr, debug = False):
         file = dir_extr
@@ -708,14 +747,14 @@ class Chart(object):
 
 class Lyrics(object):
     def __init__(self, cbr_vocal:cbr.Cbr.Voice, debug = False):
-        unsorted_pitch = []
-        unsorted_harm = []
-        unsorted_verses = []
+        pitch = []
+        harms = []
+        verses = []
         self.info = int.from_bytes(cbr_vocal.vocal_info)  #Unknown usage
 
         for verse_raw in cbr_vocal.lyrics:
             verse_clean = Verse(verse_raw, debug)
-            unsorted_verses.append(verse_clean)
+            verses.append(verse_clean)
         
         for this_wave in cbr_vocal.wave_form:
             pitch_dict = {
@@ -738,12 +777,12 @@ class Lyrics(object):
                 if pitch_dict != harm_dict:
                     print("<WARN>: Pitch and Harm are diferent")
 
-            unsorted_pitch.append(pitch_dict)
-            unsorted_harm.append(harm_dict)
+            pitch.append(pitch_dict)
+            harms.append(harm_dict)
 
-        self.verses = sorted(unsorted_verses, key=lambda item: item.time)
-        self.pitch = sorted(unsorted_harm, key=lambda item: item['time'])
-        self.harm = sorted(unsorted_harm, key=lambda item: item['time'])
+        self.verses = sorted(verses, key=lambda item: item.time)
+        self.pitch = sorted(harms, key=lambda item: item['time'])
+        self.harm = sorted(harms, key=lambda item: item['time'])
 
     def extract(self, song:Song, debug = False):
         file = song.dir_extr
@@ -816,7 +855,7 @@ class Verse(object):
         self.len = cbr_verse.time_end - cbr_verse.time_start
         
         dur_sum = 0
-        unsorted_syll = []
+        syllables = []
         for this_syll in cbr_verse.text_block:
             syll_dict = {
                 "time": this_syll.time_start,
@@ -825,8 +864,8 @@ class Verse(object):
                 "mods": this_syll.type
             }
             dur_sum += syll_dict['len']
-            unsorted_syll.append(syll_dict)
-        self.syllables = sorted(unsorted_syll, key=lambda item: item['time'])
+            syllables.append(syll_dict)
+        self.syllables = sorted(syllables, key=lambda item: item['time'])
 
         if debug:
             if dur_sum != cbr_verse.len:
