@@ -9,10 +9,8 @@ from collections import Counter
 
 # Config Constants 
 debug = True       #DEBUG
-sec_tick = 44092    #TODO: find if it can be fixed or calibrated
 const_res = 480     #Like RB
 #const_res = 192    #Like GH
-#TODO: Res=480000 a recalc ticks with variable BPM from [event]
 
 if __name__ == "__main__":
 
@@ -51,7 +49,6 @@ if __name__ == "__main__":
 
         # Extract Pulses (file_cbr)        
         os.chdir(this_song.dir_extr)  
-        head_lens = []
         chart_info = []
         for this_inst in this_song.cbr.charts:
             this_inst_name = this_inst.inst_id.name
@@ -61,41 +58,10 @@ if __name__ == "__main__":
             this_chart_info = this_inst.chart_info
             this_trk_info = this_song.cbr.meta_end
                 
-            head_lens.append(len(inst_pulse))
-            #print(this_inst_name + " header len: " + str(int(len(inst_pulse))))       # DEBUG
-            #print(this_inst_name + " header len: " + str(this_inst.num_pulse))    # DEBUG
-            
-            # chart = Chart(chart_path)
-
             csv_rows = []
             first_tick = 0
             last_tick = 0
-            aux = 0
-            '''
-            for this_pulse in inst_pulse:
-                
-                sec = ( this_pulse.time ) / ( sec_tick )
-                #sec *= 60
-                #sec /= bpm
-                min = int(sec / 60)
-                sec %= 60
-
-                if first_tick == 0:
-                    first_tick = this_pulse.time
-
-                last_tick = this_pulse.time
-                data_in = [ this_pulse.time, 
-                            this_pulse.type, 
-                            this_pulse.time - aux,
-                            min,
-                            sec,
-                            this_chart_info, 
-                            this_trk_info,
-                              ]
-                aux = this_pulse.time
-                csv_rows.append(data_in)
-            '''
-            
+            aux = 0            
             res = 0
             aux = 0
             i = 0
@@ -109,13 +75,11 @@ if __name__ == "__main__":
             #res = 2*aux[0]
             res = 2*delta_count.most_common(1)[0][0]
 
-        
-
         # Create chart file
         ts_num = 4  #TODO: Find real ts (time signature - compas)
         ts_dem = 2  # this is 2^ts_dem
         #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-        bpm = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
+        bpm = 1000*60*sam_rate/res   #TODO: Find real bpm (beats per minute)
         new_file = open("notes.chart", "w", encoding='utf-8')
 
         new_file.write("[Song]")
@@ -175,7 +139,7 @@ if __name__ == "__main__":
                         this_ts_n = int (beats / 2)
                         this_res = this_pulse.time - start_pulse_time
                         this_res /= this_ts_n
-                        this_bpm = 1000*60*sec_tick/this_res
+                        this_bpm = 1000*60*sam_rate/this_res
                         if this_ts_n != prev_ts_n:
                             new_file.write("\n  " + str(start_pulse_time + offset_pulse) + " = TS " + str(this_ts_n))
                             prev_ts_n = this_ts_n

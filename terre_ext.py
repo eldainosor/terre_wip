@@ -340,7 +340,7 @@ class Song(object):
         file += ".csv"
         lines_all = []
         for this_track in self.Tracks:
-            print("Pulse len for", this_track.name, ":",len(this_track.pulse))
+            #print("Pulse len for", this_track.name, ":",len(this_track.pulse))
             keys = list(this_track.pulse[0].keys())
             for this_key in keys:
                 csv_line = [ this_key ] 
@@ -368,24 +368,13 @@ class Song(object):
         inst_pulse = self.Tracks[2].pulse
         bmp_data, res = analize_pulse(inst_pulse, debug)
 
-        aux = 0
-        delta_pulse = []
-        for this_pulse in inst_pulse:
-            delta_pulse.append(this_pulse['time'] - aux)
-            aux = this_pulse['time']
+        self.save_charts_meta(res, debug)
+        self.charts_sync_track(bmp_data, debug)
+        self.charts_lyrics(bmp_data, debug)
+        self.charts_inst(bmp_data, debug)
 
-        delta_count = Counter(delta_pulse)      #TODO:Remove Counter?
-        #aux = delta_count.most_common(1)[0]
-        #res = 2*aux[0]
-        res = 2*delta_count.most_common(1)[0][0]
-
-        # Create chart file
-        ts_num = 4  #TODO: Find real ts (time signature - compas)
-        ts_dem = 2  # this is 2^ts_dem
-        #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-        bpm = 1000*60*sec_tick/res   #TODO: Find real bpm (beats per minute)
+    def save_charts_meta(self, res:int, debug = False):
         chart_file = open(self.chart_file, "w", encoding='utf-8')
-
         chart_file.write("[Song]")
         chart_file.write("\n{")
         chart_file.write("\n  Name = \"" + self.name + "\"")
@@ -407,7 +396,7 @@ class Song(object):
         chart_file.write("\n}\n")
         chart_file.close()
 
-
+    def charts_sync_track(self, bmp_data:dict, debug = False):
         chart_file = open(self.chart_file, "a", encoding='utf-8')
         chart_file.write("[SyncTrack]")
         chart_file.write("\n{")
@@ -422,7 +411,7 @@ class Song(object):
         chart_file.write("\n}\n")
         chart_file.close()
 
-        # Lyrics convertion
+    def charts_lyrics(self, bmp_data:dict, debug = False):
         chart_file = open(self.chart_file, "a", encoding='utf-8')
         chart_file.write("[Events]")
         chart_file.write("\n{")
@@ -445,7 +434,7 @@ class Song(object):
         chart_file.write("\n}\n")
         chart_file.close()
 
-        # Charts convertion
+    def charts_inst(self, bmp_data:dict, debug = False):
         chart_file = open(self.chart_file, "a", encoding='utf-8')
         for this_inst in self.Tracks:
             if this_inst.id_num < 3:
@@ -465,6 +454,15 @@ class Song(object):
                     chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
                     chart_file.write("\n{")
                     #TODO: Analize charts
+                    chart_data = analize_charts(this_diff.notes, bmp_data, debug)
+                    for data in chart_data:
+                        line_data = "\n  "
+                        line_data += str(data['time'])
+                        line_data += " = "
+                        line_data += str(data['type'])
+                        line_data += " "
+                        line_data += str(data['value'])
+                        chart_file.write(line_data)
                     chart_file.write("\n}\n")
         chart_file.close()
 
@@ -640,7 +638,7 @@ class Track(object):
         if self.id_num < 3:
             self.Diffs = []
             for diff_raw in cbr_chart.inst.diff_charts:
-                diff_clean = Chart(diff_raw, debug)
+                diff_clean = Chart(diff_raw, self.id_num, debug)
                 self.Diffs.append(diff_clean)
 
         if self.name == "vocals":
@@ -671,7 +669,7 @@ class Track(object):
             self.Lyrics.extract(song, debug)
 
 class Chart(object):
-    def __init__(self, cbr_diff:cbr.Cbr.Instrument, debug = False):
+    def __init__(self, cbr_diff:cbr.Cbr.Instrument, inst_id_num:int, debug = False):
         self.id_num = cbr_diff.diff.value
         self.name = cbr_diff.diff.name
         self.info = cbr_diff.diff_info  #Unknown usage
@@ -684,10 +682,16 @@ class Chart(object):
 
         for i, this_color in enumerate(cbr_diff.frets_on_fire):
             for this_note in this_color.frets_wave:
+                if inst_id_num < 2:
+                    fixed_note = 4 - i
+                else:
+                    fixed_note = i
+                #TODO: if len == 2000: then len = 0
+
                 note_dict = {
                     "time": this_note.time,
                     "len": this_note.len,
-                    "note": i,
+                    "note": fixed_note,
                     "mods": this_note.mods
                 }
                 unsorted_notes.append(note_dict)
@@ -782,12 +786,12 @@ class Lyrics(object):
 
         for this_verse in self.verses:
             lrc_line = "[" 
-            lrc_line += ticks_to_clock(this_verse.time, sec_tick)
+            lrc_line += ticks_to_clock(this_verse.time, sam_rate)
             lrc_line += "]"
             lrc_file.write(lrc_line)
             for this_syll in this_verse.syllables:
                 lrc_line = "<"
-                lrc_line += ticks_to_clock(this_syll['time'], sec_tick)
+                lrc_line += ticks_to_clock(this_syll['time'], sam_rate)
                 lrc_line += ">"
                 text = this_syll['note']
                 if text.endswith('- '):
