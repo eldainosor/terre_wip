@@ -6,9 +6,8 @@ import os, shutil, subprocess
 import time
 import cbr, disc, band
 from terre_conv import *
-
 from itertools import zip_longest
-from collections import Counter
+
 # Config Constants 
 #debug = True    #DEBUG
 data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
@@ -366,14 +365,16 @@ class Song(object):
         self.chart_file += "notes.chart"
         
         inst_pulse = self.Tracks[2].pulse
-        bmp_data, res = analize_pulse(inst_pulse, debug)
+        bmp_data, res, delay = analize_pulse(inst_pulse, debug)
+        self.delay += delay
 
         self.save_charts_meta(res, debug)
         self.charts_sync_track(bmp_data, debug)
         self.charts_lyrics(bmp_data, debug)
         self.charts_inst(bmp_data, debug)
         if debug:
-            self.charts_pulse(bmp_data, inst_pulse, debug)
+            #self.charts_pulse(bmp_data, inst_pulse, debug)
+            pass
 
     def save_charts_meta(self, res:int, debug = False):
         try:

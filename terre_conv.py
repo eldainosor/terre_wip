@@ -5,10 +5,44 @@
 from collections import Counter
 
 sam_rate = 44100    # HiRes digital sampling rate
-#sam_rate = 44056    # NTSC
-#sam_rate = 44092    #TODO: find if it can be fixed or calibrated
-const_res = 480     #Like RB
-#const_res = 192    #Like GH
+#sam_rate = 44056    # HiRes NTSC
+const_res = 480     # Like RB
+#const_res = 192    # Like GH
+SECONDS_PER_MINUTE = 60.0
+MILIS_PER_SECS = 1000.0
+
+def DisToTime(tickStart:int, tickEnd:int, bpm:int, resolution:int):
+    deltaTick = tickEnd - tickStart
+    time = ( SECONDS_PER_MINUTE * deltaTick ) / ( bpm * resolution )
+    return time
+
+def TimeToDis(timeStart:int, timeEnd:int, bpm:int, resolution:int):
+    deltaTime = timeEnd - timeStart
+    dis = ( deltaTime * bpm * resolution ) / SECONDS_PER_MINUTE
+    return dis
+
+def DisToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int, resolution:int):
+    deltaTick = tickEnd - tickStart
+    deltaTime = timeEnd - timeStart
+    bpm = ( SECONDS_PER_MINUTE * deltaTick ) / ( deltaTime * resolution)
+    return bpm
+
+def TimeToBpm(timeStart:int, timeEnd:int, beats:int, resolution:int):
+    deltaTime = timeEnd - timeStart
+    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * sam_rate * beats * 0.5 ) / ( deltaTime )
+    return bpm
+
+'''
+def TimeToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int, resolution:int):
+    deltaTick = tickEnd - tickStart
+    deltaTime = timeEnd - timeStart
+    bpm = ( resolution * deltaTime ) / ( SECONDS_PER_MINUTE * deltaTick )
+    return bpm
+'''
+
+def TickScaling(tick:int, originalResolution:int, outputResolution:int):
+    tick = tick * outputResolution / originalResolution
+    return tick
 
 def analize_pulse(inst_pulse, debug = False):
     aux = 0
@@ -42,19 +76,26 @@ def analize_pulse(inst_pulse, debug = False):
     offset_pulse = 0
     #TODO fix sync
     for this_pulse in inst_pulse:
-        #if offset_pulse > 0:       #TODO sync offset wrong?
-        if start_pulse_time > 0:
-            # Start pulse
+        if offset_pulse > 0:       #TODO sync offset wrong?
             if this_pulse['type'] != 2:
                 beats += 1
             else:
-                # Save and Reestart
                 if beats > 1:
+                    this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], beats, const_res)
+
                     this_ts_n = int (beats / 2)
                     this_tpb = this_pulse['time'] - start_pulse_time
                     this_tpb /= this_ts_n
                     this_bpm = 1000*60*sam_rate/this_tpb
+
                     if this_ts_n != prev_ts_n:
+                        if prev_ts_n == 0:
+                            this_sync = {
+                                "time":     int(0),
+                                "type":     "TS",
+                                "value":    int(this_ts_n)
+                            }
+                            sync_track_data.append(this_sync)
                         this_sync = {
                             "time":     int(start_pulse_time + offset_pulse),
                             "type":     "TS",
@@ -63,24 +104,34 @@ def analize_pulse(inst_pulse, debug = False):
                         sync_track_data.append(this_sync)
                         prev_ts_n = this_ts_n
                     if this_bpm != prev_bpm:
+                        if prev_bpm == 0:
+                            this_sync = {
+                                "time":     int(0),
+                                "type":     "B",
+                                "value":    int(this_bpm)
+                            }
+                            sync_track_data.append(this_sync)
                         this_sync = {
                             "time":     int(start_pulse_time + offset_pulse),
                             "type":     "B",
                             "value":    int(this_bpm)
                         }
                         sync_track_data.append(this_sync)
-                        prev_bpm = this_bpm                        
+                        prev_bpm = this_bpm
                 start_pulse_time = this_pulse['time']
                 beats = 1
         else:
             if this_pulse['type'] == 3 and prev_pulse_type == 2:
                 offset_pulse = prev_pulse_time
-                offset_pulse = 0
                 start_pulse_time = prev_pulse_time
                 beats = 2
+                print("Offset:", offset_pulse / sam_rate)
         prev_pulse_time = this_pulse['time']
         prev_pulse_type = this_pulse['type']
-    return ( sync_track_data, res )
+        
+    sync_track_data = sorted(sync_track_data, key=lambda item: item['time'])
+    delay = offset_pulse / sam_rate
+    return ( sync_track_data, res , delay)
 
 def analize_charts(charts:dict, bmp_data:dict, debug = False):
     notes_list = []

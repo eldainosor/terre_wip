@@ -2,14 +2,12 @@
 # Python script
 # Made by Envido32
 
-import os
 import time
 from terre_ext import *
-from collections import Counter
 
 # Config Constants 
 debug = True       #DEBUG
-const_res = 480     #Like RB
+#const_res = 480     #Like RB
 #const_res = 192    #Like GH
 
 if __name__ == "__main__":
@@ -35,13 +33,13 @@ if __name__ == "__main__":
         pl.append(this_song)
 
         this_song.create_metadata(debug)
+        this_song.extract_charts(cfg, debug)
         this_song.extract_icon(cfg, debug)
         this_song.extract_preview(cfg, debug)
         this_song.extract_audio(cfg, debug)
         this_song.extract_album(cfg, debug)
         this_song.extract_background(cfg, debug)
         this_song.extract_video(cfg, debug)
-        this_song.extract_charts(cfg, debug)
 
         # Show time and ETA
         total_tm = this_song.print_elapsed_time()
@@ -61,13 +59,13 @@ if __name__ == "__main__":
             print("Song start: ", local)
 
             this_song.convert_metadata(debug)
+            this_song.convert_charts(cfg, debug)
             this_song.convert_icon(debug)
             this_song.convert_preview(cfg, debug)
             this_song.convert_audio(cfg, debug)
             this_song.convert_album(debug)
             this_song.convert_background(debug)
             this_song.convert_video(cfg, debug)
-            this_song.convert_charts(cfg, debug)
 
             # Show time and ETA
             elapsed_tm = time.time() - start_song
