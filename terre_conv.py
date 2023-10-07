@@ -81,7 +81,7 @@ def analize_pulse(inst_pulse, debug = False):
                 beats += 1
             else:
                 if beats > 1:
-                    this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], beats, const_res)
+                    #this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], beats, const_res)
 
                     this_ts_n = int (beats / 2)
                     this_tpb = this_pulse['time'] - start_pulse_time
