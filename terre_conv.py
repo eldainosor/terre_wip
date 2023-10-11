@@ -29,7 +29,7 @@ def DisToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int, resolution:
 
 def TimeToBpm(timeStart:int, timeEnd:int, beats:int, resolution:int):
     deltaTime = timeEnd - timeStart
-    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * sam_rate * beats * 0.5 ) / ( deltaTime )
+    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * sam_rate * beats ) / ( 2 * deltaTime )
     return bpm
 
 '''
@@ -81,12 +81,7 @@ def analize_pulse(inst_pulse, debug = False):
                 beats += 1
             else:
                 if beats > 1:
-                    #this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], beats, const_res)
-
-                    this_ts_n = int (beats / 2)
-                    this_tpb = this_pulse['time'] - start_pulse_time
-                    this_tpb /= this_ts_n
-                    this_bpm = 1000*60*sam_rate/this_tpb
+                    this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], beats, const_res)
 
                     if this_ts_n != prev_ts_n:
                         if prev_ts_n == 0:

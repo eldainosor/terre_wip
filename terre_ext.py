@@ -78,9 +78,11 @@ class Settings(object):
 
         if debug:
             print("Working dir:\t[", self.dir_work, "]")
-            dir_drive = "D:"
-            self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
+            #dir_drive = "D:"
+            #self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
+            #self.dir_mozart = "C:\\Users\\envid\\OneDrive\\Documentos\\ERDTV\\Mozart"
+            self.dir_mozart = self.dir_work + "\\..\\..\\Mozart"  
             self.convert = 'Y'
             self.ext_videos = 'N'
         else:
