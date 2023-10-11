@@ -4,8 +4,8 @@
 
 from collections import Counter
 
-sam_rate = 44100    # HiRes digital sampling rate
-#sam_rate = 44056    # HiRes NTSC
+SAMPLE_RATE = 44100    # HiRes digital sampling rate
+#SAMPLE_RATE = 44056    # HiRes NTSC
 const_res = 480     # Like RB
 #const_res = 192    # Like GH
 SECONDS_PER_MINUTE = 60.0
@@ -29,7 +29,7 @@ def DisToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int, resolution:
 
 def TimeToBpm(timeStart:int, timeEnd:int, beats:int, resolution:int):
     deltaTime = timeEnd - timeStart
-    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * sam_rate * beats ) / ( 2 * deltaTime )
+    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * SAMPLE_RATE * beats ) / ( 2 * deltaTime )
     return bpm
 
 '''
@@ -60,7 +60,7 @@ def analize_pulse(inst_pulse, debug = False):
     ts_num = 4  #TODO: Find real ts (time signature - compas)
     ts_dem = 2  # this is 2^ts_dem
     #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-    bpm = 1000*60*sam_rate/res   #TODO: Find real bpm (beats per minute)
+    bpm = 1000*60*SAMPLE_RATE/res   #TODO: Find real bpm (beats per minute)
 
     sync_track_data = []
     this_tpb = res  # Tick per beat
@@ -120,12 +120,12 @@ def analize_pulse(inst_pulse, debug = False):
                 offset_pulse = prev_pulse_time
                 start_pulse_time = prev_pulse_time
                 beats = 2
-                print("Offset:", offset_pulse / sam_rate)
+                print("Offset:", offset_pulse / SAMPLE_RATE)
         prev_pulse_time = this_pulse['time']
         prev_pulse_type = this_pulse['type']
         
     sync_track_data = sorted(sync_track_data, key=lambda item: item['time'])
-    delay = offset_pulse / sam_rate
+    delay = offset_pulse / SAMPLE_RATE
     return ( sync_track_data, res , delay)
 
 def analize_charts(charts:dict, bmp_data:dict, debug = False):

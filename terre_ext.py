@@ -828,12 +828,12 @@ class Lyrics(object):
 
         for this_verse in self.verses:
             lrc_line = "[" 
-            lrc_line += ticks_to_clock(this_verse.time, sam_rate)
+            lrc_line += ticks_to_clock(this_verse.time, SAMPLE_RATE)
             lrc_line += "]"
             lrc_file.write(lrc_line)
             for this_syll in this_verse.syllables:
                 lrc_line = "<"
-                lrc_line += ticks_to_clock(this_syll['time'], sam_rate)
+                lrc_line += ticks_to_clock(this_syll['time'], SAMPLE_RATE)
                 lrc_line += ">"
                 text = this_syll['note']
                 if text.endswith('- '):
