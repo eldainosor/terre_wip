@@ -83,7 +83,7 @@ class Settings(object):
             #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
             #self.dir_mozart = "C:\\Users\\envid\\OneDrive\\Documentos\\ERDTV\\Mozart"
             self.dir_mozart = self.dir_work + "\\..\\..\\Mozart"  
-            self.convert = 'Y'
+            self.convert = 'N'
             self.ext_videos = 'N'
         else:
             valids = []
@@ -412,11 +412,14 @@ class Song(object):
         chart_file.write("\n{")
         for data in bmp_data:
             line_data = "\n  "
-            line_data += str(data['time'])
+            #line_data += str(data['time'])
+            line_data += str(data['tick'])
             line_data += " = "
             line_data += str(data['type'])
             line_data += " "
             line_data += str(data['value'])
+            #line_data += "\t"
+            #line_data += str(data['tick'])
             chart_file.write(line_data)
         chart_file.write("\n}\n")
         chart_file.close()

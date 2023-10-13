@@ -6,30 +6,34 @@ from collections import Counter
 
 SAMPLE_RATE = 44100    # HiRes digital sampling rate
 #SAMPLE_RATE = 44056    # HiRes NTSC
-const_res = 480     # Like RB
-#const_res = 192    # Like GH
+RESOLUTION = 480     # Like RB
+#RESOLUTION = 192    # Like GH
 SECONDS_PER_MINUTE = 60.0
 MILIS_PER_SECS = 1000.0
 
-def DisToTime(tickStart:int, tickEnd:int, bpm:int, resolution:int):
-    deltaTick = tickEnd - tickStart
-    time = ( SECONDS_PER_MINUTE * deltaTick ) / ( bpm * resolution )
+def DisToTime(tickStart:int, tickEnd:int, bpm:int):
+    deltaTick = ( tickEnd - tickStart ) / RESOLUTION
+    time = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * deltaTick ) / ( bpm )
     return time
 
-def TimeToDis(timeStart:int, timeEnd:int, bpm:int, resolution:int):
-    deltaTime = timeEnd - timeStart
-    dis = ( deltaTime * bpm * resolution ) / SECONDS_PER_MINUTE
+def TimeToDis(timeStart:int, timeEnd:int, bpm:int):
+    deltaTime = ( timeEnd - timeStart ) / SAMPLE_RATE
+    dis = ( deltaTime * bpm * RESOLUTION ) / ( MILIS_PER_SECS *  SECONDS_PER_MINUTE )
     return dis
 
-def DisToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int, resolution:int):
-    deltaTick = tickEnd - tickStart
-    deltaTime = timeEnd - timeStart
-    bpm = ( SECONDS_PER_MINUTE * deltaTick ) / ( deltaTime * resolution)
+def DisToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int):
+    deltaTick = ( tickEnd - tickStart ) / RESOLUTION
+    deltaTime = ( timeEnd - timeStart ) / SAMPLE_RATE
+    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * deltaTick ) / ( deltaTime )
     return bpm
 
 def TimeToBpm(timeStart:int, timeEnd:int, beats:int):
-    deltaTime = timeEnd - timeStart
-    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * SAMPLE_RATE * beats ) / ( 2 * deltaTime )
+    deltaTime = ( timeEnd - timeStart ) / SAMPLE_RATE
+    bpm = ( MILIS_PER_SECS * SECONDS_PER_MINUTE * beats ) / ( deltaTime )
+    return bpm
+
+def FirstBpm(timeEnd:int):
+    bpm = TimeToBpm(0, timeEnd, 2)
     return bpm
 
 '''
@@ -58,13 +62,15 @@ def analize_pulse(inst_pulse, debug = False):
 
     # Create chart file
     ts_num = 4  #TODO: Find real ts (time signature - compas)
-    ts_dem = 2  # this is 2^ts_dem
+    #ts_dem = 2  # this is 2^ts_dem
     #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
     bpm = 1000*60*SAMPLE_RATE/res   #TODO: Find real bpm (beats per minute)
 
     sync_track_data = []
-    this_tpb = res  # Tick per beat
+    #this_tpb = res  # Tick per beat
     this_bpm = bpm
+    this_tick = 0
+    first_bpm = 0
     this_ts_n = ts_num
     #this_ts_d = ts_dem
     beats = 0
@@ -72,6 +78,8 @@ def analize_pulse(inst_pulse, debug = False):
     prev_pulse_type = 0
     prev_bpm = 0
     prev_ts_n = 0
+    prev_bpm_time = 0
+    prev_bpm_tick = 0
     start_pulse_time = 0
     offset_pulse = 0
     #TODO fix sync
@@ -81,18 +89,28 @@ def analize_pulse(inst_pulse, debug = False):
                 beats += 1
             else:
                 if beats > 1:
-                    this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], beats)
+                    this_ts_n = beats / 2
+                    this_bpm = TimeToBpm(start_pulse_time, this_pulse['time'], this_ts_n)
+                    if prev_bpm_time == 0:
+                        this_tick = TimeToDis(0, this_pulse['time'], this_bpm)
+                    else:
+                        this_tick = TimeToDis(prev_bpm_time, this_pulse['time'], prev_bpm)
+                    this_tick += prev_bpm_tick
+                    #this_tick = start_pulse_time + offset_pulse
+                    #this_tick = start_pulse_time
 
                     if this_ts_n != prev_ts_n:
                         if prev_ts_n == 0:
                             this_sync = {
                                 "time":     int(0),
+                                "tick":     int(0),
                                 "type":     "TS",
-                                "value":    int(this_ts_n)
+                                "value":    int(1)
                             }
-                            sync_track_data.append(this_sync)
+                            #sync_track_data.append(this_sync)
                         this_sync = {
-                            "time":     int(start_pulse_time + offset_pulse),
+                            "time":     int(this_pulse['time']),
+                            "tick":     int(this_tick),
                             "type":     "TS",
                             "value":    int(this_ts_n)
                         }
@@ -100,19 +118,24 @@ def analize_pulse(inst_pulse, debug = False):
                         prev_ts_n = this_ts_n
                     if this_bpm != prev_bpm:
                         if prev_bpm == 0:
+                            first_bpm = FirstBpm(start_pulse_time)
                             this_sync = {
                                 "time":     int(0),
+                                "tick":     int(0),
                                 "type":     "B",
-                                "value":    int(this_bpm)
+                                "value":    int(first_bpm)
                             }
-                            sync_track_data.append(this_sync)
+                            #sync_track_data.append(this_sync)
                         this_sync = {
-                            "time":     int(start_pulse_time + offset_pulse),
+                            "time":     int(this_pulse['time']),
+                            "tick":     int(this_tick),
                             "type":     "B",
                             "value":    int(this_bpm)
                         }
                         sync_track_data.append(this_sync)
                         prev_bpm = this_bpm
+                        prev_bpm_time = this_pulse['time']
+                        prev_bpm_tick = this_tick
                 start_pulse_time = this_pulse['time']
                 beats = 1
         else:
@@ -124,7 +147,8 @@ def analize_pulse(inst_pulse, debug = False):
         prev_pulse_time = this_pulse['time']
         prev_pulse_type = this_pulse['type']
         
-    sync_track_data = sorted(sync_track_data, key=lambda item: item['time'])
+    #sync_track_data = sorted(sync_track_data, key=lambda item: item['time'])
+    #sync_track_data = sorted(sync_track_data, key=lambda item: item['tick'])
     delay = offset_pulse / SAMPLE_RATE
     return ( sync_track_data, res , delay)
 
