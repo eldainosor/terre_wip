@@ -36,13 +36,13 @@ def FirstBpm(timeEnd:int):
     bpm = TimeToBpm(0, timeEnd, 2)
     return bpm
 
-'''
-def TimeToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int, resolution:int):
-    deltaTick = tickEnd - tickStart
-    deltaTime = timeEnd - timeStart
-    bpm = ( resolution * deltaTime ) / ( SECONDS_PER_MINUTE * deltaTick )
-    return bpm
-'''
+def FindBpm(bpms:dict, time:int):
+    bpm_out = bpms[1]
+    for this_bpm in bpms:
+        if this_bpm['type'] == "B":
+            if this_bpm['time'] < time:
+                bpm_out = this_bpm
+    return bpm_out
 
 def TickScaling(tick:int, originalResolution:int, outputResolution:int):
     tick = tick * outputResolution / originalResolution
@@ -59,6 +59,7 @@ def analize_pulse(inst_pulse, debug = False):
     #aux = delta_count.most_common(1)[0]
     #res = 2*aux[0]
     res = 2*delta_count.most_common(1)[0][0]
+    res = RESOLUTION
 
     # Create chart file
     ts_num = 4  #TODO: Find real ts (time signature - compas)
@@ -148,11 +149,11 @@ def analize_pulse(inst_pulse, debug = False):
         prev_pulse_type = this_pulse['type']
         
     #sync_track_data = sorted(sync_track_data, key=lambda item: item['time'])
-    #sync_track_data = sorted(sync_track_data, key=lambda item: item['tick'])
+    sync_track_data = sorted(sync_track_data, key=lambda item: item['tick'])
     delay = offset_pulse / SAMPLE_RATE
-    return ( sync_track_data, res , delay)
+    return ( sync_track_data, res, delay )
 
-def analize_charts(charts:dict, bmp_data:dict, debug = False):
+def analize_charts(charts:dict, bpm_data:dict, debug = False):
     notes_list = []
     sp_list = []
     hopo_list = []
@@ -260,9 +261,22 @@ def analize_charts(charts:dict, bmp_data:dict, debug = False):
         prev_type = this_type
         
     notes_list.extend(sp_list_clean)
+
+    for i, this_note in enumerate(notes_list):
+        base_bpm = FindBpm(bpm_data, this_note['time'])
+        this_tick = TimeToDis(base_bpm['time'], this_note['time'], base_bpm['value'])
+        this_tick += base_bpm['tick']
+        notes_list[i].update({'tick': int(this_tick)})
+        if this_note['value'] > 2000:
+            len = TimeToDis(0, this_note['value'], base_bpm['value'])
+        else:
+            len = 0
+        notes_list[i].update({'len': int(len)})
+
     #notes_list.extend(hopo_list)
     #notes_list.extend(strum_list)
     notes_list = sorted(notes_list, key=lambda item: item['type'])
     notes_list = sorted(notes_list, key=lambda item: item['time'])
+    #notes_list = sorted(notes_list, key=lambda item: item['tick'])
 
     return notes_list

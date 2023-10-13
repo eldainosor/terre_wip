@@ -155,6 +155,7 @@ class Song(object):
         self.inst_mask = chart_band_record.instr_mask
         self.track_info = int.from_bytes(chart_band_record.meta_end)
         self.delay = 3000   #TODO: remove 3sec delay
+        #self.delay = 0.0   #TODO: remove 3sec delay
 
         # Read band file
         kaitai = cfg.dir_bands
@@ -425,6 +426,7 @@ class Song(object):
         chart_file.close()
 
     def charts_pulse(self, bmp_data:dict, inst_pulse:dict, debug = False):
+        #TODO: Convert all 'time' to 'tick' with BPMs
         chart_file = open(self.chart_file, "a", encoding='utf-8')
 
         chart_file.write("[ExpertDrums]")
@@ -502,11 +504,18 @@ class Song(object):
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         line_data = "\n  "
-                        line_data += str(data['time'])
+                        #line_data += str(data['time'])
+                        line_data += str(data['tick'])
                         line_data += " = "
                         line_data += str(data['type'])
                         line_data += " "
+                        line_data += str(data['len'])
+                        '''
+                        line_data += "\t"
                         line_data += str(data['value'])
+                        line_data += "\t"
+                        line_data += str(data['time'])
+                        '''
                         chart_file.write(line_data)
                     chart_file.write("\n}\n")
         chart_file.close()
