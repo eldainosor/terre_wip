@@ -18,7 +18,7 @@ if __name__ == "__main__":
     pl = Playlist(cfg, debug)
     pl.log_start(cfg, debug)
     # Create log file
-    if len(pl.files) > 0: #TODO move to extraction log tool
+    if len(pl.files) > 0:
         print("Songs found in dir:\t",  len(pl.files))   
     else:
         print("<ERROR>: No songs found in dir")

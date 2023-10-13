@@ -49,6 +49,7 @@ def TickScaling(tick:int, originalResolution:int, outputResolution:int):
     return tick
 
 def analize_pulse(inst_pulse, debug = False):
+    '''
     aux = 0
     delta_pulse = []
     for this_pulse in inst_pulse:
@@ -59,17 +60,18 @@ def analize_pulse(inst_pulse, debug = False):
     #aux = delta_count.most_common(1)[0]
     #res = 2*aux[0]
     res = 2*delta_count.most_common(1)[0][0]
+    '''
     res = RESOLUTION
 
     # Create chart file
     ts_num = 4  #TODO: Find real ts (time signature - compas)
     #ts_dem = 2  # this is 2^ts_dem
     #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-    bpm = 1000*60*SAMPLE_RATE/res   #TODO: Find real bpm (beats per minute)
+    #bpm = 1000*60*SAMPLE_RATE/res   #TODO: Find real bpm (beats per minute)
 
     sync_track_data = []
     #this_tpb = res  # Tick per beat
-    this_bpm = bpm
+    this_bpm = 120
     this_tick = 0
     first_bpm = 0
     this_ts_n = ts_num
@@ -276,7 +278,15 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
     #notes_list.extend(hopo_list)
     #notes_list.extend(strum_list)
     notes_list = sorted(notes_list, key=lambda item: item['type'])
-    notes_list = sorted(notes_list, key=lambda item: item['time'])
-    #notes_list = sorted(notes_list, key=lambda item: item['tick'])
+    #notes_list = sorted(notes_list, key=lambda item: item['time'])
+    notes_list = sorted(notes_list, key=lambda item: item['tick'])
 
     return notes_list
+
+def analize_lyrics(charts:dict, bpm_data:dict, debug = False):
+    #TODO: add lyrics ticks from time and bpm
+    base_bpm = FindBpm(bpm_data, this_phrase.time)
+    this_tick = TimeToDis(base_bpm['time'], this_phrase.time, base_bpm['value'])
+    this_tick += base_bpm['tick']
+        
+    pass

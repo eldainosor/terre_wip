@@ -124,7 +124,7 @@ class Song(object):
         kaitai += "\\"
         kaitai += file
         kaitai += ".cbr"
-        self.cbr = cbr.Cbr.from_file(kaitai)  #TODO: Delete when Methons are is done
+        self.cbr = cbr.Cbr.from_file(kaitai)  #TODO: Delete when Methods are done
         chart_band_record = cbr.Cbr.from_file(kaitai)
 
         # Extract metadata
@@ -393,8 +393,8 @@ class Song(object):
         chart_file.write("\n  Charter = \"Next Level\"")
         chart_file.write("\n  Album = \"" + self.disc + "\"")
         chart_file.write("\n  Year = \", " + str(self.year) + "\"")
-        chart_file.write("\n  Offset = " + str(int(self.delay / 1000)) )    #TODO: revome 3sec delay
-        #chart_file.write("\n  Offset = 0")    #TODO: revome 3sec delay
+        chart_file.write("\n  Offset = " + str(int(self.delay / 1000)) )    #TODO: remove 3sec delay
+        #chart_file.write("\n  Offset = 0")    #TODO: remove 3sec delay
         chart_file.write("\n  Resolution = " + str(int(res)))
         chart_file.write("\n  Player2 = bass")
         chart_file.write("\n  Difficulty = " + str(self.diffs[4]))  #Band dificulty
@@ -458,24 +458,43 @@ class Song(object):
         chart_file.write("\n}\n")
         chart_file.close()
 
-    def charts_lyrics(self, bmp_data:dict, debug = False):
+    def charts_lyrics(self, bpm_data:dict, debug = False):
         chart_file = open(self.chart_file, "a", encoding='utf-8')
         chart_file.write("[Events]")
         chart_file.write("\n{")
+        #TODO: change ['time'] to ['tick']
         for this_phrase in self.Tracks[3].Lyrics.verses:
+
+            base_bpm = FindBpm(bpm_data, this_phrase.time)
+            this_tick = TimeToDis(base_bpm['time'], this_phrase.time, base_bpm['value'])
+            this_tick += base_bpm['tick']
+        
             event_line = "\n  "
-            event_line += str(this_phrase.time)
+            #event_line += str(this_phrase.time)
+            event_line += str(int(this_tick))
             event_line += " = E \"phrase_start\""
             chart_file.write(event_line)
             for this_syll in this_phrase.syllables:
+
+                base_bpm = FindBpm(bpm_data, this_syll['time'])
+                this_tick = TimeToDis(base_bpm['time'], this_syll['time'], base_bpm['value'])
+                this_tick += base_bpm['tick']
+
                 event_line = "\n  "
-                event_line += str(this_syll['time'])
+                #event_line += str(this_syll['time'])
+                event_line += str(int(this_tick))
                 event_line += " = E \"lyric "
                 event_line += str(this_syll['note'])
                 event_line += "\""
                 chart_file.write(event_line)
             event_line = "\n  "
-            event_line += str(this_phrase.time + this_phrase.len)
+
+            base_bpm = FindBpm(bpm_data, this_phrase.time + this_phrase.len)
+            this_tick = TimeToDis(base_bpm['time'], this_phrase.time + this_phrase.len, base_bpm['value'])
+            this_tick += base_bpm['tick']
+
+            #event_line += str(this_phrase.time + this_phrase.len)
+            event_line += str(int(this_tick))
             event_line += " = E \"phrase_end\""
             chart_file.write(event_line)
         chart_file.write("\n}\n")
