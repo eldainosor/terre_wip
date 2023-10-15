@@ -21,6 +21,12 @@ def TimeToDis(timeStart:int, timeEnd:int, bpm:int):
     dis = ( deltaTime * bpm * RESOLUTION ) / ( MILIS_PER_SECS *  SECONDS_PER_MINUTE )
     return dis
 
+def SwapTimeForDis(time:int, bpms:dict):
+    bpm = FindBpm(bpms, time)
+    tick = TimeToDis(bpm['time'], time, bpm['value'])
+    tick += bpm['tick']
+    return tick
+
 def DisToBpm(tickStart:int, tickEnd:int, timeStart:int, timeEnd:int):
     deltaTick = ( tickEnd - tickStart ) / RESOLUTION
     deltaTime = ( timeEnd - timeStart ) / SAMPLE_RATE
@@ -49,18 +55,6 @@ def TickScaling(tick:int, originalResolution:int, outputResolution:int):
     return tick
 
 def analize_pulse(inst_pulse, debug = False):
-    '''
-    aux = 0
-    delta_pulse = []
-    for this_pulse in inst_pulse:
-        delta_pulse.append(this_pulse['time'] - aux)
-        aux = this_pulse['time']
-
-    delta_count = Counter(delta_pulse)      #TODO:Remove Counter?
-    #aux = delta_count.most_common(1)[0]
-    #res = 2*aux[0]
-    res = 2*delta_count.most_common(1)[0][0]
-    '''
     res = RESOLUTION
 
     # Create chart file
@@ -70,10 +64,8 @@ def analize_pulse(inst_pulse, debug = False):
     #bpm = 1000*60*SAMPLE_RATE/res   #TODO: Find real bpm (beats per minute)
 
     sync_track_data = []
-    #this_tpb = res  # Tick per beat
     this_bpm = 120
     this_tick = 0
-    first_bpm = 0
     this_ts_n = ts_num
     #this_ts_d = ts_dem
     beats = 0
@@ -85,9 +77,8 @@ def analize_pulse(inst_pulse, debug = False):
     prev_bpm_tick = 0
     start_pulse_time = 0
     offset_pulse = 0
-    #TODO fix sync
     for this_pulse in inst_pulse:
-        if offset_pulse > 0:       #TODO sync offset wrong?
+        if offset_pulse > 0:
             if this_pulse['type'] != 2:
                 beats += 1
             else:
@@ -99,8 +90,6 @@ def analize_pulse(inst_pulse, debug = False):
                     else:
                         this_tick = TimeToDis(prev_bpm_time, this_pulse['time'], prev_bpm)
                     this_tick += prev_bpm_tick
-                    #this_tick = start_pulse_time + offset_pulse
-                    #this_tick = start_pulse_time
 
                     if this_ts_n != prev_ts_n:
                         if prev_ts_n == 0:
@@ -108,9 +97,9 @@ def analize_pulse(inst_pulse, debug = False):
                                 "time":     int(0),
                                 "tick":     int(0),
                                 "type":     "TS",
-                                "value":    int(1)
+                                "value":    int(this_ts_n)
                             }
-                            #sync_track_data.append(this_sync)
+                            sync_track_data.append(this_sync)
                         this_sync = {
                             "time":     int(this_pulse['time']),
                             "tick":     int(this_tick),
@@ -126,9 +115,9 @@ def analize_pulse(inst_pulse, debug = False):
                                 "time":     int(0),
                                 "tick":     int(0),
                                 "type":     "B",
-                                "value":    int(first_bpm)
+                                "value":    int(this_bpm)
                             }
-                            #sync_track_data.append(this_sync)
+                            sync_track_data.append(this_sync)
                         this_sync = {
                             "time":     int(this_pulse['time']),
                             "tick":     int(this_tick),
@@ -162,7 +151,6 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
     strum_list = []
     mods_list = []
     for this_note in charts:
-        #TODO: if len == 2000: then len = 0
         #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN, 0x02 ???
         note_in = {
             "time":     int(this_note['time']),
@@ -265,11 +253,11 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
     notes_list.extend(sp_list_clean)
 
     for i, this_note in enumerate(notes_list):
-        base_bpm = FindBpm(bpm_data, this_note['time'])
-        this_tick = TimeToDis(base_bpm['time'], this_note['time'], base_bpm['value'])
-        this_tick += base_bpm['tick']
+        this_tick = SwapTimeForDis(this_note['time'], bpm_data)
+
         notes_list[i].update({'tick': int(this_tick)})
         if this_note['value'] > 2000:
+            base_bpm = FindBpm(bpm_data, this_note['time'])
             len = TimeToDis(0, this_note['value'], base_bpm['value'])
         else:
             len = 0
@@ -282,11 +270,3 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
     notes_list = sorted(notes_list, key=lambda item: item['tick'])
 
     return notes_list
-
-def analize_lyrics(charts:dict, bpm_data:dict, debug = False):
-    #TODO: add lyrics ticks from time and bpm
-    base_bpm = FindBpm(bpm_data, this_phrase.time)
-    this_tick = TimeToDis(base_bpm['time'], this_phrase.time, base_bpm['value'])
-    this_tick += base_bpm['tick']
-        
-    pass

@@ -41,7 +41,7 @@ if __name__ == "__main__":
         this_song.extract_background(cfg, debug)
         this_song.extract_video(cfg, debug)
 
-        this_song.convert_charts(cfg, debug)    #DEBUG
+        #this_song.convert_charts(cfg, debug)    #DEBUG
 
         # Show time and ETA
         total_tm = this_song.print_elapsed_time()

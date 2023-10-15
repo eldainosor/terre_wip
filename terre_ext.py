@@ -80,11 +80,9 @@ class Settings(object):
             print("Working dir:\t[", self.dir_work, "]")
             #dir_drive = "D:"
             #self.dir_mozart = dir_drive + "\\Games\\Rythm\\ERDTV\\Mozart"            
-            #self.dir_mozart = self.dir_disc + "\\install\\data\\mozart"    #DEBUG
-            #self.dir_mozart = "C:\\Users\\envid\\OneDrive\\Documentos\\ERDTV\\Mozart"
             self.dir_mozart = self.dir_work + "\\..\\..\\Mozart"  
-            self.convert = 'N'
-            self.ext_videos = 'N'
+            self.convert = 'Y'
+            self.ext_videos = 'Y'
         else:
             valids = []
             for char in range(ord('A'), ord('Z')+1):
@@ -464,22 +462,14 @@ class Song(object):
         chart_file.write("\n{")
         #TODO: change ['time'] to ['tick']
         for this_phrase in self.Tracks[3].Lyrics.verses:
-
-            base_bpm = FindBpm(bpm_data, this_phrase.time)
-            this_tick = TimeToDis(base_bpm['time'], this_phrase.time, base_bpm['value'])
-            this_tick += base_bpm['tick']
-        
+            this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
             event_line = "\n  "
             #event_line += str(this_phrase.time)
             event_line += str(int(this_tick))
             event_line += " = E \"phrase_start\""
             chart_file.write(event_line)
             for this_syll in this_phrase.syllables:
-
-                base_bpm = FindBpm(bpm_data, this_syll['time'])
-                this_tick = TimeToDis(base_bpm['time'], this_syll['time'], base_bpm['value'])
-                this_tick += base_bpm['tick']
-
+                this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
                 event_line = "\n  "
                 #event_line += str(this_syll['time'])
                 event_line += str(int(this_tick))
@@ -488,11 +478,7 @@ class Song(object):
                 event_line += "\""
                 chart_file.write(event_line)
             event_line = "\n  "
-
-            base_bpm = FindBpm(bpm_data, this_phrase.time + this_phrase.len)
-            this_tick = TimeToDis(base_bpm['time'], this_phrase.time + this_phrase.len, base_bpm['value'])
-            this_tick += base_bpm['tick']
-
+            this_tick = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
             #event_line += str(this_phrase.time + this_phrase.len)
             event_line += str(int(this_tick))
             event_line += " = E \"phrase_end\""
