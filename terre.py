@@ -6,7 +6,8 @@ import time
 from terre_ext import *
 
 # Config Constants 
-debug = True       #DEBUG
+#debug = True       #DEBUG
+debug = False       #DEBUG
 #const_res = 480     #Like RB
 #const_res = 192    #Like GH
 
