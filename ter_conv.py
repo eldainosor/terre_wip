@@ -2,8 +2,6 @@
 # Python script
 # Made by Envido32
 
-from collections import Counter
-
 SAMPLE_RATE = 44100    # HiRes digital sampling rate
 #SAMPLE_RATE = 44056    # HiRes NTSC
 RESOLUTION = 480     # Like RB
@@ -58,16 +56,11 @@ def analize_pulse(inst_pulse, debug = False):
     res = RESOLUTION
 
     # Create chart file
-    ts_num = 4  #TODO: Find real ts (time signature - compas)
-    #ts_dem = 2  # this is 2^ts_dem
-    #res = 82680/pow(2,ts_dem)   #TODO: Find real resolution (ticks per 1/4 note)
-    #bpm = 1000*60*SAMPLE_RATE/res   #TODO: Find real bpm (beats per minute)
-
+    ts_num = 4
     sync_track_data = []
     this_bpm = 120
     this_tick = 0
     this_ts_n = ts_num
-    #this_ts_d = ts_dem
     beats = 0
     prev_pulse_time = 0
     prev_pulse_type = 0
@@ -135,7 +128,8 @@ def analize_pulse(inst_pulse, debug = False):
                 offset_pulse = prev_pulse_time
                 start_pulse_time = prev_pulse_time
                 beats = 2
-                print("Offset:", offset_pulse / SAMPLE_RATE)
+                if debug:
+                    print("Offset:", offset_pulse / SAMPLE_RATE)
         prev_pulse_time = this_pulse['time']
         prev_pulse_type = this_pulse['type']
         

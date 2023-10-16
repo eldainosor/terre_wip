@@ -1,6 +1,6 @@
-# Todo El Rock (Recargado)
+# Todo El Rock (Desde Cemento)
 
-**_TeRRe_** es una herramienta de extracción y preservación del juego [El Rock de Tu Vida](https://web.archive.org/web/20111020150625/http://www.elrockdetuvida.com/website/index.php) en desarrollo.
+**_TodoElRock_** es una herramienta de extracción y preservación del juego [El Rock de Tu Vida](https://web.archive.org/web/20111020150625/http://www.elrockdetuvida.com/website/index.php) en desarrollo avanzado.
 
 [toc]
 
@@ -10,9 +10,45 @@ Lanzado en el año 2011 para Windows PC por los desarrolladores Next Level y dis
 
 _Las marcas y productos mencionados son propiedad de sus respectivos dueños._ 
 
+## Requisitos 
+
+**_TodoElRock_** esta hecho en [Python](https://www.python.org/) y utiliza [FFMPEG](https://www.ffmpeg.org/) para codificar audio y video. 
+
+## Utilización
+
+1) Instalar [Python](https://www.python.org/).
+2) Instalar el paquete dependiente de Python: `pip install kaitaistruct`
+3) Descargar [TodoElRock](https://gitlab.com/envido32/todoelrock/-/archive/main/todoelrock-main.zip) y descomprimir.
+3) Descargar [FFMPEG](https://www.ffmpeg.org/) y extraer `ffmpeg.exe` en el mismo directorio que **__TodoElRock__**
+2) Ejecutar el archivo `python todoelrock.py`
+3) Seleccionar la unidad donde se encuentra el disco original de instalación.
+4) La extracción debería tardar pocos minutos.
+5) Si [FFMPEG](https://www.ffmpeg.org/) se encuentra instalado se puede continuar con la codificación para convertir los archivos para que sean compatibles con [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/). _NOTA: Esto puede tardar mucho tiempo._
+
+## Archivos de salida
+Una vez finalizada la ejecución del código deberían haber dos directorios nuevos creados, cada una adentro con un directorio para cada cancion:
+
+- _[raw/%artist% – %song%]_: Archivos audiovisuales extraídos del disco de cada una de las canciones encontradas.
+- _[erdtv/%artist% – %song%]_: Archivos audiovisuales convertidos a formato compatible con [Clone Hero](https://clonehero.net/). _NOTA: Requiere [FFMPEG](https://www.ffmpeg.org/)_
+
+
+| raw            | erdtv          | Descripción        |
+|----------------|----------------|--------------------|
+| song.ini       | song.ini       | Informacion        |
+| preview.wav    | preview.ogg    | Audio preliminar   |
+| video.asf      | video.webm     | Video de fondo     |
+| background.png | background.png | Imagen de fondo    |
+| album.png      | album.png      | Tapa del disco     |
+| guitar.flac    | guitar.ogg     | Audio guitarra     |
+| rhythm.flac    | rhythm.ogg     | Audio bajo         |
+| drums.flac     | drums.ogg      | Audio bateria      |
+| vocals.flac    | vocals.ogg     | Audio cantante     |
+| song.flac      | song.ogg       | Audio extras       |
+| notes.chart    | notes.chart    | Notas instrumentos |
+
 ## Objetivos
 
-Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del disco de instalación original y exporta a otros juegos de ritmo similares (como [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/)) para que las canciones incluidas puedan ser disfrutadas por audiencias modernas.
+Con la intención de lograr la preservación y archivo, **_TodoElRock_** extrae del disco de instalación original y exporta a otros juegos de ritmo similares (como [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/)) para que las canciones incluidas puedan ser disfrutadas por audiencias modernas.
 
 - [x] Extraer la información de las canciones (metadata)
 
@@ -26,15 +62,15 @@ Con la intención de lograr la preservación y archivo, **_TeRRe_** extrae del d
 
 - [x] Extraer el video de fondo de las canciones (video)
 
-- [ ] Extraer las notas de los instrumentos (charts) [BETA]
+- [x] Extraer las partituras de los instrumentos (charts)
 
-### WIP (31-Ago-2023):
+### Desarrollo (16-Oct-2023):
 
-Las notas de los instrumentos ya han sido identificadas y su decodificacion esta en proceso a formato Chart.
-
-Actualmente es jugable en estado primitivo y en desarrollo.
+Las notas de los instrumentos ya han sido identificadas decodificadas en formato Chart usable en [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/).
 
 [Charts format documentation by TheNathannator](https://github.com/TheNathannator/GuitarGame_ChartFormats/tree/main/doc/FileFormats/.chart)
+
+Actualmente es jugable por completo, incluyendo Guitarra, Bajo y Bateria en 3 dificultades. Las letras de las canciones estan disponibles y sincronizadas, pero sin puntaje de voz.
 
 - [x] Identificar instrumentos
 
@@ -56,48 +92,15 @@ Actualmente es jugable en estado primitivo y en desarrollo.
 
 - [x] Codificar letras [BETA]
 
-- [ ] Identificar canto
+- [x] Identificar timings (compas, pulso, etc)
+
+- [x] Codificar timings (BPM, Resolution, TimeSign)
+
+- [x] Identificar canto
 
 - [ ] Codificar canto
 
-- [x] Identificar timings (compas, pulso, etc)
-
-- [ ] Codificar timings (BPM, Resolution, TimeSign) [ALPHA] (necesita calibracion)
-
 - ¿Migrar a MIDI?
-
-## Requisitos 
-
-**_TeRRe_** esta hecho en [Python](https://www.python.org/) y utiliza [FFMPEG](https://www.ffmpeg.org/) para codificar audio y video. 
-
-## Utilización
-
-1) Instalar [Python](https://www.python.org/) y opcionalmente [FFMPEG](https://www.ffmpeg.org/).
-2) Ejecutar el archivo _“terre.py”_
-3) Seleccionar la unidad donde se encuentra el disco original de instalación.
-4) La extracción debería tardar pocos minutos.
-5) Si [FFMPEG](https://www.ffmpeg.org/) se encuentra instalado se puede continuar con la codificación para convertir los archivos para que sean compatibles con [Clone Hero](https://clonehero.net/). NOTA: Esto puede tardar mucho tiempo.
-
-## Archivos de salida
-Una vez finalizada la ejecución del código deberían haber dos directorios nuevos creados, cada una adentro con un directorio para cada cancion:
-
-- _[raw/%artist% – %song%]_: Archivos audiovisuales extraídos del disco de cada una de las canciones encontradas.
-- _[erdtv/%artist% – %song%]_: Archivos audiovisuales convertidos a formato compatible con [Clone Hero](https://clonehero.net/). NOTA: Requiere [FFMPEG](https://www.ffmpeg.org/)
-
-
-| raw            | erdtv          | Descripción        |
-|----------------|----------------|--------------------|
-| song.ini       | song.ini       | Informacion        |
-| preview.wav    | preview.ogg    | Audio preliminar   |
-| video.asf      | video.webm     | Video de fondo     |
-| background.png | background.png | Imagen de fondo    |
-| album.png      | album.png      | Tapa del disco     |
-| guitar.flac    | guitar.ogg     | Audio guitarra     |
-| rhythm.flac    | rhythm.ogg     | Audio bajo         |
-| drums.flac     | drums.ogg      | Audio bateria      |
-| vocals.flac    | vocals.ogg     | Audio cantante     |
-| song.flac      | song.ogg       | Audio extras       |
-| notes.chart    | notes.chart    | Notas instrumentos |
 
 ## Descripción de los archivos y directorios
 
@@ -163,12 +166,14 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
 
 Hay muchos detalles que han sido identificados y codificados con ayuda de Kaitai
 
-## Créditos
+## Créditos y agradecimientos
 
 Análisis inicial de archivos por [@eldainosor](https://twitter.com/eldainosor)
 
 Desarrollo del código de extracción [@envido32](https://twitter.com/envido32)
 
+Documentacion y ayuda de los archivos Chart [@TheNathannator](https://github.com/TheNathannator)
+
 Y a toda la increible comunidad de juegos de ritmo por su trabajo constante.
 
-_El Rock de Tu Vida, Next Level, Loaded, Rock Band, Guitar Hero, Harmonix, Activision, Clone Hero y todas las marcas y productos mencionados son propiedad de sus respectivos dueños._
+_El Rock de Tu Vida, Next Level, Loaded, Rock Band, Guitar Hero, Harmonix, Activision, Clone Hero, YARG y todas las marcas y productos mencionados son propiedad de sus respectivos dueños._

@@ -3,17 +3,15 @@
 # Made by Envido32
 
 import time
-from terre_ext import *
+from ter_ext import *
 
 # Config Constants 
 #debug = True       #DEBUG
 debug = False       #DEBUG
-#const_res = 480     #Like RB
-#const_res = 192    #Like GH
 
 if __name__ == "__main__":
 
-    print(" >>> EXTRACTOR TODO EL ROCK (RECARGADO) <<< ")
+    print(" >>> EXTRACTOR TODO EL ROCK (Desde Cemento) <<< ")
 
     cfg = Settings(debug)
     pl = Playlist(cfg, debug)
@@ -42,7 +40,8 @@ if __name__ == "__main__":
         this_song.extract_background(cfg, debug)
         this_song.extract_video(cfg, debug)
 
-        #this_song.convert_charts(cfg, debug)    #DEBUG
+        if debug:
+            this_song.convert_charts(cfg, debug)    #DEBUG
 
         # Show time and ETA
         total_tm = this_song.print_elapsed_time()
@@ -55,7 +54,7 @@ if __name__ == "__main__":
         for k, this_song in enumerate(pl.Songs):
             k += 1
             n = len(pl.Songs)
-            print(" >> Converting (", int(k) , "/" , int(n) , "): ", this_song.name) 
+            print(" >> Converting (", int(k) , "/" , int(n) , "): ", this_song.name, "by", this_song.band) 
 
             start_song = time.time()
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
@@ -63,11 +62,11 @@ if __name__ == "__main__":
 
             this_song.convert_metadata(debug)
             this_song.convert_charts(cfg, debug)
+            this_song.convert_album(debug)
+            this_song.convert_background(debug)
             this_song.convert_icon(debug)
             this_song.convert_preview(cfg, debug)
             this_song.convert_audio(cfg, debug)
-            this_song.convert_album(debug)
-            this_song.convert_background(debug)
             this_song.convert_video(cfg, debug)
 
             # Show time and ETA

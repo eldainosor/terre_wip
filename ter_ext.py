@@ -5,8 +5,8 @@
 import os, shutil, subprocess
 import time
 import cbr, disc, band
-from terre_conv import *
-from itertools import zip_longest
+from ter_conv import *
+#from itertools import zip_longest
 
 # Config Constants 
 #debug = True    #DEBUG
@@ -89,7 +89,7 @@ class Settings(object):
                 valids.append(chr(char))
             text = "Elegi la unidad del disco de ERDTV: "
             dir_drive = promt(text, valids)
-            self.dir_mozart = dir_drive + "\\install\\data\\mozart"
+            self.dir_mozart = dir_drive + ":\\install\\data\\mozart"
             valids = ['Y', 'N']
             text = "Convertir los archivos para usar en otros juegos? Esto puede tomar varios minutos: [Y/N] "
             self.convert = promt(text, valids)
@@ -289,6 +289,8 @@ class Song(object):
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
     def create_metadata(self, debug = False):
+        print("Creating song.ini...")
+
         try:
             os.makedirs(self.dir_extr)
         except:
@@ -328,6 +330,7 @@ class Song(object):
         for this_track in self.Tracks:
             this_track.extract(self, debug)
 
+        '''
         if debug:
             self.test_unify_pulses(debug)
         
@@ -359,8 +362,10 @@ class Song(object):
             csv_line += '\n'
             csv_new.write(csv_line)
         csv_new.close()
+        '''
             
     def convert_charts(self, cfg:Settings, debug = False):
+        print("Creating notes.chart...")
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
         self.chart_file += "notes.chart"
@@ -373,9 +378,10 @@ class Song(object):
         self.charts_sync_track(bmp_data, debug)
         self.charts_lyrics(bmp_data, debug)
         self.charts_inst(bmp_data, debug)
+        '''
         if debug:
             #self.charts_pulse(bmp_data, inst_pulse, debug)
-            pass
+        '''
 
     def save_charts_meta(self, res:int, debug = False):
         try:
@@ -423,6 +429,7 @@ class Song(object):
         chart_file.write("\n}\n")
         chart_file.close()
 
+    '''
     def charts_pulse(self, bmp_data:dict, inst_pulse:dict, debug = False):
         #TODO: Convert all 'time' to 'tick' with BPMs
         chart_file = open(self.chart_file, "a", encoding='utf-8')
@@ -455,12 +462,12 @@ class Song(object):
             chart_file.write(line_data)
         chart_file.write("\n}\n")
         chart_file.close()
+    '''
 
     def charts_lyrics(self, bpm_data:dict, debug = False):
         chart_file = open(self.chart_file, "a", encoding='utf-8')
         chart_file.write("[Events]")
         chart_file.write("\n{")
-        #TODO: change ['time'] to ['tick']
         for this_phrase in self.Tracks[3].Lyrics.verses:
             this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
             event_line = "\n  "
@@ -505,7 +512,6 @@ class Song(object):
                     this_diff_name = this_diff.name
                     chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
                     chart_file.write("\n{")
-                    #TODO: Analize charts
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         line_data = "\n  "
@@ -561,6 +567,7 @@ class Song(object):
             dest_dir = self.dir_conv
             dest_file =  instrument + ".ogg"
 
+            #TODO: use Python FFMPEG or ask for download
             try:
                 cmd = cfg.ffmpeg_file 
                 cmd += " -y -loglevel -8 -stats -i " 
@@ -581,6 +588,7 @@ class Song(object):
         dest_dir = self.dir_conv
         dest_file = "preview.ogg"
 
+        #TODO: use python FFMPEG or ask for download
         try:
             cmd = cfg.ffmpeg_file 
             cmd += " -y -loglevel -8 -stats -i " 
@@ -594,29 +602,33 @@ class Song(object):
             print("FFMPEG.exe not found")
 
     def convert_video(self, cfg:Settings, debug = False):
-        print("Compressing video file with FFMPEG (ASF to WEBM)")
-        source_dir = self.dir_extr
-        source_file = "video.asf"
-        dest_dir = self.dir_conv
-        dest_file = "video.webm"
+        if cfg.ext_videos == 'Y':
+            print("Compressing video file with FFMPEG (ASF to WEBM)")
+            source_dir = self.dir_extr
+            source_file = "video.asf"
+            dest_dir = self.dir_conv
+            dest_file = "video.webm"
 
-        try:
-            cmd = cfg.ffmpeg_file 
-            cmd += " -y -loglevel -8 -stats -hwaccel auto -i "
-            cmd += "\"" + source_dir + "\\" + source_file + "\""
-            for i, instrument in enumerate(data_order):
-                audio_in = dest_dir + "\\" + instrument + ".ogg"
-                if os.path.exists(audio_in):
-                    cmd += " -i \"" + audio_in + "\""
-            #cmd += " -ss " + str(self.delay) + "ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
-            cmd += " -filter_complex amix=inputs="                 # Intro Skip #TODO: remove 3sec delay
-            cmd += str(int(i)) 
-            cmd += ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
-            cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
-            #print("Command: " + cmd)    # DEBUG
-            subprocess.run(cmd)
-        except:
-            print("FFMPEG.exe not found")
+            #TODO: use python FFMPEG or ask for download
+            try:
+                cmd = cfg.ffmpeg_file 
+                cmd += " -y -loglevel -8 -stats -hwaccel auto -i "
+                cmd += "\"" + source_dir + "\\" + source_file + "\""
+                for i, instrument in enumerate(data_order):
+                    audio_in = dest_dir + "\\" + instrument + ".ogg"
+                    if os.path.exists(audio_in):
+                        cmd += " -i \"" + audio_in + "\""
+                #cmd += " -ss " + str(self.delay) + "ms -filter_complex amix=inputs="     # Intro Skip #TODO: remove 3sec delay
+                cmd += " -filter_complex amix=inputs="                 # Intro Skip #TODO: remove 3sec delay
+                cmd += str(int(i)) 
+                cmd += ":duration=longest -c:v libvpx -quality good -crf 12 -b:v 2000K -map 0:v:0? -an -sn -map_chapters -1 -f webm "
+                cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
+                #print("Command: " + cmd)    # DEBUG
+                subprocess.run(cmd)
+            except:
+                print("FFMPEG.exe not found")
+        else:
+            print("Video convertion skiped")
 
     def print_start_time(self):
         localtime = time.localtime(self.start_time)
@@ -745,7 +757,6 @@ class Chart(object):
                     fixed_note = 4 - i
                 else:   #TODO Double check if drums ok
                     fixed_note = i
-                #TODO: if len == 2000: then len = 0
 
                 note_dict = {
                     "time": this_note.time,
