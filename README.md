@@ -19,17 +19,17 @@ _Las marcas y productos mencionados son propiedad de sus respectivos dueños._
 1) Instalar [Python](https://www.python.org/).
 2) Instalar el paquete dependiente de Python: `pip install kaitaistruct`
 3) Descargar [TodoElRock](https://gitlab.com/envido32/todoelrock/-/archive/main/todoelrock-main.zip) y descomprimir.
-3) Descargar [FFMPEG](https://www.ffmpeg.org/) y extraer `ffmpeg.exe` en el mismo directorio que **__TodoElRock__**
-2) Ejecutar el archivo `python todoelrock.py`
-3) Seleccionar la unidad donde se encuentra el disco original de instalación.
-4) La extracción debería tardar pocos minutos.
-5) Si [FFMPEG](https://www.ffmpeg.org/) se encuentra instalado se puede continuar con la codificación para convertir los archivos para que sean compatibles con [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/). _NOTA: Esto puede tardar mucho tiempo._
+4) Descargar [FFMPEG](https://www.ffmpeg.org/) y extraer `ffmpeg.exe` en el mismo directorio que **__TodoElRock__**
+5) Ejecutar el archivo `python todoelrock.py`
+6) Seleccionar la unidad donde se encuentra el disco original de instalación.
+7) La extracción debería tardar pocos minutos.
+8) Si [FFMPEG](https://www.ffmpeg.org/) se encuentra instalado se puede continuar con la codificación para convertir los archivos para que sean compatibles con [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/). _NOTA: Esto puede tardar mucho tiempo._
 
 ## Archivos de salida
 Una vez finalizada la ejecución del código deberían haber dos directorios nuevos creados, cada una adentro con un directorio para cada cancion:
 
 - _[raw/%artist% – %song%]_: Archivos audiovisuales extraídos del disco de cada una de las canciones encontradas.
-- _[erdtv/%artist% – %song%]_: Archivos audiovisuales convertidos a formato compatible con [Clone Hero](https://clonehero.net/). _NOTA: Requiere [FFMPEG](https://www.ffmpeg.org/)_
+- _[erdtv/%artist% – %song%]_: Archivos audiovisuales convertidos a formato compatible con [Clone Hero](https://clonehero.net/) o [YARG](https://yarg.in/). _NOTA: Requiere [FFMPEG](https://www.ffmpeg.org/)_
 
 
 | raw            | erdtv          | Descripción        |
@@ -164,7 +164,7 @@ Se han creado archivos de [Kaitai Struct](https://kaitai.io/) para el analisis d
    0x00xx = Ending SubHeader (8.0 KB)
    ```
 
-Hay muchos detalles que han sido identificados y codificados con ayuda de Kaitai
+Hay muchos detalles que han sido identificados y codificados con ayuda de [Kaitai](https://ide.kaitai.io/)
 
 ## Créditos y agradecimientos
 

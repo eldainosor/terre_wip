@@ -289,7 +289,7 @@ class Song(object):
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
     def create_metadata(self, debug = False):
-        print("Creating song.ini...")
+        print("Creating song.ini ...")
 
         try:
             os.makedirs(self.dir_extr)
@@ -365,7 +365,7 @@ class Song(object):
         '''
             
     def convert_charts(self, cfg:Settings, debug = False):
-        print("Creating notes.chart...")
+        print("Creating notes.chart ...")
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
         self.chart_file += "notes.chart"
