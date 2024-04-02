@@ -16,9 +16,6 @@ data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
 
-# Hardcodeadisimo mal
-chartMidiFile = MIDIFile(4, eventtime_is_ticks=True, ticks_per_quarternote=480, deinterleave=False)     # only 1 track
-
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
     try:
@@ -374,6 +371,9 @@ class Song(object):
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
         self.chart_file += "notes.mid"
+
+        global chartMidiFile
+        chartMidiFile = MIDIFile(4, eventtime_is_ticks=True, ticks_per_quarternote=480, deinterleave=False)
         
         inst_pulse = self.Tracks[2].pulse
         bmp_data, res, delay = analize_pulse(inst_pulse, debug)
@@ -474,15 +474,53 @@ class Song(object):
             tick_full_length = tick_end_time - tick_start_time
             chartMidiFile.addNote(3, 0, 105, tick_start_time, tick_full_length, 100)
             #event_line += str(this_phrase.time)
+            countSyll = 0
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
-                this_tick_length = SwapTimeForDis(this_syll['time'] + this_syll['len'], bpm_data)
+                this_tick_length = SwapTimeForDis(this_syll['len'], bpm_data)
 
-                # Setting the note pitch to C3 just for now?
-                this_tick_pitch = (36 + (12*3))
+                # THIS IS SO UGLY
+                this_tick_note = 0
+                this_tick_scale = 0
+                prev_tick_scale = 0
+                this_tick_has_mod = 0
+                for currentPitch in self.Tracks[3].Lyrics.pitch:
+                    if this_syll['time'] == currentPitch['time']:
+                        this_tick_note = currentPitch['note']
+                        this_tick_scale = currentPitch['scale']
+                        this_tick_has_mod = currentPitch['mods']   
+
+                #bruh this hack is to see if we can make it higher or lower
+                final_tick_pitch = 36
+                if countSyll > 0:
+                    if this_tick_scale > prev_tick_scale:
+                        # verify that the diff is higher
+                        if (this_tick_scale - prev_tick_scale) > 2:
+                            final_tick_pitch = final_tick_pitch + 12
+                        elif int(this_tick_note) == 0:
+                            this_tick_note = 12
+                    elif this_tick_scale < prev_tick_scale:
+                        # verify that the diff is higher
+                        if (prev_tick_scale - this_tick_scale) > 2:
+                            final_tick_pitch = final_tick_pitch - 12
+                        elif int(this_tick_note) == 0:
+                            this_tick_note = 12
+
+                this_tick_pitch = (final_tick_pitch) + int(this_tick_note)
+
+                #this_tick_pitch = (36 + (12*3))
                 #event_line += str(this_syll['time'])
                 chartMidiFile.addNote(3, 0, this_tick_pitch, int(this_tick), int(this_tick_length), 100)
+
+                chartMidiFile.addText(3, int(this_tick), str(this_syll['note']))
+
+                ## HACKY WAY TO IMPLEMENT LYRICS MODULATION
+                if this_tick_has_mod == 1:
+                    chartMidiFile.addText(3, int(this_tick) + int(this_tick_length) + 20, " + ")
                 # chart_file.write(event_line)
+                countSyll = countSyll + 1
+                prev_tick_scale = this_tick_scale
+            
 
     def charts_inst(self, bmp_data:dict, debug = False):
         # chart_file =open(self.chart_file, "a", encoding='utf-8')
