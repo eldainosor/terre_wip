@@ -6,6 +6,8 @@ import os, shutil, subprocess
 import time
 import cbr, disc, band
 from ter_conv import *
+from midiutil.MidiFile import MIDIFile
+import math
 #from itertools import zip_longest
 
 # Config Constants 
@@ -13,6 +15,9 @@ from ter_conv import *
 data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
+
+# Hardcodeadisimo mal
+chartMidiFile = MIDIFile(4, eventtime_is_ticks=True, ticks_per_quarternote=480, deinterleave=False)     # only 1 track
 
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
@@ -89,15 +94,15 @@ class Settings(object):
                 valids.append(chr(char))
             text = "Elegi la unidad del disco de ERDTV: "
             dir_drive = promt(text, valids)
-            self.dir_mozart = dir_drive + ":\\install\\data\\mozart"
+            self.dir_mozart = dir_drive + ":\\INSTALL\\DATA\\MOZART"
             valids = ['Y', 'N']
             text = "Convertir los archivos para usar en otros juegos? Esto puede tomar varios minutos: [Y/N] "
             self.convert = promt(text, valids)
             text = "Extraer videos? Esto puede tomar muchos minutos: [Y/N] "
             self.ext_videos = promt(text, valids) 
-        self.dir_songs = self.dir_mozart + "\\song"
-        self.dir_bands = self.dir_mozart + "\\band"
-        self.dir_discs = self.dir_mozart + "\\disc"
+        self.dir_songs = self.dir_mozart + "\\SONG"
+        self.dir_bands = self.dir_mozart + "\\BAND"
+        self.dir_discs = self.dir_mozart + "\\DISC"
         self.ffmpeg_file = self.dir_work + "\\ffmpeg.exe"
 
     def print_start_time(self):
@@ -365,10 +370,10 @@ class Song(object):
         '''
             
     def convert_charts(self, cfg:Settings, debug = False):
-        print("Creating notes.chart ...")
+        print("Creating notes.mid ...")
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
-        self.chart_file += "notes.chart"
+        self.chart_file += "notes.mid"
         
         inst_pulse = self.Tracks[2].pulse
         bmp_data, res, delay = analize_pulse(inst_pulse, debug)
@@ -378,6 +383,9 @@ class Song(object):
         self.charts_sync_track(bmp_data, debug)
         self.charts_lyrics(bmp_data, debug)
         self.charts_inst(bmp_data, debug)
+
+        with open(self.chart_file, 'wb') as outf:
+            chartMidiFile.writeFile(outf)
         '''
         if debug:
             #self.charts_pulse(bmp_data, inst_pulse, debug)
@@ -389,33 +397,26 @@ class Song(object):
         except:
             #print("[", self.dir_conv , "] already exists")
             pass
-        chart_file = open(self.chart_file, "w", encoding='utf-8')
-        chart_file.write("[Song]")
-        chart_file.write("\n{")
-        chart_file.write("\n  Name = \"" + self.name + "\"")
-        chart_file.write("\n  Artist = \"" + self.band + "\"")
-        chart_file.write("\n  Charter = \"Next Level\"")
-        chart_file.write("\n  Album = \"" + self.disc + "\"")
-        chart_file.write("\n  Year = \", " + str(self.year) + "\"")
-        chart_file.write("\n  Offset = " + str(int(self.delay / 1000)) )    #TODO: remove 3sec delay
-        #chart_file.write("\n  Offset = 0")    #TODO: remove 3sec delay
-        chart_file.write("\n  Resolution = " + str(int(res)))
-        chart_file.write("\n  Player2 = bass")
-        chart_file.write("\n  Difficulty = " + str(self.diffs[4]))  #Band dificulty
-        chart_file.write("\n  Genre = \"Rock Argentino\"")
-        chart_file.write("\n  MusicStream = \"song.ogg\"")
-        chart_file.write("\n  GuitarStream = \"guitar.ogg\"")
-        chart_file.write("\n  RhythmStream = \"rhythm.ogg\"")
-        chart_file.write("\n  DrumStream = \"drums.ogg\"")
-        chart_file.write("\n  VocalStream = \"vocals.ogg\"")
-        chart_file.write("\n}\n")
-        chart_file.close()
 
     def charts_sync_track(self, bmp_data:dict, debug = False):
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
-        chart_file.write("[SyncTrack]")
-        chart_file.write("\n{")
+        # chart_file = open(self.chart_file, "a", encoding='utf-8')
+        # chart_file.write("[SyncTrack]")
+        # chart_file.write("\n{")
         for data in bmp_data:
+            match str(data['type']):
+                case "TS":
+                    # TODO: Parse in case there's more than 2 values
+                    numerTS = int(data['value'])
+                    denomTS = 2
+                    if (int(data['value']) == 1):
+                        denomTS = 1
+                    else:
+                        denomTS = int(int(data['value']) / 2)
+                    chartMidiFile.addTimeSignature(0, int(data['tick']), numerTS, denomTS, 24)
+                case "B":
+                    this_tempo_change = int(int(data['value']) / 1000)
+                    chartMidiFile.addTempo(0, int(data['time']), this_tempo_change)
+            
             line_data = "\n  "
             #line_data += str(data['time'])
             line_data += str(data['tick'])
@@ -425,17 +426,18 @@ class Song(object):
             line_data += str(data['value'])
             #line_data += "\t"
             #line_data += str(data['tick'])
-            chart_file.write(line_data)
-        chart_file.write("\n}\n")
-        chart_file.close()
+            # chart_file.write(line_data)
+        # chart_file.write("\n}\n")
+        # chart_file.close()
+
 
     '''
     def charts_pulse(self, bmp_data:dict, inst_pulse:dict, debug = False):
         #TODO: Convert all 'time' to 'tick' with BPMs
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
+        # chart_file =open(self.chart_file, "a", encoding='utf-8')
 
-        chart_file.write("[ExpertDrums]")
-        chart_file.write("\n{")
+        # chart_file.write("[ExpertDrums]")
+        # chart_file.write("\n{")
 
         notes_list = []
         for this_pulse in inst_pulse:
@@ -459,59 +461,66 @@ class Song(object):
             line_data += str(data['type'])
             line_data += " "
             line_data += str(data['value'])
-            chart_file.write(line_data)
-        chart_file.write("\n}\n")
-        chart_file.close()
+            # chart_file.write(line_data)
+        # chart_file.write("\n}\n")
+        # chart_file.close()
     '''
 
     def charts_lyrics(self, bpm_data:dict, debug = False):
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
-        chart_file.write("[Events]")
-        chart_file.write("\n{")
+        chartMidiFile.addTrackName(3, 0, "PART VOCALS")
         for this_phrase in self.Tracks[3].Lyrics.verses:
-            this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
-            event_line = "\n  "
+            tick_start_time = int(SwapTimeForDis(this_phrase.time, bpm_data))
+            tick_end_time = int(SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data))
+            tick_full_length = tick_end_time - tick_start_time
+            chartMidiFile.addNote(3, 0, 105, tick_start_time, tick_full_length, 100)
             #event_line += str(this_phrase.time)
-            event_line += str(int(this_tick))
-            event_line += " = E \"phrase_start\""
-            chart_file.write(event_line)
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
-                event_line = "\n  "
+                this_tick_length = SwapTimeForDis(this_syll['time'] + this_syll['len'], bpm_data)
+
+                # Setting the note pitch to C3 just for now?
+                this_tick_pitch = (36 + (12*3))
                 #event_line += str(this_syll['time'])
-                event_line += str(int(this_tick))
-                event_line += " = E \"lyric "
-                event_line += str(this_syll['note'])
-                event_line += "\""
-                chart_file.write(event_line)
-            event_line = "\n  "
-            this_tick = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
-            #event_line += str(this_phrase.time + this_phrase.len)
-            event_line += str(int(this_tick))
-            event_line += " = E \"phrase_end\""
-            chart_file.write(event_line)
-        chart_file.write("\n}\n")
-        chart_file.close()
+                chartMidiFile.addNote(3, 0, this_tick_pitch, int(this_tick), int(this_tick_length), 100)
+                # chart_file.write(event_line)
 
     def charts_inst(self, bmp_data:dict, debug = False):
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
+        # chart_file =open(self.chart_file, "a", encoding='utf-8')
+        this_inst_track = -1
         for this_inst in self.Tracks:
             if this_inst.id_num < 3:
                 this_inst_name = this_inst.name
                 match this_inst_name:
                     case "guitar":
-                        this_inst_name = "Single"
+                        this_inst_track = 0
+                        chartMidiFile.addTrackName(this_inst_track, 0, "PART GUITAR")
                     case "rhythm":
-                        this_inst_name = "DoubleBass"
+                        this_inst_track = 1
+                        chartMidiFile.addTrackName(this_inst_track, 0, "PART BASS")
                     case "drums":
-                        this_inst_name = "Drums"
+                        this_inst_track = 2
+                        chartMidiFile.addTrackName(this_inst_track, 0, "PART DRUMS")
                     case _:
+                        this_inst_track = -1
                         this_inst_name = ""
             
                 for this_diff in reversed(this_inst.Diffs):
                     this_diff_name = this_diff.name
-                    chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
-                    chart_file.write("\n{")
+                    # chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
+                    # chart_file.write("\n{")
+
+                    # Setting this to expert by default (won't be used)
+                    diff_note_base = 96
+                    match this_diff_name:
+                        case "easy":
+                            diff_note_base = 60
+                        case "medium":
+                            diff_note_base = 72
+                        case "hard":
+                            diff_note_base = 84
+                        case _:
+                            diff_note_base = 96
+
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         line_data = "\n  "
@@ -521,15 +530,21 @@ class Song(object):
                         line_data += str(data['type'])
                         line_data += " "
                         line_data += str(data['len'])
+                        if str(data['type']) == "S 2":
+                            chartMidiFile.addNote(this_inst_track, 0, 116, int(data['tick']), data['len'], 100)
+                        else:
+                            #final_note_length = data['len'] == 0 ? 100 : data['len']
+                            final_note_length = 100 if data['len'] == 0 else data['len']
+                            chartMidiFile.addNote(this_inst_track, 0, diff_note_base + int(data['type'][2:]), int(data['tick']), final_note_length, 100)
                         '''
                         line_data += "\t"
                         line_data += str(data['value'])
                         line_data += "\t"
                         line_data += str(data['time'])
                         '''
-                        chart_file.write(line_data)
-                    chart_file.write("\n}\n")
-        chart_file.close()
+                        # chart_file.write(line_data)
+                    # chart_file.write("\n}\n")
+        # chart_file.close()
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
