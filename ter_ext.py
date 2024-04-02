@@ -475,7 +475,6 @@ class Song(object):
             chartMidiFile.addNote(3, 0, 105, tick_start_time, tick_full_length, 100)
             #event_line += str(this_phrase.time)
             countSyll = 0
-            final_tick_scale = 36
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
                 this_tick_length = SwapTimeForDis(this_syll['len'], bpm_data)
@@ -492,24 +491,22 @@ class Song(object):
                         this_tick_has_mod = currentPitch['mods']   
 
                 #bruh this hack is to see if we can make it higher or lower
+                final_tick_pitch = 36
                 if countSyll > 0:
                     if this_tick_scale > prev_tick_scale:
                         # verify that the diff is higher
                         if (this_tick_scale - prev_tick_scale) > 2:
-                            final_tick_scale = final_tick_scale + 12
+                            final_tick_pitch = final_tick_pitch + 12
                         elif int(this_tick_note) == 0:
                             this_tick_note = 12
                     elif this_tick_scale < prev_tick_scale:
                         # verify that the diff is higher
                         if (prev_tick_scale - this_tick_scale) > 2:
-                            final_tick_scale = final_tick_scale - 12
+                            final_tick_pitch = final_tick_pitch - 12
                         elif int(this_tick_note) == 0:
                             this_tick_note = 12
-                #else:
-                    #final_tick_scale = 36 + (12 * (int(this_tick_scale)/4))
-                    #final_tick_scale = 36 + (12*(math.ceil((int(this_tick_scale) + 1)/4)))
 
-                this_tick_pitch = int(final_tick_scale) + int(this_tick_note)
+                this_tick_pitch = (final_tick_pitch) + int(this_tick_note)
 
                 #this_tick_pitch = (36 + (12*3))
                 #event_line += str(this_syll['time'])
