@@ -390,11 +390,11 @@ class Song(object):
         self.chart_file += "\\"
         self.chart_file += "notes.mid"
         global chartMidiFile
-        chartMidiFile = MIDIFile(inst_max_tracks, eventtime_is_ticks=True, ticks_per_quarternote=int(res), deinterleave=False)
         
         inst_pulse = self.Tracks[2].pulse
         bmp_data, res, delay = analize_pulse(inst_pulse, debug)
         self.delay += delay
+        chartMidiFile = MIDIFile(inst_max_tracks, eventtime_is_ticks=True, ticks_per_quarternote=int(res), deinterleave=False)
 
         self.save_charts_meta(res, debug)
         self.charts_sync_track(bmp_data, debug)
@@ -468,14 +468,21 @@ class Song(object):
 
     def charts_lyrics(self, bpm_data:dict, debug = False):
         chartMidiFile.addTrackName(inst_vocals_track, inst_main_channel, "PART VOCALS")
+        prev_syl_has_mod = 0
+        tick_syl_sp_start = 0
+        tick_syl_sp_end = 0
+
         for this_phrase in self.Tracks[3].Lyrics.verses:
             this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
-            chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, tick_start_time, tick_full_length, 100)
+            this_tick_length = SwapTimeForDis(this_phrase.len, bpm_data)
+            chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick), int(this_tick_length), 100)
 
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
-                #this_tick_length = SwapTimeForDis(this_syll['len'], bpm_data)
-                this_tick_length = int(this_syll['len'])
+                this_tick_length = SwapTimeForDis(this_syll['len'], bpm_data)
+                this_tick_syl_scale = 0
+                this_tick_syl_note = 0
+                this_tick_syl_has_mod = 0
 
                 for currentPitch in self.Tracks[3].Lyrics.pitch:
                     if this_syll['time'] == currentPitch['time']:
@@ -499,15 +506,25 @@ class Song(object):
                 if this_tick_syl_scale > this_tick_syl_scale:
                     # verify that the diff is higher
                     if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
-                        this_tick_actual_note = this_tick_syl_note + 12
-
+                        if this_tick_syl_note + 12 + this_tick_actual_note < 85:
+                            this_tick_actual_note = this_tick_syl_note + 12
                 this_tick_midi_note = this_tick_base_oct + this_tick_actual_note
-                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), this_tick_length - 20, 100)
-                this_tick_final_lyr = str(this_syll['note'])
-                if this_tick_syl_has_mod == 1:
-                    this_tick_final_lyr += "+"
+                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), int(this_tick_length), 100)
 
+                # Adding lyrics events
+                this_tick_final_lyr = str(this_syll['note'])
                 chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
+
+                # Trying to keep the star power phases
+                if (this_tick_syl_has_mod == 1 and prev_syl_has_mod == 0):
+                    tick_syl_sp_start = int(this_tick)
+                elif (this_tick_syl_has_mod == 0 and prev_syl_has_mod == 1):
+                    tick_syl_sp_end = int(this_tick) + int(this_tick_length)
+                    tick_syl_sp_length = tick_syl_sp_end - tick_syl_sp_start
+                    chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_star_power, tick_syl_sp_start, tick_syl_sp_length, 100)
+
+                # DIRTY WORK TO KEEP SP PHASES
+                prev_syl_has_mod = int(this_tick_syl_has_mod)
 
     def charts_inst(self, bmp_data:dict, debug = False):
         this_inst_midi_track = -1
@@ -544,10 +561,10 @@ class Song(object):
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         if str(data['type']) == "S 2":
-                            chartMidiFile.addNote(this_inst_track, inst_main_channel, note_event_star_power, data['tick'], data['len'], 100)
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), data['len'], 100)
                         else:
                             final_note_length = 100 if data['len'] == 0 else data['len']
-                            chartMidiFile.addNote(this_inst_track, inst_main_channel, diff_note_base + int(data['type'][2:]), data['tick'], final_note_length, 100)
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']), final_note_length, 100)
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
