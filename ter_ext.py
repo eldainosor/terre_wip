@@ -373,7 +373,7 @@ class Song(object):
         self.chart_file += "notes.mid"
 
         global chartMidiFile
-        chartMidiFile = MIDIFile(4, eventtime_is_ticks=True, ticks_per_quarternote=480, deinterleave=False)
+        chartMidiFile = MIDIFile(4, eventtime_is_ticks=True, ticks_per_quarternote=RESOLUTION, deinterleave=False)
         
         inst_pulse = self.Tracks[2].pulse
         bmp_data, res, delay = analize_pulse(inst_pulse, debug)
@@ -486,14 +486,14 @@ class Song(object):
                 this_tick_has_mod = 0
                 for currentPitch in self.Tracks[3].Lyrics.pitch:
                     if this_syll['time'] == currentPitch['time']:
-                        this_tick_note = currentPitch['note']
-                        this_tick_scale = currentPitch['scale']
-                        this_tick_has_mod = currentPitch['mods']   
+                        this_tick_syl_note = int(currentPitch['note'])
+                        this_tick_syl_scale = int(currentPitch['scale'])
+                        this_tick_syl_has_mod = int(currentPitch['mods'])   
 
                 #bruh this hack is to see if we can make it higher or lower
 
                 # Lets find out first which scale we will be singing on
-                match this_tick_scale:
+                match this_tick_syl_scale:
                     case 0 | 1 | 2:
                         this_tick_base_oct = 36
                     case 3 | 4 | 5:
@@ -504,21 +504,17 @@ class Song(object):
                         this_tick_base_oct = 72
 
                 # Trying to fix weird pitches
-                this_tick_actual_note = this_tick_note
-                #if countSyll > 0:
-                if this_tick_scale > prev_tick_scale:
+                this_tick_actual_note = this_tick_syl_note
+                if this_tick_syl_scale > this_tick_syl_scale:
                     # verify that the diff is higher
-                    if (this_tick_scale > 0 and this_tick_note < 3):
-                        this_tick_actual_note = this_tick_note + 12
+                    if (this_tick_syl_scale > 0 and this_tick_syl_note < 3):
+                        this_tick_actual_note = this_tick_syl_note + 12
 #                    elif this_tick_scale < prev_tick_scale:
 #                        if not this_tick_scale - prev_tick_scale > -2 and this_tick_note > 8:
 #                            this_tick_actual_note = this_tick_note - 12
 
-                this_tick_pitch = (this_tick_base_oct) + int(this_tick_actual_note)
-                print(this_tick_pitch)
-                #this_tick_pitch = (36 + (12*3))
-                #event_line += str(this_syll['time'])
-                chartMidiFile.addNote(3, 0, this_tick_pitch, int(this_tick), int(this_tick_length) - 25, 100)
+                this_tick_midi_note = this_tick_base_oct + this_tick_actual_note
+                chartMidiFile.addNote(3, 0, this_tick_midi_note, int(this_tick), int(this_tick_length) - 20, 100)
                 this_tick_final_lyr = str(this_syll['note'])
                 if this_tick_has_mod == 1:
                     this_tick_final_lyr += "+"
@@ -527,7 +523,6 @@ class Song(object):
 
                 ## HACKY WAY TO IMPLEMENT LYRICS MODULATION
                 # chart_file.write(event_line)
-                countSyll = countSyll + 1
                 prev_tick_scale = this_tick_scale
             
 
