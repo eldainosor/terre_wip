@@ -389,6 +389,9 @@ class Song(object):
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
         self.chart_file += "notes.mid"
+        self.chart_dbg_file = self.dir_conv
+        self.chart_dbg_file += "\\"
+        self.chart_dbg_file += "notes.mid.debugfile"
         global chartMidiFile
         
         inst_pulse = self.Tracks[2].pulse
@@ -467,6 +470,9 @@ class Song(object):
     '''
 
     def charts_lyrics(self, bpm_data:dict, debug = False):
+        chart_debug_vocals = open(self.chart_dbg_file, "a", encoding='utf-8')
+        chart_debug_vocals.write("[VOCAL INFO]")
+        chart_debug_vocals.write("----------------------------")
         chartMidiFile.addTrackName(inst_vocals_track, inst_main_channel, "PART VOCALS")
         prev_syl_has_mod = 0
         tick_syl_sp_start = 0
@@ -502,14 +508,23 @@ class Song(object):
                         this_tick_base_oct = 72
 
                 # Trying to fix weird pitches
-                this_tick_actual_note = this_tick_syl_note
+                this_tick_actual_note = this_tick_syl_note + this_tick_base_oct
                 if this_tick_syl_scale > this_tick_syl_scale:
-                    # verify that the diff is higher
-                    if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
+                    # make sure to put the tone lower when the note is higher than 8
+                    if (this_tick_syl_scale > 0 and this_tick_syl_note > 7):
+                        # ??????
+                        this_tick_base_oct = this_tick_base_oct - 12
+                    if (this_tick_syl_scale > 0 and this_tick_syl_note > 7):
+                        this_tick_midi_note = (this_tick_base_oct - 12) + this_tick_actual_note
+                    else:
+                        this_tick_midi_note = this_tick_base_oct + this_tick_actual_note
+
+                        '''
                         if this_tick_syl_note + 12 + this_tick_actual_note < 85:
                             this_tick_actual_note = this_tick_syl_note + 12
+                        '''
                 this_tick_midi_note = this_tick_base_oct + this_tick_actual_note
-                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), int(this_tick_length), 100)
+                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), int(this_tick_length) - 20, 100)
 
                 # Adding lyrics events
                 this_tick_final_lyr = str(this_syll['note'])
@@ -525,6 +540,23 @@ class Song(object):
 
                 # DIRTY WORK TO KEEP SP PHASES
                 prev_syl_has_mod = int(this_tick_syl_has_mod)
+
+                # Solo para enterarme
+                chart_debug_vocals.write("silaba: " + str(this_tick_final_lyr))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor tick: " + str(int(this_tick)))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor note: " + str(this_tick_syl_note))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor scale: " + str(this_tick_syl_scale))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor base octava: " + str(this_tick_base_oct))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor nota midi: " + str(this_tick_actual_note))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("----------------------------")
+                chart_debug_vocals.write("\n")
+        chart_debug_vocals.close()
 
     def charts_inst(self, bmp_data:dict, debug = False):
         this_inst_midi_track = -1
