@@ -8,11 +8,31 @@ import cbr, disc, band
 from ter_conv import *
 #from itertools import zip_longest
 
+from midiutil.MidiFile import MIDIFile
+
 # Config Constants 
 #debug = True    #DEBUG
 data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
+
+# This is just needed for MIDI channels and just the main track
+inst_max_tracks = 4
+inst_guitar_track = 0
+inst_rhythm_track = 1
+inst_drums_track = 2
+inst_vocals_track = 3
+inst_main_channel = 0
+
+# Additional MIDI values according to difficulty
+diff_start_point_note_easy = 60
+diff_start_point_note_medium = 72
+diff_start_point_note_hard = 84
+diff_start_point_note_expert = 96
+
+# Extra MIDI values for events
+note_event_star_power = 116
+note_event_vocal_phrase = 105
 
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
@@ -365,10 +385,12 @@ class Song(object):
         '''
             
     def convert_charts(self, cfg:Settings, debug = False):
-        print("Creating notes.chart ...")
+        print("Creating notes.mid ...")
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
-        self.chart_file += "notes.chart"
+        self.chart_file += "notes.mid"
+        global chartMidiFile
+        chartMidiFile = MIDIFile(inst_max_tracks, eventtime_is_ticks=True, ticks_per_quarternote=int(res), deinterleave=False)
         
         inst_pulse = self.Tracks[2].pulse
         bmp_data, res, delay = analize_pulse(inst_pulse, debug)
@@ -383,51 +405,31 @@ class Song(object):
             #self.charts_pulse(bmp_data, inst_pulse, debug)
         '''
 
+        with open(self.chart_file, 'wb') as outf:
+            chartMidiFile.writeFile(outf)
+
     def save_charts_meta(self, res:int, debug = False):
         try:
             os.makedirs(self.dir_conv)
         except:
             #print("[", self.dir_conv , "] already exists")
             pass
-        chart_file = open(self.chart_file, "w", encoding='utf-8')
-        chart_file.write("[Song]")
-        chart_file.write("\n{")
-        chart_file.write("\n  Name = \"" + self.name + "\"")
-        chart_file.write("\n  Artist = \"" + self.band + "\"")
-        chart_file.write("\n  Charter = \"Next Level\"")
-        chart_file.write("\n  Album = \"" + self.disc + "\"")
-        chart_file.write("\n  Year = \", " + str(self.year) + "\"")
-        chart_file.write("\n  Offset = " + str(int(self.delay / 1000)) )    #TODO: remove 3sec delay
-        #chart_file.write("\n  Offset = 0")    #TODO: remove 3sec delay
-        chart_file.write("\n  Resolution = " + str(int(res)))
-        chart_file.write("\n  Player2 = bass")
-        chart_file.write("\n  Difficulty = " + str(self.diffs[4]))  #Band dificulty
-        chart_file.write("\n  Genre = \"Rock Argentino\"")
-        chart_file.write("\n  MusicStream = \"song.ogg\"")
-        chart_file.write("\n  GuitarStream = \"guitar.ogg\"")
-        chart_file.write("\n  RhythmStream = \"rhythm.ogg\"")
-        chart_file.write("\n  DrumStream = \"drums.ogg\"")
-        chart_file.write("\n  VocalStream = \"vocals.ogg\"")
-        chart_file.write("\n}\n")
-        chart_file.close()
 
     def charts_sync_track(self, bmp_data:dict, debug = False):
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
-        chart_file.write("[SyncTrack]")
-        chart_file.write("\n{")
         for data in bmp_data:
-            line_data = "\n  "
-            #line_data += str(data['time'])
-            line_data += str(data['tick'])
-            line_data += " = "
-            line_data += str(data['type'])
-            line_data += " "
-            line_data += str(data['value'])
-            #line_data += "\t"
-            #line_data += str(data['tick'])
-            chart_file.write(line_data)
-        chart_file.write("\n}\n")
-        chart_file.close()
+            match str(data['type']):
+                case "TS":
+                    # TODO: Parse in case there's more than 2 values
+                    numerTS = int(data['value'])
+                    denomTS = 2
+                    if (int(data['value']) == 1):
+                        denomTS = 1
+                    else:
+                        denomTS = int(int(data['value']) / 2)
+                    chartMidiFile.addTimeSignature(inst_main_channel, data['tick'], numerTS, denomTS, 24)
+                case "B":
+                    this_tempo_change = int(data['value'] / 1000)
+                    chartMidiFile.addTempo(inst_main_channel, data['tick'], this_tempo_change)
 
     '''
     def charts_pulse(self, bmp_data:dict, inst_pulse:dict, debug = False):
@@ -465,71 +467,87 @@ class Song(object):
     '''
 
     def charts_lyrics(self, bpm_data:dict, debug = False):
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
-        chart_file.write("[Events]")
-        chart_file.write("\n{")
+        chartMidiFile.addTrackName(inst_vocals_track, inst_main_channel, "PART VOCALS")
         for this_phrase in self.Tracks[3].Lyrics.verses:
             this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
-            event_line = "\n  "
-            #event_line += str(this_phrase.time)
-            event_line += str(int(this_tick))
-            event_line += " = E \"phrase_start\""
-            chart_file.write(event_line)
+            chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, tick_start_time, tick_full_length, 100)
+
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
-                event_line = "\n  "
-                #event_line += str(this_syll['time'])
-                event_line += str(int(this_tick))
-                event_line += " = E \"lyric "
-                event_line += str(this_syll['note'])
-                event_line += "\""
-                chart_file.write(event_line)
-            event_line = "\n  "
-            this_tick = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
-            #event_line += str(this_phrase.time + this_phrase.len)
-            event_line += str(int(this_tick))
-            event_line += " = E \"phrase_end\""
-            chart_file.write(event_line)
-        chart_file.write("\n}\n")
-        chart_file.close()
+                #this_tick_length = SwapTimeForDis(this_syll['len'], bpm_data)
+                this_tick_length = int(this_syll['len'])
+
+                for currentPitch in self.Tracks[3].Lyrics.pitch:
+                    if this_syll['time'] == currentPitch['time']:
+                        this_tick_syl_note = int(currentPitch['note'])
+                        this_tick_syl_scale = int(currentPitch['scale'])
+                        this_tick_syl_has_mod = int(currentPitch['mods'])
+
+                # Lets find out first which scale we will be singing on
+                match this_tick_syl_scale:
+                    case 0 | 1 | 2:
+                        this_tick_base_oct = 36
+                    case 3 | 4 | 5:
+                        this_tick_base_oct = 48
+                    case 6 | 7 | 8:
+                        this_tick_base_oct = 60
+                    case 9 | 10 | 11:
+                        this_tick_base_oct = 72
+
+                # Trying to fix weird pitches
+                this_tick_actual_note = this_tick_syl_note
+                if this_tick_syl_scale > this_tick_syl_scale:
+                    # verify that the diff is higher
+                    if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
+                        this_tick_actual_note = this_tick_syl_note + 12
+
+                this_tick_midi_note = this_tick_base_oct + this_tick_actual_note
+                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), this_tick_length - 20, 100)
+                this_tick_final_lyr = str(this_syll['note'])
+                if this_tick_syl_has_mod == 1:
+                    this_tick_final_lyr += "+"
+
+                chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
 
     def charts_inst(self, bmp_data:dict, debug = False):
-        chart_file = open(self.chart_file, "a", encoding='utf-8')
+        this_inst_midi_track = -1
         for this_inst in self.Tracks:
             if this_inst.id_num < 3:
                 this_inst_name = this_inst.name
                 match this_inst_name:
                     case "guitar":
-                        this_inst_name = "Single"
+                        this_inst_midi_track = inst_guitar_track
+                        this_inst_name = "GUITAR"
                     case "rhythm":
-                        this_inst_name = "DoubleBass"
+                        this_inst_midi_track = inst_rhythm_track
+                        this_inst_name = "BASS"
                     case "drums":
-                        this_inst_name = "Drums"
+                        this_inst_midi_track = inst_drums_track
+                        this_inst_name = "DRUMS"
                     case _:
                         this_inst_name = ""
+                chartMidiFile.addTrackName(this_inst_midi_track, inst_main_channel, "PART " + this_inst_name)
             
                 for this_diff in reversed(this_inst.Diffs):
                     this_diff_name = this_diff.name
-                    chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
-                    chart_file.write("\n{")
+
+                    match this_diff_name:
+                        case "easy":
+                            diff_note_base = diff_start_point_note_easy
+                        case "medium":
+                            diff_note_base = diff_start_point_note_medium
+                        case "hard":
+                            diff_note_base = diff_start_point_note_hard
+                        case _:
+                            diff_note_base = diff_start_point_note_expert
+
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
-                        line_data = "\n  "
-                        #line_data += str(data['time'])
-                        line_data += str(data['tick'])
-                        line_data += " = "
-                        line_data += str(data['type'])
-                        line_data += " "
-                        line_data += str(data['len'])
-                        '''
-                        line_data += "\t"
-                        line_data += str(data['value'])
-                        line_data += "\t"
-                        line_data += str(data['time'])
-                        '''
-                        chart_file.write(line_data)
-                    chart_file.write("\n}\n")
-        chart_file.close()
+                        if str(data['type']) == "S 2":
+                            chartMidiFile.addNote(this_inst_track, inst_main_channel, note_event_star_power, data['tick'], data['len'], 100)
+                        else:
+                            final_note_length = 100 if data['len'] == 0 else data['len']
+                            chartMidiFile.addNote(this_inst_track, inst_main_channel, diff_note_base + int(data['type'][2:]), data['tick'], final_note_length, 100)
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
