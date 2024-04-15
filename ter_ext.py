@@ -501,6 +501,7 @@ class Song(object):
                     case 9 | 10 | 11:
                         this_tick_base_oct = 72
 
+                '''
                 # Trying to fix weird pitches
                 this_tick_actual_note = this_tick_syl_note
                 if this_tick_syl_scale > this_tick_syl_scale:
@@ -508,7 +509,8 @@ class Song(object):
                     if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
                         if this_tick_syl_note + 12 + this_tick_actual_note < 85:
                             this_tick_actual_note = this_tick_syl_note + 12
-                this_tick_midi_note = this_tick_base_oct + this_tick_actual_note
+                 '''
+                this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
                 chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), int(this_tick_length), 100)
 
                 # Adding lyrics events
