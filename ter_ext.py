@@ -515,6 +515,11 @@ class Song(object):
 
                 # Adding lyrics events
                 this_tick_final_lyr = str(this_syll['note'])
+
+                # This syllable does not have any pitch at all
+                if this_tick_syl_note == 0 and this_tick_syl_scale == 0:
+                    this_tick_final_lyr += "#"
+
                 chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
 
                 # Trying to keep the star power phases
