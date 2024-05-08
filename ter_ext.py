@@ -483,7 +483,7 @@ class Song(object):
         for this_phrase in self.Tracks[3].Lyrics.verses:
             this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
             this_tick_end = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
-            this_tick_length = int(tick_end_time - tick_start_time)
+            this_tick_length = int(this_tick_end - this_tick)
             chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick), int(this_tick_length), 100)
 
             for this_syll in this_phrase.syllables:
@@ -495,6 +495,7 @@ class Song(object):
                 this_tick_syl_note = 0
                 this_tick_syl_has_mod = 0
 
+
                 for currentPitch in self.Tracks[3].Lyrics.pitch:
                     if this_syll['time'] == currentPitch['time']:
                         this_tick_syl_note = int(currentPitch['note'])
@@ -503,19 +504,19 @@ class Song(object):
 
                 # Lets find out first which scale we will be singing on
                 match this_tick_syl_scale:
-                    case 0 | 1 | 2:
-                        this_tick_base_oct = 36
-                    case 3 | 4 | 5:
+#                    case 0 | 1 | 2:
+#                        this_tick_base_oct = 36
+                    case 0 | 1 | 2 | 3 | 4 | 5:
                         this_tick_base_oct = 48
-                    case 6 | 7 | 8:
+                    case 6 | 7 | 8 | 9 | 10 | 11:
                         this_tick_base_oct = 60
-                    case 9 | 10 | 11:
-                        this_tick_base_oct = 72
+#                    case 9 | 10 | 11:
+#                        this_tick_base_oct = 72
 
                 '''
                 # Trying to fix weird pitches
                 this_tick_actual_note = this_tick_syl_note
-                if this_tick_syl_scale > this_tick_syl_scale:
+                if this_tick_syl_scale > prev_tick_syl_scale:
                     # verify that the diff is higher
                     if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
                         if this_tick_syl_note + 12 + this_tick_actual_note < 85:
@@ -523,7 +524,7 @@ class Song(object):
                 '''
 
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
-                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), int(this_tick_length), 100)
+                chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), this_tick_length, 100)
 
                 # Adding lyrics events
                 this_tick_final_lyr = str(this_syll['note'])
