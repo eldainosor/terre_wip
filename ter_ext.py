@@ -482,7 +482,8 @@ class Song(object):
 
         for this_phrase in self.Tracks[3].Lyrics.verses:
             this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
-            this_tick_length = SwapTimeForDis(this_phrase.len, bpm_data)
+            this_tick_end = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
+            this_tick_length = int(tick_end_time - tick_start_time)
             chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick), int(this_tick_length), 100)
 
             for this_syll in this_phrase.syllables:
