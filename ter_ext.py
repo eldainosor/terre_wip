@@ -603,9 +603,9 @@ class Song(object):
                         case "medium":
                             diff_note_base = diff_start_point_note_medium
                         case "hard":
-                            diff_note_base = diff_start_point_note_hard
-                        case _:
                             diff_note_base = diff_start_point_note_expert
+                        case _:
+                            diff_note_base = diff_start_point_note_hard
 
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
