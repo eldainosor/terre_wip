@@ -488,7 +488,9 @@ class Song(object):
 
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
-                this_tick_length = SwapTimeForDis(this_syll['len'], bpm_data)
+                # EXPERIMENTAL
+                this_tick_end_stamp = SwapTimeForDis(this_syll['time'] + this_syll['len'], bpm_data)
+                this_tick_length = int(this_tick_end_stamp - this_tick)
                 this_tick_syl_scale = 0
                 this_tick_syl_note = 0
                 this_tick_syl_has_mod = 0
