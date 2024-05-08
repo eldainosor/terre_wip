@@ -389,6 +389,9 @@ class Song(object):
         self.chart_file = self.dir_conv
         self.chart_file += "\\"
         self.chart_file += "notes.mid"
+        self.chart_dbg_file = self.dir_conv
+        self.chart_dbg_file += "\\"
+        self.chart_dbg_file += "notes.mid.debugfile"
         global chartMidiFile
         
         inst_pulse = self.Tracks[2].pulse
@@ -467,6 +470,11 @@ class Song(object):
     '''
 
     def charts_lyrics(self, bpm_data:dict, debug = False):
+        chart_debug_vocals = open(self.chart_dbg_file, "a", encoding='utf-8')
+        chart_debug_vocals.write("[VOCAL INFO]")
+        chart_debug_vocals.write("\n")
+        chart_debug_vocals.write("----------------------------")
+        chart_debug_vocals.write("\n")
         chartMidiFile.addTrackName(inst_vocals_track, inst_main_channel, "PART VOCALS")
         prev_syl_has_mod = 0
         tick_syl_sp_start = 0
@@ -509,7 +517,8 @@ class Song(object):
                     if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
                         if this_tick_syl_note + 12 + this_tick_actual_note < 85:
                             this_tick_actual_note = this_tick_syl_note + 12
-                 '''
+                '''
+
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
                 chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), int(this_tick_length), 100)
 
@@ -522,6 +531,34 @@ class Song(object):
 
                 chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
 
+                chart_debug_vocals.write("silaba: " + str(this_tick_final_lyr))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor tick: " + str(this_tick) + "(valor int:" + str(int(this_tick)))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor length: " + str(this_tick_length) + "(valor int:" + str(int(this_tick_length)))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor note: " + str(this_tick_syl_note) + "(valor int:" + str(int(this_tick_syl_note)) + ")")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor scale: " + str(this_tick_syl_scale) + "(valor int:" + str(int(this_tick_syl_scale)) + ")")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor base octava: " + str(this_tick_base_oct))
+                chart_debug_vocals.write("\n")
+                notas_musicales_nom_eng = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+                match this_tick_syl_scale:
+                    case 0 | 1 | 2:
+                        nota_musical_octava = 2
+                    case 3 | 4 | 5:
+                        nota_musical_octava = 3
+                    case 6 | 7 | 8:
+                        nota_musical_octava = 4
+                    case 9 | 10 | 11:
+                        nota_musical_octava = 5
+                chart_debug_vocals.write("valor nota midi: " + str(this_tick_midi_note) + "(valor nota musical: " + notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava) + ")")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("----------------------------")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("\n")
+
                 # Trying to keep the star power phases
                 if (this_tick_syl_has_mod == 1 and prev_syl_has_mod == 0):
                     tick_syl_sp_start = int(this_tick)
@@ -532,6 +569,7 @@ class Song(object):
 
                 # DIRTY WORK TO KEEP SP PHASES
                 prev_syl_has_mod = int(this_tick_syl_has_mod)
+        chart_debug_vocals.close()
 
     def charts_inst(self, bmp_data:dict, debug = False):
         this_inst_midi_track = -1
