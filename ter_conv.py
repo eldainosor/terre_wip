@@ -146,6 +146,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
     mods_list = []
     for this_note in charts:
         #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN, 0x02 ???
+        #                                                         0x11 HOPO+STAR "N 5", 0x21 UP+STAR,  0x31 DOWN+STAR
         note_in = {
             "time":     int(this_note['time']),
             "type":     "N " + str(this_note['note']),
@@ -153,9 +154,9 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         }
         notes_list.append(note_in)
         
-        has_sp = this_note['mods'] & 0x01
-        has_hopo = this_note['mods'] & 0x10
-        has_strum = this_note['mods'] & (0x20 | 0x30)
+        has_sp = this_note['mods'] & (0x01 | 0x11 | 0x21 | 0x31)
+        has_hopo = this_note['mods'] & (0x10 | 0x11)
+        has_strum = this_note['mods'] & (0x20 | 0x30 | 0x21 | 0x31)
         has_other = this_note['mods'] & 0x0E  #DEBUG
 
         if has_sp:
