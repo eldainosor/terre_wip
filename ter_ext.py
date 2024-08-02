@@ -31,8 +31,10 @@ diff_start_point_note_hard = 84
 diff_start_point_note_expert = 96
 
 # Extra MIDI values for events
-note_event_star_power = 116
+note_event_force_hopo_offset = 5
+note_event_force_strum_offset = 6
 note_event_vocal_phrase = 105
+note_event_star_power = 116
 
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
@@ -598,11 +600,11 @@ class Song(object):
                     this_diff_name = this_diff.name
 
                     match this_diff_name:
-                        case "medium":
+                        case "easy":
                             diff_note_base = diff_start_point_note_easy
-                        case "hard":
+                        case "medium":
                             diff_note_base = diff_start_point_note_medium
-                        case "expert":
+                        case "hard":
                             diff_note_base = diff_start_point_note_expert
                         case _:
                             diff_note_base = diff_start_point_note_hard
@@ -610,7 +612,11 @@ class Song(object):
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         if str(data['type']) == "S 2":
-                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), data['len'], 100)
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), int(data['len']), 100)
+                        elif str(data['type']) == "K 2":
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']), int(data['len']), 100)
+                        elif str(data['type']) == "W 2":
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']), int(data['len']), 100)
                         else:
                             final_note_length = 100 if data['len'] == 0 else data['len']
                             chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']), final_note_length, 100)
