@@ -155,10 +155,36 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         
         has_sp = this_note['mods'] & 0x01
         has_hopo = this_note['mods'] & 0x10
-        has_strum = this_note['mods'] & 0x20
+        has_upstrum = this_note['mods'] & 0x20
         has_other = this_note['mods'] & 0x0E  #DEBUG
+        # Unneeded note mode parsing
+        has_sp_and_hopo = this_note['mods'] & 0x11
+        has_sp_and_upstrum = this_note['mods'] & 0x21
+        has_sp_and_downstrum = this_note['mods'] & 0x21
+        has_downstrum = this_note['mods'] & 0x30
 
         if has_sp:
+            note_in = {
+                "time":     int(this_note['time']),
+                "type":     "S " + str(this_note['note']),
+                "value":    int(this_note['len'])
+            }
+            sp_list.append(note_in)
+        if has_sp_and_hopo:
+            note_in = {
+                "time":     int(this_note['time']),
+                "type":     "S " + str(this_note['note']),
+                "value":    int(this_note['len'])
+            }
+            sp_list.append(note_in)
+        if has_sp_and_upstrum:
+            note_in = {
+                "time":     int(this_note['time']),
+                "type":     "S " + str(this_note['note']),
+                "value":    int(this_note['len'])
+            }
+            sp_list.append(note_in)
+        if has_sp_and_downstrum:
             note_in = {
                 "time":     int(this_note['time']),
                 "type":     "S " + str(this_note['note']),
@@ -172,7 +198,22 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 "value":    int(this_note['len'])
             }
             hopo_list.append(note_in)
-        if has_strum:
+        if has_sp_and_hopo:
+            note_in = {
+                "time":     int(this_note['time']),
+                "type":     "N 5",
+                "value":    int(this_note['len'])
+            }
+            hopo_list.append(note_in)
+        if has_upstrum:
+            # TODO: What kind of modifier is this?
+            note_in = {
+                "time":     int(this_note['time']),
+                "type":     "N 9",
+                "value":    int(this_note['len'])
+            }
+            strum_list.append(note_in)
+        if has_downstrum:
             # TODO: What kind of modifier is this?
             note_in = {
                 "time":     int(this_note['time']),
