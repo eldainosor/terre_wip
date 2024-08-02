@@ -598,11 +598,11 @@ class Song(object):
                     this_diff_name = this_diff.name
 
                     match this_diff_name:
-                        case "easy":
-                            diff_note_base = diff_start_point_note_easy
                         case "medium":
-                            diff_note_base = diff_start_point_note_medium
+                            diff_note_base = diff_start_point_note_easy
                         case "hard":
+                            diff_note_base = diff_start_point_note_medium
+                        case "expert":
                             diff_note_base = diff_start_point_note_expert
                         case _:
                             diff_note_base = diff_start_point_note_hard
