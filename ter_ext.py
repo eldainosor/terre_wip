@@ -599,13 +599,13 @@ class Song(object):
 
                     match this_diff_name:
                         case "easy":
-                            diff_note_base = diff_start_point_note_easy
-                        case "medium":
                             diff_note_base = diff_start_point_note_medium
-                        case "hard":
+                        case "medium":
                             diff_note_base = diff_start_point_note_hard
-                        case _:
+                        case "hard":
                             diff_note_base = diff_start_point_note_expert
+                        case _:
+                            diff_note_base = diff_start_point_note_easy
 
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
