@@ -155,7 +155,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         
         has_sp = this_note['mods'] & 0x01
         has_hopo = this_note['mods'] & 0x10
-        has_strum = this_note['mods'] & 0x20
+        has_strum = this_note['mods'] & (0x20 | 0x30)
         has_other = this_note['mods'] & 0x0E  #DEBUG
 
         if has_sp:
