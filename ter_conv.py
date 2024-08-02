@@ -156,7 +156,8 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         
         has_sp = this_note['mods'] & 0x01
         has_hopo = this_note['mods'] & 0x10
-        has_strum = this_note['mods'] & 0x20
+        has_up_strum = this_note['mods'] & 0x20
+        has_down_strum = this_note['mods'] & 0x30
         has_other = this_note['mods'] & 0x0E  #DEBUG
 
         if has_sp:
@@ -166,8 +167,14 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 "value":    int(this_note['len'])
             }
             sp_list.append(note_in)
-        if has_strum:
-            # TODO: What kind of modifier is this?
+        if has_up_strum:
+            note_in = {
+                "time":     int(this_note['time']),
+                "type":     "K " + str(this_note['note']),
+                "value":    int(this_note['len'])
+            }
+            strum_list.append(note_in)
+        if has_down_strum:
             note_in = {
                 "time":     int(this_note['time']),
                 "type":     "K " + str(this_note['note']),
@@ -302,7 +309,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 hopo_len += last_hopo_len
                 note_hopo_in = {
                     "time":     int(first_hopo_timing),
-                    "type":     "W 2",
+                    "type":     "W 6",
                     "value":    int(hopo_len)
                 }
                 hopo_list_clean.append(note_hopo_in)
@@ -346,7 +353,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 strum_len += last_strum_len
                 note_strum_in = {
                     "time":     int(first_strum_timing),
-                    "type":     "K 2",
+                    "type":     "K 5",
                     "value":    int(strum_len)
                 }
                 strum_list_clean.append(note_strum_in)
