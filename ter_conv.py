@@ -209,7 +209,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
             # TODO: What kind of modifier is this?
             note_in = {
                 "time":     int(this_note['time']),
-                "type":     "N 9",
+                "type":     "N 5",
                 "value":    int(this_note['len'])
             }
             strum_list.append(note_in)
@@ -217,7 +217,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
             # TODO: What kind of modifier is this?
             note_in = {
                 "time":     int(this_note['time']),
-                "type":     "N 9",
+                "type":     "N 5",
                 "value":    int(this_note['len'])
             }
             strum_list.append(note_in)
