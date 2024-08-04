@@ -33,6 +33,8 @@ diff_start_point_note_expert = 96
 # Extra MIDI values for events
 note_event_star_power = 116
 note_event_vocal_phrase = 105
+note_event_force_strum_offset = 6
+note_event_force_hopo_offset = 5
 
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
@@ -611,6 +613,10 @@ class Song(object):
                     for data in chart_data:
                         if str(data['type']) == "S 2":
                             chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), data['len'], 100)
+                        elif str(data['type']) == "H 5":
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']), data['len'], 100)
+                        elif str(data['type']) == "W 6":
+                            chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']), data['len'], 100)
                         else:
                             final_note_length = 100 if data['len'] == 0 else data['len']
                             chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']), final_note_length, 100)
