@@ -161,7 +161,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         # Unneeded note mode parsing
         has_sp_and_hopo = this_note['mods'] & 0x11 == 0x11
         has_sp_and_upstrum = this_note['mods'] & 0x21 == 0x21
-        has_sp_and_downstrum = this_note['mods'] & 0x21 == 0x21
+        has_sp_and_downstrum = this_note['mods'] & 0x31 == 0x31
         has_downstrum = this_note['mods'] & 0x30 == 0x30
 
         # Filtering the star power type of notes
@@ -198,14 +198,14 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         if has_hopo:
             note_in = {
                 "time":     int(this_note['time']),
-                "type":     "H " + str(this_note['note']),
+                "type":     "K " + str(this_note['note']),
                 "value":    int(this_note['len'])
             }
             hopo_list.append(note_in)
         if has_sp_and_hopo:
             note_in = {
                 "time":     int(this_note['time']),
-                "type":     "H " + str(this_note['note']),
+                "type":     "K " + str(this_note['note']),
                 "value":    int(this_note['len'])
             }
             hopo_list.append(note_in)
@@ -217,7 +217,6 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 "type":     "W " + str(this_note['note']),
                 "value":    int(this_note['len'])
             }
-            print("<DEBUG>: Forced strum fret mod found: " + str(note_in))   #DEBUG
             strum_list.append(note_in)
         if has_downstrum:
             note_in = {
@@ -225,7 +224,6 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 "type":     "W " + str(this_note['note']),
                 "value":    int(this_note['len'])
             }
-            print("<DEBUG>: Forced strum fret mod found: " + str(note_in))   #DEBUG
             strum_list.append(note_in)
         if has_sp_and_upstrum:
             note_in = {
@@ -233,7 +231,6 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 "type":     "W " + str(this_note['note']),
                 "value":    int(this_note['len'])
             }
-            print("<DEBUG>: Forced strum fret mod found: " + str(note_in))   #DEBUG
             strum_list.append(note_in)
         if has_sp_and_downstrum:
             note_in = {
@@ -241,7 +238,6 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
                 "type":     "W " + str(this_note['note']),
                 "value":    int(this_note['len'])
             }
-            print("<DEBUG>: Forced strum fret mod found: " + str(note_in))   #DEBUG
             strum_list.append(note_in)
 
         # Filtering other type of notes
@@ -264,30 +260,16 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
     first_timing = 0
     last_timing = 0
     last_len = 0
-    first_hopo_timing = 0
-    last_hopo_timing = 0
-    last_hopo_len = 0
-    first_strum_timing = 0
-    last_strum_timing = 0
-    last_strum_len = 0
     
     prev_timing = 0
     prev_type = "N"
     prev_len = 0
-    prev_hopo_timing = 0
-    prev_hopo_type = "N"
-    prev_hopo_len = 0
-    prev_strum_timing = 0
-    prev_strum_type = "N"
-    prev_strum_len = 0
 
     sp_counting = 0
     sp_list_clean = []
     unique_hopo_times = set()
-    hopo_counting = 0
     hopo_list_clean = []
     unique_strum_times = set()
-    strum_counting = 0
     strum_list_clean = []
     #TODO: Star Power works OK on CH and Moonscraper... not YARG, why?
     for this_star in sp_list:
@@ -338,59 +320,13 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         this_hopo_time = this_hopo['time']
         this_hopo_type = this_hopo['type']
         this_hopo_value = this_hopo['value']
-        '''
-        match hopo_counting:
-            case 0:     #Waiting for H
-                if this_hopo_type.startswith("N"):
-                    hopo_counting = 0 #Waiting for H
-                elif this_hopo_type.startswith("H"):
-                    first_hopo_timing = this_hopo_time
-                    last_hopo_timing = this_hopo_time
-                    last_hopo_len = this_hopo_value
-                    hopo_counting = 1 #Expect N
-            case 1:     #Expect N
-                if prev_hopo_timing == this_hopo_time and prev_hopo_len == this_hopo_value:
-                    hopo_counting = 1 #Keep counting
-                else:
-                    if this_hopo_type.startswith("H") and prev_hopo_type.startswith("N"):
-                        sp_counting = 1
-                    else:
-                        last_hopo_timing = prev_hopo_timing
-                        last_hopo_len = prev_hopo_len
-                        hopo_counting = 2
-            case 2:
-                hopo_len = last_hopo_timing 
-                hopo_len -= first_hopo_timing 
-                hopo_len += last_hopo_len
-                note_in = {
-                    "time":     int(first_hopo_timing),
-                    "type":     "H 5",
-                    "value":    int(hopo_len)
-                }
-                hopo_list_clean.append(note_in)
-                hopo_counting = 0
-            case _:
-                hopo_counting = 0
 
-        prev_hopo_timing = this_hopo_time
-        prev_hopo_len = this_hopo_value
-        prev_hopo_type = this_hopo_type
-        
-
-        if this_hopo_type.startswith("H"):
-            note_in = {
-                "time":     int(this_hopo_time),
-                "type":     "H 5",
-                "value":    int(this_hopo_value)
-            }
-            hopo_list_clean.append(note_in)
-        '''
-        if this_hopo_type.startswith("H"):
+        if this_hopo_type.startswith("K"):
             if this_hopo_time not in unique_hopo_times:
                 unique_hopo_times.add(this_hopo_time)
                 note_in = {
                     "time":     int(this_hopo_time),
-                    "type":     "H 5",
+                    "type":     "K 5",
                     "value":    int(this_hopo_value)
                 }
                 hopo_list_clean.append(note_in)
@@ -402,51 +338,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         this_strum_time = this_strum['time']
         this_strum_type = this_strum['type']
         this_strum_value = this_strum['value']
-        '''
-        match strum_counting:
-            case 0:     #Waiting for H
-                if this_strum_type.startswith("N"):
-                    strum_counting = 0 #Waiting for W
-                elif this_strum_type.startswith("W"):
-                    first_strum_timing = this_strum_time
-                    last_strum_timing = this_strum_time
-                    last_strum_len = this_strum_value
-                    strum_counting = 1 #Expect N
-            case 1:     #Expect N
-                if prev_strum_timing == this_strum_time and prev_strum_len == this_strum_value:
-                    strum_counting = 1 #Keep counting
-                else:
-                    if this_strum_type.startswith("W") and prev_strum_type.startswith("N"):
-                        sp_counting = 1
-                    else:
-                        last_strum_timing = prev_strum_timing
-                        last_strum_len = prev_strum_len
-                        strum_counting = 2
-            case 2:
-                strum_len = last_strum_timing 
-                strum_len -= first_strum_timing 
-                strum_len += last_strum_len
-                note_in = {
-                    "time":     int(first_strum_timing),
-                    "type":     "W 6",
-                    "value":    int(strum_len)
-                }
-                strum_list_clean.append(note_in)
-                strum_counting = 0
-            case _:
-                strum_counting = 0
-        prev_strum_timing = this_strum_time
-        prev_strum_len = this_strum_value
-        prev_strum_type = this_strum_type
 
-        if this_strum_type.startswith("W"):
-            note_in = {
-                "time":     int(this_strum_time),
-                "type":     "W 6",
-                "value":    int(this_strum_value)
-            }
-            strum_list_clean.append(note_in)
-        '''
         if this_strum_type.startswith("W"):
             if this_strum_time not in unique_strum_times:
                 unique_strum_times.add(this_strum_time)
@@ -467,13 +359,10 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
             base_bpm = FindBpm(bpm_data, this_note['time'])
             len = TimeToDis(0, this_note['value'], base_bpm['value'])
         else:
-            len = 0
+            len = 100
         notes_list[i].update({'len': int(len)})
 
-    #notes_list.extend(hopo_list)
-    #notes_list.extend(strum_list)
     notes_list = sorted(notes_list, key=lambda item: item['type'])
-    #notes_list = sorted(notes_list, key=lambda item: item['time'])
     notes_list = sorted(notes_list, key=lambda item: item['tick'])
 
     return notes_list
