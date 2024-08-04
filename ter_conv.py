@@ -161,7 +161,7 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         # Unneeded note mode parsing
         has_sp_and_hopo = this_note['mods'] & 0x11 == 0x11
         has_sp_and_upstrum = this_note['mods'] & 0x21 == 0x21
-        has_sp_and_downstrum = this_note['mods'] & 0x21 == 0x21
+        has_sp_and_downstrum = this_note['mods'] & 0x31 == 0x31
         has_downstrum = this_note['mods'] & 0x30 == 0x30
 
         if has_sp:
