@@ -288,6 +288,29 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
         
     notes_list.extend(sp_list_clean)
 
+    # Time to cleanup the HOPO/Strum notes (on charts it works as a toggle)
+    strum_and_hopo_list = []
+    strum_and_hopo_list_clean = []
+    unique_hopo_strum_times = set()
+
+    strum_and_hopo_list.extend(strum_list)
+    strum_and_hopo_list.extend(hopo_list)
+
+    for this_hopo_or_strum in strum_and_hopo_list:
+        this_hopo_or_strum_time = this_hopo_or_strum['time']
+        this_hopo_or_strum_type = this_hopo_or_strum['type']
+        this_hopo_or_strum_value = this_hopo_or_strum['value']
+        if this_hopo_or_strum_time not in unique_hopo_strum_times:
+            unique_hopo_strum_times.add(this_hopo_or_strum_time)
+            note_in = {
+                "time":     int(this_hopo_or_strum_time),
+                "type":     "N 5",
+                "value":    int(this_hopo_or_strum_value)
+            }
+            strum_and_hopo_list_clean.append(note_in)
+
+    notes_list.extend(strum_and_hopo_list_clean)
+
     for i, this_note in enumerate(notes_list):
         this_tick = SwapTimeForDis(this_note['time'], bpm_data)
 
@@ -299,8 +322,6 @@ def analize_charts(charts:dict, bpm_data:dict, debug = False):
             len = 0
         notes_list[i].update({'len': int(len)})
 
-    #notes_list.extend(hopo_list)
-    #notes_list.extend(strum_list)
     notes_list = sorted(notes_list, key=lambda item: item['type'])
     #notes_list = sorted(notes_list, key=lambda item: item['time'])
     notes_list = sorted(notes_list, key=lambda item: item['tick'])
