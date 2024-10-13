@@ -2,17 +2,41 @@
 # Python script
 # Made by Envido32
 
+# TODO clean imports, list pip install
 import os, shutil, subprocess
 import time
 import cbr, disc, band
 from ter_conv import *
 #from itertools import zip_longest
+from midiutil.MidiFile import MIDIFile
 
 # Config Constants 
 #debug = True    #DEBUG
 data_order = ("head","guitar", "rhythm", "drums", "vocals", "song")
 inst_order = ("guitar", "rhythm", "drums", "vocals", "band")
 diff_order = ("easy", "medium", "hard")
+
+# This is just needed for MIDI channels and just the main track
+# TODO: Use inst_order
+inst_max_tracks = 4
+inst_guitar_track = 0
+inst_rhythm_track = 1
+inst_drums_track = 2
+inst_vocals_track = 3
+inst_main_channel = 0
+
+# Additional MIDI values according to difficulty+
+# TODO: Use 60+12*n
+diff_start_point_note_easy = 60
+diff_start_point_note_medium = 72
+diff_start_point_note_hard = 84
+diff_start_point_note_expert = 96
+
+# Extra MIDI values for events
+note_event_force_hopo_offset = 5
+note_event_force_strum_offset = 6
+note_event_vocal_phrase = 105
+note_event_star_power = 116
 
 def copy_file(source_dir:str, source_file:str, dest_dir:str, dest_file:str):
     # Create output dir
@@ -530,6 +554,211 @@ class Song(object):
                         chart_file.write(line_data)
                     chart_file.write("\n}\n")
         chart_file.close()
+
+    def convert_midi(self, cfg:Settings, debug = False):
+        print("Creating notes.mid ...")
+        self.midi_file = self.dir_conv
+        self.midi_file += "\\"
+        self.midi_file += "notes.mid"
+        self.midi_dbg_file = self.dir_conv
+        self.midi_dbg_file += "\\"
+        self.midi_dbg_file += "notes.mid.debugfile"
+        #TODO Remove global, use local
+        #global chartMidiFile
+        
+        inst_pulse = self.Tracks[2].pulse
+        bmp_data, res, delay = analize_pulse(inst_pulse, debug)
+        self.delay += delay
+        self.chartMidiFile = MIDIFile(inst_max_tracks, eventtime_is_ticks=True, ticks_per_quarternote=int(res), deinterleave=False)
+
+        #self.save_midi_meta(res, debug) # TODO remove or use save_midi_meta
+        self.midi_sync_track(bmp_data, debug)
+        self.midi_lyrics(bmp_data, debug)
+        self.midi_inst(bmp_data, debug)
+        '''
+        if debug:
+            #self.charts_pulse(bmp_data, inst_pulse, debug)
+        '''
+
+        with open(self.midi_file, 'wb') as outf:
+            self.chartMidiFile.writeFile(outf)
+
+    # TODO remove or use save_midi_meta
+    '''
+    def save_midi_meta(self, res:int, debug = False):
+        try:
+            os.makedirs(self.dir_conv)
+        except:
+            #print("[", self.dir_conv , "] already exists")
+            pass
+    '''
+
+    def midi_sync_track(self, bmp_data:dict, debug = False):
+        for data in bmp_data:
+            match str(data['type']):
+                case "TS":
+                    # TODO: Parse in case there's more than 2 values
+                    numerTS = int(data['value'])
+                    denomTS = 2
+                    if (int(data['value']) == 1):
+                        denomTS = 1
+                    else:
+                        denomTS = int(int(data['value']) / 2)
+                    self.chartMidiFile.addTimeSignature(inst_main_channel, data['tick'], numerTS, denomTS, 24)
+                case "B":
+                    this_tempo_change = int(data['value'] / 1000)
+                    self.chartMidiFile.addTempo(inst_main_channel, data['tick'], this_tempo_change)
+
+    def midi_lyrics(self, bpm_data:dict, debug = False):
+        # TODO: add debug toggle
+        chart_debug_vocals = open(self.midi_dbg_file, "a", encoding='utf-8')
+        chart_debug_vocals.write("[VOCAL INFO]")
+        chart_debug_vocals.write("\n")
+        chart_debug_vocals.write("----------------------------")
+        chart_debug_vocals.write("\n")
+        self.chartMidiFile.addTrackName(inst_vocals_track, inst_main_channel, "PART VOCALS")
+        prev_syl_has_mod = 0
+        tick_syl_sp_start = 0
+        tick_syl_sp_end = 0
+
+        for this_phrase in self.Tracks[3].Lyrics.verses:
+            this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
+            this_tick_end = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
+            this_tick_length = int(this_tick_end - this_tick)
+            self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick), int(this_tick_length), 100)
+
+            for this_syll in this_phrase.syllables:
+                this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
+                # EXPERIMENTAL
+                this_tick_end_stamp = SwapTimeForDis(this_syll['time'] + this_syll['len'], bpm_data)
+                this_tick_length = int(this_tick_end_stamp - this_tick)
+                this_tick_syl_scale = 0
+                this_tick_syl_note = 0
+                this_tick_syl_has_mod = 0
+
+                for currentPitch in self.Tracks[3].Lyrics.pitch:
+                    if this_syll['time'] == currentPitch['time']:
+                        this_tick_syl_note = int(currentPitch['note'])
+                        this_tick_syl_scale = int(currentPitch['scale'])
+                        this_tick_syl_has_mod = int(currentPitch['mods'])
+
+                # Lets find out first which scale we will be singing on
+                match this_tick_syl_scale:
+#                    case 0 | 1 | 2:
+#                        this_tick_base_oct = 36
+                    case 0 | 1 | 2 | 3 | 4 | 5:
+                        this_tick_base_oct = 48
+                    case 6 | 7 | 8 | 9 | 10 | 11:
+                        this_tick_base_oct = 60
+#                    case 9 | 10 | 11:
+#                        this_tick_base_oct = 72
+
+                '''
+                # Trying to fix weird pitches
+                this_tick_actual_note = this_tick_syl_note
+                if this_tick_syl_scale > prev_tick_syl_scale:
+                    # verify that the diff is higher
+                    if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
+                        if this_tick_syl_note + 12 + this_tick_actual_note < 85:
+                            this_tick_actual_note = this_tick_syl_note + 12
+                '''
+
+                this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
+                self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), this_tick_length, 100)
+
+                # Adding lyrics events
+                this_tick_final_lyr = str(this_syll['note'])
+
+                # This syllable does not have any pitch at all
+                if this_tick_syl_note == 0 and this_tick_syl_scale == 0:
+                    this_tick_final_lyr += "#"
+
+                self.chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
+
+                chart_debug_vocals.write("silaba: " + str(this_tick_final_lyr))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor tick: " + str(this_tick) + "(valor int:" + str(int(this_tick)))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor length: " + str(this_tick_length) + "(valor int:" + str(int(this_tick_length)))
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor note: " + str(this_tick_syl_note) + "(valor int:" + str(int(this_tick_syl_note)) + ")")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor scale: " + str(this_tick_syl_scale) + "(valor int:" + str(int(this_tick_syl_scale)) + ")")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("valor base octava: " + str(this_tick_base_oct))
+                chart_debug_vocals.write("\n")
+                # TODO: move to def
+                notas_musicales_nom_eng = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
+                match this_tick_syl_scale:
+                    case 0 | 1 | 2:
+                        nota_musical_octava = 2
+                    case 3 | 4 | 5:
+                        nota_musical_octava = 3
+                    case 6 | 7 | 8:
+                        nota_musical_octava = 4
+                    case 9 | 10 | 11:
+                        nota_musical_octava = 5
+                chart_debug_vocals.write("valor nota midi: " + str(this_tick_midi_note) + "(valor nota musical: " + notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava) + ")")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("----------------------------")
+                chart_debug_vocals.write("\n")
+                chart_debug_vocals.write("\n")
+
+                # Trying to keep the star power phases
+                if (this_tick_syl_has_mod == 1 and prev_syl_has_mod == 0):
+                    tick_syl_sp_start = int(this_tick)
+                elif (this_tick_syl_has_mod == 0 and prev_syl_has_mod == 1):
+                    tick_syl_sp_end = int(this_tick) + int(this_tick_length)
+                    tick_syl_sp_length = tick_syl_sp_end - tick_syl_sp_start
+                    self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_star_power, tick_syl_sp_start, tick_syl_sp_length, 100)
+
+                # DIRTY WORK TO KEEP SP PHASES
+                prev_syl_has_mod = int(this_tick_syl_has_mod)
+        chart_debug_vocals.close()
+
+    def midi_inst(self, bmp_data:dict, debug = False):
+        this_inst_midi_track = -1
+        for this_inst in self.Tracks:
+            if this_inst.id_num < 3:
+                this_inst_name = this_inst.name
+                match this_inst_name:
+                    case "guitar":
+                        this_inst_midi_track = inst_guitar_track
+                        this_inst_name = "GUITAR"
+                    case "rhythm":
+                        this_inst_midi_track = inst_rhythm_track
+                        this_inst_name = "BASS"
+                    case "drums":
+                        this_inst_midi_track = inst_drums_track
+                        this_inst_name = "DRUMS"
+                    case _:
+                        this_inst_name = ""
+                self.chartMidiFile.addTrackName(this_inst_midi_track, inst_main_channel, "PART " + this_inst_name)
+            
+                for this_diff in reversed(this_inst.Diffs):
+                    this_diff_name = this_diff.name
+
+                    match this_diff_name:
+                        case "easy":
+                            diff_note_base = diff_start_point_note_easy
+                        case "medium":
+                            diff_note_base = diff_start_point_note_medium
+                        case "hard":
+                            diff_note_base = diff_start_point_note_hard
+                        case _:
+                            diff_note_base = diff_start_point_note_expert
+
+                    chart_data = analize_charts(this_diff.notes, bmp_data, debug)
+                    for data in chart_data:
+                        if str(data['type']) == "S 2":
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), int(data['len']), 100)
+                        elif str(data['type']) == "K 2":
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']), int(data['len']), 100)
+                        elif str(data['type']) == "W 2":
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']), int(data['len']), 100)
+                        else:
+                            final_note_length = 100 if data['len'] == 0 else data['len']
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']), final_note_length, 100)
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
