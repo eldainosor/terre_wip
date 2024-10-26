@@ -607,16 +607,12 @@ class Song(object):
                     self.chartMidiFile.addTempo(inst_main_channel, data['tick'], this_tempo_change)
 
     def midi_lyrics(self, bpm_data:dict, debug = False):
-        # TODO: add debug toggle
         if debug:
             self.midi_dbg_file = self.dir_extr
             self.midi_dbg_file += "\\"
-            self.midi_dbg_file += "notes_mid.log"
+            self.midi_dbg_file += "lyrics_mid.csv"
             chart_debug_vocals = open(self.midi_dbg_file, "a", encoding='utf-8')
-            chart_debug_vocals.write("[VOCAL INFO]")
-            chart_debug_vocals.write("\n")
-            chart_debug_vocals.write("----------------------------")
-            chart_debug_vocals.write("\n")
+            chart_debug_vocals.write("silaba,tick,length,note,scale,octave,eng,\n")
         self.chartMidiFile.addTrackName(inst_vocals_track, inst_main_channel, "PART VOCALS")
         prev_syl_has_mod = 0
         tick_syl_sp_start = 0
@@ -677,18 +673,18 @@ class Song(object):
                 self.chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
 
                 if debug:
-                    chart_debug_vocals.write("silaba: " + str(this_tick_final_lyr))
-                    chart_debug_vocals.write("\n")
-                    chart_debug_vocals.write("valor tick: " + str(this_tick) + " (valor int:" + str(int(this_tick)) + ")")
-                    chart_debug_vocals.write("\n")
-                    chart_debug_vocals.write("valor length: " + str(this_tick_length) + " (valor int:" + str(int(this_tick_length)) + ")")
-                    chart_debug_vocals.write("\n")
-                    chart_debug_vocals.write("valor note: " + str(this_tick_syl_note) + " (valor int:" + str(int(this_tick_syl_note)) + ")")
-                    chart_debug_vocals.write("\n")
-                    chart_debug_vocals.write("valor scale: " + str(this_tick_syl_scale) + " (valor int:" + str(int(this_tick_syl_scale)) + ")")
-                    chart_debug_vocals.write("\n")
-                    chart_debug_vocals.write("valor base octava: " + str(this_tick_base_oct))
-                    chart_debug_vocals.write("\n")
+                    chart_debug_vocals.write(str(int(this_tick_final_lyr)))
+                    chart_debug_vocals.write(",")
+                    chart_debug_vocals.write(str(this_tick))
+                    chart_debug_vocals.write(",")
+                    chart_debug_vocals.write(str(this_tick_length))
+                    chart_debug_vocals.write(",")
+                    chart_debug_vocals.write(str(this_tick_syl_note))
+                    chart_debug_vocals.write(",")
+                    chart_debug_vocals.write(str(this_tick_syl_scale))
+                    chart_debug_vocals.write(",")
+                    chart_debug_vocals.write(str(this_tick_base_oct))
+                    chart_debug_vocals.write(",")
                 # TODO: move to def
                 notas_musicales_nom_eng = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
                 match this_tick_syl_scale:
@@ -702,10 +698,10 @@ class Song(object):
                         nota_musical_octava = 5
                 
                 if debug:
-                    chart_debug_vocals.write("valor nota midi: " + str(this_tick_midi_note) + " (valor nota musical: " + notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava) + ")")
-                    chart_debug_vocals.write("\n")
-                    chart_debug_vocals.write("----------------------------")
-                    chart_debug_vocals.write("\n")
+                    chart_debug_vocals.write(str(this_tick_midi_note))
+                    chart_debug_vocals.write(",")
+                    chart_debug_vocals.write(str(notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava)))
+                    chart_debug_vocals.write(",")
                     chart_debug_vocals.write("\n")
 
                 # Trying to keep the star power phases
