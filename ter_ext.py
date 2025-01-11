@@ -331,6 +331,7 @@ class Song(object):
         ini_file.write("\nyear = " + str(self.year))
         for i, instrument in enumerate(inst_order):
             ini_file.write("\ndiff_" + instrument + " = " + str(self.diffs[i]))
+        ini_file.write("\ndiff_bass = " + str(self.diffs[1]))
         ini_file.write("\nicon = " + "erdtv")
         ini_file.write("\ngenre = " + "Rock Argentino")
         ini_file.write("\ncharter = " + "Next Level")
@@ -431,6 +432,7 @@ class Song(object):
         chart_file.write("\n  MusicStream = \"song.ogg\"")
         chart_file.write("\n  GuitarStream = \"guitar.ogg\"")
         chart_file.write("\n  RhythmStream = \"rhythm.ogg\"")
+        #chart_file.write("\n  BassStream = \"bass.ogg\"")
         chart_file.write("\n  DrumStream = \"drums.ogg\"")
         chart_file.write("\n  VocalStream = \"vocals.ogg\"")
         chart_file.write("\n}\n")
@@ -527,6 +529,8 @@ class Song(object):
                     case "guitar":
                         this_inst_name = "Single"
                     case "rhythm":
+                        this_inst_name = "DoubleBass"
+                    case "bass":
                         this_inst_name = "DoubleBass"
                     case "drums":
                         this_inst_name = "Drums"
