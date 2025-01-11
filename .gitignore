@@ -2,6 +2,7 @@ __pycache__/
 test.py
 erdtv/
 raw/
+songs/
 ffmpeg.exe
 songs.csv
 AUdata.ods
@@ -9,3 +10,4 @@ erdtv-caja1.jpeg
 erdtv-caja2.jpeg
 songs_man.csv
 songs_man.osd
+songs.csv
