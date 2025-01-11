@@ -330,8 +330,10 @@ class Song(object):
         ini_file.write("\nalbum = " + self.disc)
         ini_file.write("\nyear = " + str(self.year))
         for i, instrument in enumerate(inst_order):
-            ini_file.write("\ndiff_" + instrument + " = " + str(self.diffs[i]))
-        ini_file.write("\ndiff_bass = " + str(self.diffs[1]))
+            if instrument == "rhythm":
+                ini_file.write("\ndiff_bass = " + str(self.diffs[1]))
+            else:
+                ini_file.write("\ndiff_" + instrument + " = " + str(self.diffs[i]))
         ini_file.write("\nicon = " + "erdtv")
         ini_file.write("\ngenre = " + "Rock Argentino")
         ini_file.write("\ncharter = " + "Next Level")
@@ -530,8 +532,8 @@ class Song(object):
                         this_inst_name = "Single"
                     case "rhythm":
                         this_inst_name = "DoubleBass"
-                    case "bass":
-                        this_inst_name = "DoubleBass"
+                    #case "bass":
+                    #    this_inst_name = "DoubleBass"
                     case "drums":
                         this_inst_name = "Drums"
                     case _:
