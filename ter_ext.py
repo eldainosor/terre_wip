@@ -445,6 +445,8 @@ class Song(object):
         chart_file.write("[SyncTrack]")
         chart_file.write("\n{")
         for data in bmp_data:
+            if (str(data['type']).startswith("K") or str(data['type']).startswith("W")):
+                continue
             line_data = "\n  "
             #line_data += str(data['time'])
             line_data += str(data['tick'])
