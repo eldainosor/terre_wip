@@ -5,6 +5,7 @@
 # TODO clean imports, list pip install
 import os, shutil, subprocess
 import time
+import unicodedata
 import cbr, disc, band                          # pip install kaitaistruct
 from ter_conv import *
 #from itertools import zip_longest
@@ -445,18 +446,17 @@ class Song(object):
         chart_file.write("[SyncTrack]")
         chart_file.write("\n{")
         for data in bmp_data:
-            if (str(data['type']).startswith("K") or str(data['type']).startswith("W")):
-                continue
-            line_data = "\n  "
-            #line_data += str(data['time'])
-            line_data += str(data['tick'])
-            line_data += " = "
-            line_data += str(data['type'])
-            line_data += " "
-            line_data += str(data['value'])
-            #line_data += "\t"
-            #line_data += str(data['tick'])
-            chart_file.write(line_data)
+            if not "K" in str(data['type']) and not "W" in str(data['type']):
+                line_data = "\n  "
+                #line_data += str(data['time'])
+                line_data += str(data['tick'])
+                line_data += " = "
+                line_data += str(data['type'])
+                line_data += " "
+                line_data += str(data['value'])
+                #line_data += "\t"
+                #line_data += str(data['tick'])
+                chart_file.write(line_data)
         chart_file.write("\n}\n")
         chart_file.close()
 
@@ -564,7 +564,7 @@ class Song(object):
                     chart_file.write("\n}\n")
         chart_file.close()
 
-    def convert_midi(self, cfg:Settings, debug = False):
+    def convert_midi(self, cfg:Settings, debug = True):
         print("Creating notes.mid ...")
         self.midi_file = self.dir_conv
         self.midi_file += "\\"
@@ -604,17 +604,17 @@ class Song(object):
                 case "TS":
                     # TODO: Parse in case there's more than 2 values
                     numerTS = int(data['value'])
-                    denomTS = 2
+                    denomTS = 4
                     if (int(data['value']) == 1):
                         denomTS = 1
                     else:
                         denomTS = int(int(data['value']) / 2)
                     self.chartMidiFile.addTimeSignature(inst_main_channel, data['tick'], numerTS, denomTS, 24)
                 case "B":
-                    this_tempo_change = int(data['value'] / 1000)
+                    this_tempo_change = int(data['value'] / 1000.0)
                     self.chartMidiFile.addTempo(inst_main_channel, data['tick'], this_tempo_change)
 
-    def midi_lyrics(self, bpm_data:dict, debug = False):
+    def midi_lyrics(self, bpm_data:dict, debug = True):
         if debug:
             self.midi_dbg_file = self.dir_extr
             self.midi_dbg_file += "\\"
@@ -631,6 +631,9 @@ class Song(object):
             this_tick_end = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
             this_tick_length = int(this_tick_end - this_tick)
             self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick), int(this_tick_length), 100)
+
+            #TODO: Mejor implementación
+            prev_syll = "lorem"
 
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
@@ -667,6 +670,9 @@ class Song(object):
                         if this_tick_syl_note + 12 + this_tick_actual_note < 85:
                             this_tick_actual_note = this_tick_syl_note + 12
                 '''
+                # This is just a test to see if this works
+                if (this_tick_syl_note > 8) and (this_tick_syl_note != 0 and this_tick_syl_scale != 0):
+                    this_tick_base_oct -= 12
 
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
                 self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), this_tick_length, 100)
@@ -722,6 +728,7 @@ class Song(object):
 
                 # DIRTY WORK TO KEEP SP PHASES
                 prev_syl_has_mod = int(this_tick_syl_has_mod)
+
         if debug:
             chart_debug_vocals.close()
 
@@ -762,8 +769,10 @@ class Song(object):
                         if str(data['type']) == "S 2":
                             self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), int(data['len']), 100)
                         elif str(data['type']) == "K 2":
+                            final_note_length = 100 if data['len'] == 0 else data['len']
                             self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']), int(data['len']), 100)
                         elif str(data['type']) == "W 2":
+                            final_note_length = 100 if data['len'] == 0 else data['len']
                             self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']), int(data['len']), 100)
                         else:
                             final_note_length = 100 if data['len'] == 0 else data['len']
