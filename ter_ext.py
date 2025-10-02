@@ -849,7 +849,8 @@ class Song(object):
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         if str(data['type']) == "S 2":
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
+                            if this_diff_name == "hard":
+                                self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
                         elif str(data['type']) == "K 2":
                             final_note_length = 100 if data['len'] == 0 else data['len']
                             self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
