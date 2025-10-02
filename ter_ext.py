@@ -757,7 +757,7 @@ class Song(object):
                     this_tick_base_oct -= 12
 
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
-                self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick), this_tick_length, 100)
+                self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick) - self.offset_ticks, this_tick_length, 100)
 
                 # Adding lyrics events
                 this_tick_final_lyr = str(this_syll['note'])
@@ -806,7 +806,7 @@ class Song(object):
                 elif (this_tick_syl_has_mod == 0 and prev_syl_has_mod == 1):
                     tick_syl_sp_end = int(this_tick) + int(this_tick_length)
                     tick_syl_sp_length = tick_syl_sp_end - tick_syl_sp_start
-                    self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_star_power, tick_syl_sp_start, tick_syl_sp_length, 100)
+                    self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_star_power, tick_syl_sp_start - self.offset_ticks, tick_syl_sp_length, 100)
 
                 # DIRTY WORK TO KEEP SP PHASES
                 prev_syl_has_mod = int(this_tick_syl_has_mod)
@@ -849,16 +849,16 @@ class Song(object):
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
                         if str(data['type']) == "S 2":
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']), int(data['len']), 100)
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
                         elif str(data['type']) == "K 2":
                             final_note_length = 100 if data['len'] == 0 else data['len']
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']), int(data['len']), 100)
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
                         elif str(data['type']) == "W 2":
                             final_note_length = 100 if data['len'] == 0 else data['len']
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']), int(data['len']), 100)
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
                         else:
                             final_note_length = 100 if data['len'] == 0 else data['len']
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']), final_note_length, 100)
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']) - self.offset_ticks, final_note_length, 100)
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
