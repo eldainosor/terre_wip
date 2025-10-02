@@ -671,7 +671,7 @@ class Song(object):
                             this_tick_actual_note = this_tick_syl_note + 12
                 '''
                 # This is just a test to see if this works
-                if (this_tick_syl_note > 8) and (this_tick_syl_note != 0 and this_tick_syl_scale != 0):
+                if (this_tick_syl_note > 9) and (this_tick_syl_note != 0 and this_tick_syl_scale != 0):
                     this_tick_base_oct -= 12
 
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
