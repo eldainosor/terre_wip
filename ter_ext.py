@@ -766,7 +766,7 @@ class Song(object):
                 if this_tick_syl_note == 0 and this_tick_syl_scale == 0:
                     this_tick_final_lyr += "#"
 
-                self.chartMidiFile.addText(inst_vocals_track, int(this_tick), this_tick_final_lyr)
+                self.chartMidiFile.addText(inst_vocals_track, int(this_tick) - self.offset_ticks, this_tick_final_lyr)
 
                 if debug:
                     chart_debug_vocals.write(str(int(this_tick_final_lyr)))
