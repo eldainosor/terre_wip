@@ -838,12 +838,6 @@ class Song(object):
                         if str(data['type']) == "S 2":
                             if this_diff_name == "hard":
                                 self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
-                        elif str(data['type']) == "K 2":
-                            final_note_length = 100 if data['len'] == 0 else data['len']
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
-                        elif str(data['type']) == "W 2":
-                            final_note_length = 100 if data['len'] == 0 else data['len']
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
                         else:
                             final_note_length = 100 if data['len'] == 0 else data['len']
                             self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']) - self.offset_ticks, final_note_length, 100)
