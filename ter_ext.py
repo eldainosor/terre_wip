@@ -601,7 +601,6 @@ class Song(object):
     def midi_sync_track(self, bmp_data: dict, debug=False):
 
         # --- PARÁMETROS CLAVE ---
-        TPQN = 480  # Ticks Por Negra (PPQ) de tu archivo MIDI.
         NEGRAS_DESEADAS = 4  # Número de negras que debe durar el tramo inicial (ej. 1 compás de 4/4).
 
         first_bpm = 0.0
@@ -631,7 +630,7 @@ class Song(object):
         if first_bpm > 0 and resync_event:
             
             # 1. Ticks Ideales (Donde debería caer el evento de resincronización)
-            TICKS_IDEALES = NEGRAS_DESEADAS * TPQN
+            TICKS_IDEALES = NEGRAS_DESEADAS * RESOLUTION
             
             # 2. Cálculo del Offset de Ticks
             self.offset_ticks = TICK_RESINCRONIZACION - TICKS_IDEALES
@@ -640,7 +639,7 @@ class Song(object):
             
             # Tiempo en segundos por tick (basado en el BPM inicial)
             # Fórmula: Segundos_por_tick = (60.0 / BPM) / TPQN
-            SECONDS_PER_TICK = (60.0 / first_bpm) / TPQN 
+            SECONDS_PER_TICK = (60.0 / first_bpm) / RESOLUTION 
             
             # Offset en segundos
             offset_seconds = self.offset_ticks * SECONDS_PER_TICK
