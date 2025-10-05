@@ -598,102 +598,90 @@ class Song(object):
             pass
     '''
 
-    def midi_sync_track(self, bmp_data:dict, debug = False):
-        
-        # --- PARÁMETROS DE COMPENSACIÓN (Ajustar según necesidad) ---
-        TPQN = 480              # Ticks Por Negra (PPQ) de tu archivo MIDI.
-        NEGRAS_DESEADAS = 4     # Número de negras que debe durar el tramo inicial (ej. 1 compás de 4/4).
-                                # Si 3279 ticks es el inicio del compás 2, son 4 negras.
+    def midi_sync_track(self, bmp_data: dict, debug=False):
+
+        # --- PARÁMETROS CLAVE ---
+        TPQN = 480  # Ticks Por Negra (PPQ) de tu archivo MIDI.
+        NEGRAS_DESEADAS = 4  # Número de negras que debe durar el tramo inicial (ej. 1 compás de 4/4).
 
         first_bpm = 0.0
-        compensation_applied = False
+        TICK_RESINCRONIZACION = 0
         
-        # --- NUEVA VARIABLE DE INSTANCIA PARA ALMACENAR EL OFFSET ---
-        self.offset_ticks = 0 
+        # --- NUEVAS VARIABLES DE INSTANCIA PARA ALMACENAR EL OFFSET (MODIFICADAS) ---
+        self.offset_ticks = 0
+        self.offset_ms = 0  # Offset en milisegundos (entero)
 
-        # --- FASE 1: CÁLCULO DE COMPENSACIÓN Y OFFSET (Pre-procesamiento) ---
-        resync_event = None
+        # Nota: Asumimos que 'inst_main_channel' y 'self.chartMidiFile' están definidos.
         
-        # Se asume que self.sync_track_events es una lista de diccionarios de eventos
+        # -----------------------------------------------------------------
+        # --- FASE 1: CÁLCULO DE OFFSET EN TICKS Y MILISEGUNDOS ---
+        # -----------------------------------------------------------------
+        resync_event = None
+
+        # 1. ENCONTRAR first_bpm (tick 0) y resync_event (primer BPM > 0)
         for data in bmp_data:
-            if data['type'] == 'B' and data['tick'] > 0:
-                # El primer evento de BPM que no sea tick 0 se considera el punto de resincronización.
-                resync_event = data
-                break
-            elif data['type'] == 'B' and data['tick'] == 0:
-                # Almacenar el primer BPM original
+            if data['type'] == 'B' and data['tick'] == 0:
+                # Almacenar el primer BPM original (ya está en BPM, que es valor/1000)
                 first_bpm = data['value'] / 1000.0
+            elif data['type'] == 'B' and data['tick'] > 0:
+                resync_event = data
+                TICK_RESINCRONIZACION = resync_event['tick']
+                break # Encontramos el punto clave, salimos del bucle.
 
         if first_bpm > 0 and resync_event:
-            TICK_RESINCRONIZACION = resync_event['tick']
             
-            # 1. Ticks Ideales (Donde debería caer el evento)
+            # 1. Ticks Ideales (Donde debería caer el evento de resincronización)
             TICKS_IDEALES = NEGRAS_DESEADAS * TPQN
             
-            # 2. Factor de Compensación 
-            FACTOR_COMPENSACION = TICKS_IDEALES / TICK_RESINCRONIZACION
-            
-            # 3. Nuevo BPM de Compensación para el tick 0
-            BPM_COMPENSACION = round((first_bpm * FACTOR_COMPENSACION), 3)
-
-            # 4. Cálculo del Offset de Ticks
-            # El exceso de ticks que hay que eliminar de todas las notas/eventos
+            # 2. Cálculo del Offset de Ticks
             self.offset_ticks = TICK_RESINCRONIZACION - TICKS_IDEALES
             
-            # 5. Aplicar la compensación de BPM en el tick 0 (INYECCIÓN DE TEMPO COMPENSADO)
-            self.chartMidiFile.addTempo(inst_main_channel, 0, BPM_COMPENSACION)
+            # 3. CÁLCULO DEL OFFSET EN MILISEGUNDOS (NUEVA FÓRMULA)
+            
+            # Tiempo en segundos por tick (basado en el BPM inicial)
+            # Fórmula: Segundos_por_tick = (60.0 / BPM) / TPQN
+            SECONDS_PER_TICK = (60.0 / first_bpm) / TPQN 
+            
+            # Offset en segundos
+            offset_seconds = self.offset_ticks * SECONDS_PER_TICK
+            
+            # Convertir a milisegundos y redondear al entero más cercano
+            self.offset_ms = round(offset_seconds * 1000) 
             
             if debug:
-                print(f"DEBUG: Compensación aplicada. BPM 0 ajustado a {BPM_COMPENSACION} para sincronizar con tick {TICK_RESINCRONIZACION}.")
-                print(f"DEBUG: Ticks de Offset calculado: {self.offset_ticks}. Se restará a todos los eventos futuros.")
+                print("--- CÁLCULO DE OFFSET ---")
+                print(f"DEBUG: BPM Inicial (tick 0): {first_bpm}")
+                print(f"DEBUG: Offset de Ticks calculado: {self.offset_ticks}")
+                print(f"DEBUG: Offset de Segundos (no guardado): {offset_seconds:.6f} s")
+                print(f"DEBUG: Offset de Milisegundos guardado: {self.offset_ms} ms")
+                print("--- FIN CÁLCULO DE OFFSET ---")
             
-            compensation_applied = True
+            # Aquí NO se aplica compensación de BPM al tick 0, solo se prepara el MIDI
+            # desplazando todos los ticks.
 
-
-        # --- FASE 2: APLICACIÓN DEL OFFSET (Bucle principal para añadir eventos MIDI) ---
+        # -----------------------------------------------------------------
+        # --- FASE 2: APLICACIÓN DEL OFFSET (Bucle principal para MIDI) ---
+        # -----------------------------------------------------------------
         for data in bmp_data:
             
             # Calcular el nuevo tick para este evento
             new_tick = max(0, data['tick'] - self.offset_ticks)
             
             if data['type'] == 'B': 
+                this_tempo_change = data['value'] / 1000.0
                 
-                # RESTABLECER EL BPM ORIGINAL en el punto de resincronización
-                if compensation_applied and data['tick'] == TICK_RESINCRONIZACION:
-                    
-                    # 1. Restablecer el BPM original (sin compensación)
-                    this_tempo_change = first_bpm 
-                    
+                # Aplicar todos los cambios de BPM con el offset de tick.
+                if new_tick >= 0:
                     self.chartMidiFile.addTempo(inst_main_channel, new_tick, this_tempo_change)
-                    
-                    if debug:
-                        print(f"DEBUG: BPM restablecido en tick {data['tick']} (MIDI tick: {new_tick}). BPM: {this_tempo_change}")
-                    
-                elif data['tick'] > 0:
-                    # Aplicar el offset al resto de cambios de BPM
-                    this_tempo_change = data['value'] / 1000.0
-                    
-                    self.chartMidiFile.addTempo(inst_main_channel, new_tick, this_tempo_change)
-
-                # Si data['tick'] == 0, ya fue inyectado con el BPM_COMPENSACION en la Fase 1.
 
             elif data['type'] == 'TS':
-                # El time signature también debe tener el offset aplicado a su tick (new_tick ya está calculado)
+                # El Time Signature también debe tener el offset aplicado a su tick (new_tick ya está calculado)
                 
-                # Lógica para determinar el denominador del Time Signature (basado en tus snippets anteriores)
+                # Lógica para Time Signature
                 numerTS = int(data['value'])
-                denomTS = 4 
-                if (int(data['value']) == 1):
-                    # Si el numerador es 1, asumimos 1/4 (esto puede ser específico de tu formato)
-                    denomTS = 1
-                else:
-                    # En tu lógica anterior, el denominador era el numerador dividido por 2
-                    # Pero el formato MIDI requiere que sea la potencia de 2 (ej. 2 para 4/4)
-                    # Asumiremos 4/4 (denom power of 2 = 2) si no hay más info.
-                    # Mantendremos la lógica simple con 4 como el valor estándar (2^2)
-                    denomTS = 2 # 2^2 = 4 (para 4/4)
+                denomTS = 2 # 2^2 = 4 (para 4/4). 
+                # ... (Lógica adicional de TS si es necesario)
                 
-                # Usar el valor TS real (numerador) y el denominador de 4 (MIDI value 2)
                 self.chartMidiFile.addTimeSignature(inst_main_channel, new_tick, numerTS, denomTS, 24)
 
     def midi_lyrics(self, bpm_data:dict, debug = True):
@@ -903,7 +891,7 @@ class Song(object):
                 cmd += " -y -loglevel -8 -stats -i " 
                 #cmd += cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd += "\"" + source_dir + "\\" + source_file + "\""
-                cmd += " -af adelay=" + str(self.delay) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
+                cmd += " -af adelay=" + str(self.delay - self.offset_ms) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
                 #cmd += " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
                 cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
                 #print("Command:", cmd)    # DEBUG
