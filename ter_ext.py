@@ -684,7 +684,7 @@ class Song(object):
                 self.chartMidiFile.addTimeSignature(inst_main_channel, new_tick, numerTS, denomTS, 24)
 
     def midi_lyrics(self, bpm_data:dict, debug = True):
-        if debug:
+        if True:
             self.midi_dbg_file = self.dir_extr
             self.midi_dbg_file += "\\"
             self.midi_dbg_file += "lyrics_mid.csv"
@@ -721,15 +721,26 @@ class Song(object):
 
                 # Lets find out first which scale we will be singing on
                 match this_tick_syl_scale:
-#                    case 0 | 1 | 2:
-#                        this_tick_base_oct = 36
-                    case 0 | 1 | 2 | 3 | 4 | 5:
+                    case 0 | 1 | 2:
+                        this_tick_base_oct = 36
+                    case 3 | 4 | 5:
                         this_tick_base_oct = 48
-                    case 6 | 7 | 8 | 9 | 10 | 11:
+                    case 6 | 7 | 8:
                         this_tick_base_oct = 60
-#                    case 9 | 10 | 11:
-#                        this_tick_base_oct = 72
-
+                    case 9 | 10 | 11:
+                        this_tick_base_oct = 72
+                # This is just a test to see if this works
+                if (this_tick_syl_note > 6 and (this_tick_syl_scale == 2  or this_tick_syl_scale == 5 or this_tick_syl_scale == 8 or this_tick_syl_scale == 11)):
+                    this_tick_base_oct -= 12
+                elif (this_tick_syl_note < 5 and (this_tick_syl_scale == 7 or this_tick_syl_scale == 11 or this_tick_syl_scale == 10 or this_tick_syl_scale == 8)):
+                    this_tick_base_oct += 12
+                elif (this_tick_syl_note == 0 and this_tick_syl_scale == 9):
+                    # No sé loko
+                    this_tick_base_oct = this_tick_base_oct + 12
+                elif (this_tick_syl_note == 7 and this_tick_syl_scale == 11):
+                    # No sé loko
+                    this_tick_base_oct = this_tick_base_oct - 12
+                
                 '''
                 # Trying to fix weird pitches
                 this_tick_actual_note = this_tick_syl_note
@@ -739,15 +750,12 @@ class Song(object):
                         if this_tick_syl_note + 12 + this_tick_actual_note < 85:
                             this_tick_actual_note = this_tick_syl_note + 12
                 '''
-                # This is just a test to see if this works
-                if (this_tick_syl_note > 9) and (this_tick_syl_note != 0 and this_tick_syl_scale != 0):
-                    this_tick_base_oct -= 12
 
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
                 self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick) - self.offset_ticks, this_tick_length, 100)
 
                 # Adding lyrics events
-                this_tick_final_lyr = str(this_syll['note'])
+                this_tick_final_lyr = str(this_syll['note']).strip()
 
                 # This syllable does not have any pitch at all
                 if this_tick_syl_note == 0 and this_tick_syl_scale == 0:
@@ -755,8 +763,8 @@ class Song(object):
 
                 self.chartMidiFile.addText(inst_vocals_track, int(this_tick) - self.offset_ticks, this_tick_final_lyr)
 
-                if debug:
-                    chart_debug_vocals.write(str(int(this_tick_final_lyr)))
+                if True:
+                    chart_debug_vocals.write(str(this_tick_final_lyr))
                     chart_debug_vocals.write(",")
                     chart_debug_vocals.write(str(this_tick))
                     chart_debug_vocals.write(",")
@@ -780,7 +788,7 @@ class Song(object):
                     case 9 | 10 | 11:
                         nota_musical_octava = 5
                 
-                if debug:
+                if True:
                     chart_debug_vocals.write(str(this_tick_midi_note))
                     chart_debug_vocals.write(",")
                     chart_debug_vocals.write(str(notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava)))
@@ -839,7 +847,7 @@ class Song(object):
                             if this_diff_name == "hard":
                                 self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
                         else:
-                            final_note_length = 100 if data['len'] == 0 else data['len']
+                            final_note_length = 100 if data['len'] == 0 or data['len'] == 1  else data['len']
                             self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']) - self.offset_ticks, final_note_length, 100)
 
     def convert_metadata(self, debug = False):
@@ -884,7 +892,7 @@ class Song(object):
                 cmd += " -y -loglevel -8 -stats -i " 
                 #cmd += cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd += "\"" + source_dir + "\\" + source_file + "\""
-                cmd += " -af adelay=" + str(self.delay - self.offset_ms) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
+                cmd += " -af adelay=" + str(self.delay - self.offset_ms if cfg.convert == 'Y' else self.delay) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
                 #cmd += " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
                 cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
                 #print("Command:", cmd)    # DEBUG
