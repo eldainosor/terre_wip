@@ -60,9 +60,9 @@ if __name__ == "__main__":
             local = time.strftime("%H:%M:%S", time.localtime(start_song))
             print("Song start: ", local)
 
-            this_song.convert_metadata(debug)
             this_song.convert_charts(cfg, debug)
             this_song.convert_midi(cfg, debug)
+            this_song.convert_metadata(debug)
             this_song.convert_album(debug)
             this_song.convert_background(debug)
             this_song.convert_icon(debug)
