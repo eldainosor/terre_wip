@@ -3,8 +3,10 @@ test.py
 erdtv/
 raw/
 songs/
-ffmpeg.exe
 songs.csv
+ffmpeg.exe
+ffplay.exe
+ffprobe.exe
 AUdata.ods
 erdtv-caja1.jpeg
 erdtv-caja2.jpeg
