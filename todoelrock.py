@@ -50,6 +50,9 @@ if __name__ == "__main__":
         
     # Convert to Clone Hero (needs FFMPEG)
     if cfg.convert == 'Y':
+        # Enforce the creation of RB-compatible .mid format (for full band support)
+        useRBMidiFormat = False
+
         # Loop for each song
         for k, this_song in enumerate(pl.Songs):
             k += 1
@@ -61,13 +64,15 @@ if __name__ == "__main__":
             print("Song start: ", local)
 
             this_song.convert_metadata(debug)
-            this_song.convert_charts(cfg, debug)
-            this_song.convert_midi(cfg, debug)
+            if (useRBMidiFormat):
+                this_song.convert_midi(cfg, debug)
+            else:
+                this_song.convert_charts(cfg, debug)
             this_song.convert_album(debug)
             this_song.convert_background(debug)
             this_song.convert_icon(debug)
             this_song.convert_preview(cfg, debug)
-            this_song.convert_audio(cfg, debug)
+            this_song.convert_audio(cfg, useRBMidiFormat, debug)
             this_song.convert_video(cfg, debug)
 
             # Show time and ETA

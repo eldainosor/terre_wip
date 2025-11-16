@@ -341,8 +341,8 @@ class Song(object):
         ini_file.write("\nbanner_link_a = " + "http://www.elrockdetuvida.com/website/index.php")
         ini_file.write("\nlink_name_a = " + "Homepage")
         ini_file.write("\nloading_phrase = " + "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-        ini_file.write("\n;video_start_time = " + str(int(self.delay - self.offset_ms)))    #TODO: remove 3sec delay
-        ini_file.write("\ndelay = " + str(int(self.delay - self.offset_ms)))                #TODO: remove 3sec delay
+        ini_file.write("\n;video_start_time = " + str(int(self.delay)))    #TODO: remove 3sec delay
+        ini_file.write("\ndelay = " + str(int(self.delay)))                #TODO: remove 3sec delay
         
         ini_file.close()
     
@@ -878,7 +878,7 @@ class Song(object):
         dest_file = "erdtv.png"
         copy_file(source_dir, source_file, dest_dir, dest_file)
 
-    def convert_audio(self, cfg:Settings, debug = False):
+    def convert_audio(self, cfg:Settings, useMidiFormat, debug = False):
         for instrument in data_order:
             print("Compressing", instrument, "audio file with FFMPEG (Flac to OGG)")
             source_dir = self.dir_extr
@@ -886,13 +886,18 @@ class Song(object):
             dest_dir = self.dir_conv
             dest_file =  instrument + ".ogg"
 
+            if (useMidiFormat):
+                songDelay = self.delay - self.offset_ms
+            else:
+                songDelay = self.delay
+
             #TODO: use Python FFMPEG or ask for download
             try:
                 cmd = cfg.ffmpeg_file 
                 cmd += " -y -loglevel -8 -stats -i " 
                 #cmd += cmd + " -y -stats -i "    # DEBUG Verbose 
                 cmd += "\"" + source_dir + "\\" + source_file + "\""
-                cmd += " -af adelay=" + str(self.delay - self.offset_ms if cfg.convert == 'Y' else self.delay) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
+                cmd += " -af adelay=" + str(songDelay) + ":all=1 -c:a libvorbis -b:a 320k "      #Skipp 3sec #TODO: remove 3sec delay
                 #cmd += " -c:a libvorbis -b:a 320k "                           #Skipp 3sec #TODO: remove 3sec delay
                 cmd += "\"" +  dest_dir + "\\" + dest_file + "\""
                 #print("Command:", cmd)    # DEBUG
