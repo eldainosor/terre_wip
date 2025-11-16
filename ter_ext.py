@@ -684,7 +684,7 @@ class Song(object):
                 self.chartMidiFile.addTimeSignature(inst_main_channel, new_tick, numerTS, denomTS, 24)
 
     def midi_lyrics(self, bpm_data:dict, debug = True):
-        if debug:
+        if True:
             self.midi_dbg_file = self.dir_extr
             self.midi_dbg_file += "\\"
             self.midi_dbg_file += "lyrics_mid.csv"
@@ -763,7 +763,7 @@ class Song(object):
 
                 self.chartMidiFile.addText(inst_vocals_track, int(this_tick) - self.offset_ticks, this_tick_final_lyr)
 
-                if debug:
+                if True:
                     chart_debug_vocals.write(str(this_tick_final_lyr))
                     chart_debug_vocals.write(",")
                     chart_debug_vocals.write(str(this_tick))
@@ -788,7 +788,7 @@ class Song(object):
                     case 9 | 10 | 11:
                         nota_musical_octava = 5
                 
-                if debug:
+                if True:
                     chart_debug_vocals.write(str(this_tick_midi_note))
                     chart_debug_vocals.write(",")
                     chart_debug_vocals.write(str(notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava)))
