@@ -341,8 +341,8 @@ class Song(object):
         ini_file.write("\nbanner_link_a = " + "http://www.elrockdetuvida.com/website/index.php")
         ini_file.write("\nlink_name_a = " + "Homepage")
         ini_file.write("\nloading_phrase = " + "Viví la experiencia de interpretar los temas de tus bandas favoritas del rock nacional.")
-        ini_file.write("\n;video_start_time = " + str(int(self.delay)))    #TODO: remove 3sec delay
-        ini_file.write("\ndelay = " + str(int(self.delay)))                #TODO: remove 3sec delay
+        ini_file.write("\n;video_start_time = " + str(int(self.delay - self.offset_ms)))    #TODO: remove 3sec delay
+        ini_file.write("\ndelay = " + str(int(self.delay - self.offset_ms)))                #TODO: remove 3sec delay
         
         ini_file.close()
     
