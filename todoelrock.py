@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # Convert to Clone Hero (needs FFMPEG)
     if cfg.convert == 'Y':
         # Enforce the creation of RB-compatible .mid format (for full band support)
-        useRBMidiFormat = False
+        useRBMidiFormat = True
 
         # Loop for each song
         for k, this_song in enumerate(pl.Songs):
