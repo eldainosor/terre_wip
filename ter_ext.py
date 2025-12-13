@@ -701,9 +701,6 @@ class Song(object):
             this_tick_length = int(this_tick_end - this_tick)
             self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick) - self.offset_ticks, int(this_tick_length), 100)
 
-            #TODO: Mejor implementación
-            prev_syll = "lorem"
-
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
                 # EXPERIMENTAL
@@ -718,6 +715,13 @@ class Song(object):
                         this_tick_syl_note = int(currentPitch['note'])
                         this_tick_syl_scale = int(currentPitch['scale'])
                         this_tick_syl_has_mod = int(currentPitch['mods'])
+
+                # Cleaning the output lyrics
+                this_tick_final_lyr = " ".join(str(this_syll['note']).split())
+
+                # Before adding lyrics events, check if the syllable has actual lyrics
+                if len(this_tick_final_lyr) == 0:
+                    continue
 
                 # Lets find out first which scale we will be singing on
                 match this_tick_syl_scale:
@@ -740,6 +744,9 @@ class Song(object):
                 elif (this_tick_syl_note == 7 and this_tick_syl_scale == 11):
                     # No sé loko
                     this_tick_base_oct = this_tick_base_oct - 12
+                elif (this_tick_syl_note == 3 and this_tick_syl_scale == 11):
+                    # No sé loko
+                    this_tick_base_oct = this_tick_base_oct - 12
                 
                 '''
                 # Trying to fix weird pitches
@@ -753,9 +760,6 @@ class Song(object):
 
                 this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
                 self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick) - self.offset_ticks, this_tick_length, 100)
-
-                # Adding lyrics events
-                this_tick_final_lyr = str(this_syll['note']).strip()
 
                 # This syllable does not have any pitch at all
                 if this_tick_syl_note == 0 and this_tick_syl_scale == 0:
@@ -1136,7 +1140,7 @@ class Lyrics(object):
             harms.append(harm_dict)
 
         self.verses = sorted(verses, key=lambda item: item.time)
-        self.pitch = sorted(harms, key=lambda item: item['time'])
+        self.pitch = sorted(pitch, key=lambda item: item['time'])
         self.harm = sorted(harms, key=lambda item: item['time'])
 
     def extract(self, song:Song, debug = False):
