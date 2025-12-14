@@ -694,6 +694,7 @@ class Song(object):
         prev_syl_has_mod = 0
         tick_syl_sp_start = 0
         tick_syl_sp_end = 0
+        last_valid_midi_pitch = 60
 
         for this_phrase in self.Tracks[3].Lyrics.verses:
             this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
@@ -709,12 +710,16 @@ class Song(object):
                 this_tick_syl_scale = 0
                 this_tick_syl_note = 0
                 this_tick_syl_has_mod = 0
+                # Búsqueda en pitch (Tu código actual)
+                found_pitch = False
 
                 for currentPitch in self.Tracks[3].Lyrics.pitch:
                     if this_syll['time'] == currentPitch['time']:
                         this_tick_syl_note = int(currentPitch['note'])
                         this_tick_syl_scale = int(currentPitch['scale'])
                         this_tick_syl_has_mod = int(currentPitch['mods'])
+                        found_pitch = True
+                        break # Optimización: salir si ya lo encontramos
 
                 # Cleaning the output lyrics
                 this_tick_final_lyr = " ".join(str(this_syll['note']).split())
@@ -723,81 +728,54 @@ class Song(object):
                 if len(this_tick_final_lyr) == 0:
                     continue
 
-                # Lets find out first which scale we will be singing on
-                match this_tick_syl_scale:
-                    case 0 | 1 | 2:
-                        this_tick_base_oct = 36
-                    case 3 | 4 | 5:
-                        this_tick_base_oct = 48
-                    case 6 | 7 | 8:
-                        this_tick_base_oct = 60
-                    case 9 | 10 | 11:
-                        this_tick_base_oct = 72
-                # This is just a test to see if this works
-                if (this_tick_syl_note > 6 and (this_tick_syl_scale == 2  or this_tick_syl_scale == 5 or this_tick_syl_scale == 8 or this_tick_syl_scale == 11)):
-                    this_tick_base_oct -= 12
-                elif (this_tick_syl_note < 5 and (this_tick_syl_scale == 7 or this_tick_syl_scale == 11 or this_tick_syl_scale == 10 or this_tick_syl_scale == 8)):
-                    this_tick_base_oct += 12
-                elif (this_tick_syl_note == 0 and this_tick_syl_scale == 9):
-                    # No sé loko
-                    this_tick_base_oct = this_tick_base_oct + 12
-                elif (this_tick_syl_note == 7 and this_tick_syl_scale == 11):
-                    # No sé loko
-                    this_tick_base_oct = this_tick_base_oct - 12
-                elif (this_tick_syl_note == 3 and this_tick_syl_scale == 11):
-                    # No sé loko
-                    this_tick_base_oct = this_tick_base_oct - 12
-                
-                '''
-                # Trying to fix weird pitches
-                this_tick_actual_note = this_tick_syl_note
-                if this_tick_syl_scale > prev_tick_syl_scale:
-                    # verify that the diff is higher
-                    if (this_tick_syl_scale > 0 and this_tick_syl_note < 4):
-                        if this_tick_syl_note + 12 + this_tick_actual_note < 85:
-                            this_tick_actual_note = this_tick_syl_note + 12
-                '''
+                this_tick_midi_note = 0
+                this_tick_unpitched = False
 
-                this_tick_midi_note = this_tick_base_oct + this_tick_syl_note
-                self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick) - self.offset_ticks, this_tick_length, 100)
-
-                # This syllable does not have any pitch at all
                 if this_tick_syl_note == 0 and this_tick_syl_scale == 0:
+                    this_tick_unpitched = True
+
+                if this_tick_unpitched:
+                    this_tick_midi_note = last_valid_midi_pitch 
                     this_tick_final_lyr += "#"
+                else:
+                    raw_potential_midi = 36 + (this_tick_syl_scale * 12) + this_tick_syl_note
+
+                    folded_midi = raw_potential_midi
+                    while folded_midi > 84: folded_midi -= 12
+                    while folded_midi < 36: folded_midi += 12
+                    
+                    diff = folded_midi - last_valid_midi_pitch
+
+                    if diff > 5:
+                        alt_lower = folded_midi - 12
+                        if abs(alt_lower - last_valid_midi_pitch) < abs(diff):
+                            folded_midi = alt_lower
+
+                    elif diff < -5:
+                        alt_upper = folded_midi + 12
+                        if abs(alt_upper - last_valid_midi_pitch) < abs(diff):
+                            folded_midi = alt_upper
+                    
+                    this_tick_midi_note = folded_midi
+                    while this_tick_midi_note > 84:
+                        this_tick_midi_note -= 12
+                    while this_tick_midi_note < 36:
+                        this_tick_midi_note += 12
+                    last_valid_midi_pitch = this_tick_midi_note
+
+                self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, this_tick_midi_note, int(this_tick) - self.offset_ticks, this_tick_length, 100)
 
                 self.chartMidiFile.addText(inst_vocals_track, int(this_tick) - self.offset_ticks, this_tick_final_lyr)
 
                 if True:
-                    chart_debug_vocals.write(str(this_tick_final_lyr))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write(str(this_tick))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write(str(this_tick_length))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write(str(this_tick_syl_note))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write(str(this_tick_syl_scale))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write(str(this_tick_base_oct))
-                    chart_debug_vocals.write(",")
-                # TODO: move to def
-                notas_musicales_nom_eng = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"]
-                match this_tick_syl_scale:
-                    case 0 | 1 | 2:
-                        nota_musical_octava = 2
-                    case 3 | 4 | 5:
-                        nota_musical_octava = 3
-                    case 6 | 7 | 8:
-                        nota_musical_octava = 4
-                    case 9 | 10 | 11:
-                        nota_musical_octava = 5
-                
-                if True:
-                    chart_debug_vocals.write(str(this_tick_midi_note))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write(str(notas_musicales_nom_eng[int(this_tick_syl_note)] + str(nota_musical_octava)))
-                    chart_debug_vocals.write(",")
-                    chart_debug_vocals.write("\n")
+                    octave_calc = (this_tick_midi_note // 12) - 1 # Cálculo real de octava
+                    note_idx = this_tick_midi_note % 12
+                    note_name = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"][note_idx]
+                    
+                    chart_debug_vocals.write(f"{this_tick_final_lyr},{this_tick},{this_tick_length},{this_tick_syl_note},{this_tick_syl_scale},")
+                    calculated_base = (this_tick_midi_note // 12) * 12 
+                    chart_debug_vocals.write(f"{calculated_base},")
+                    chart_debug_vocals.write(f"{this_tick_midi_note},{note_name}{octave_calc}\n")
 
                 # Trying to keep the star power phases
                 if (this_tick_syl_has_mod == 1 and prev_syl_has_mod == 0):
@@ -847,12 +825,19 @@ class Song(object):
 
                     chart_data = analize_charts(this_diff.notes, bmp_data, debug)
                     for data in chart_data:
+                        # Fix the position of the current note
+                        final_note_tick = int(data['tick']) - self.offset_ticks
+                        final_note_length = 100 if data['len'] == 0 or data['len'] == 1  else data['len']
+
                         if str(data['type']) == "S 2":
                             if this_diff_name == "hard":
-                                self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, int(data['tick']) - self.offset_ticks, int(data['len']), 100)
+                                self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, note_event_star_power, final_note_tick, final_note_length, 100)
+                        elif str(data['type']) == "K 2":
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_strum_offset, int(data['tick']), final_note_length, 100)
+                        elif str(data['type']) == "W 2":
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + note_event_force_hopo_offset, int(data['tick']), final_note_length, 100)
                         else:
-                            final_note_length = 100 if data['len'] == 0 or data['len'] == 1  else data['len']
-                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), int(data['tick']) - self.offset_ticks, final_note_length, 100)
+                            self.chartMidiFile.addNote(this_inst_midi_track, inst_main_channel, diff_note_base + int(data['type'][2:]), final_note_tick,  final_note_length, 100)
 
     def convert_metadata(self, debug = False):
         source_dir = self.dir_extr
