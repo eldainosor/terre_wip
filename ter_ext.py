@@ -701,7 +701,9 @@ class Song(object):
             this_tick_end = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
             this_tick_length = int(this_tick_end - this_tick)
             self.chartMidiFile.addNote(inst_vocals_track, inst_main_channel, note_event_vocal_phrase, int(this_tick) - self.offset_ticks, int(this_tick_length), 100)
-
+            # ### NUEVO: Inicializamos estado de la frase ###
+            last_syll_had_hyphen = False 
+            last_clean_text = ""
             for this_syll in this_phrase.syllables:
                 this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
                 # EXPERIMENTAL
@@ -723,10 +725,39 @@ class Song(object):
 
                 # Cleaning the output lyrics
                 this_tick_final_lyr = " ".join(str(this_syll['note']).split())
+                # ### MODIFICADO: Lógica de Texto Rock Band ###
+                
+                # 1. Obtenemos el texto limpio (raíz) para comparar
+                current_clean_text = this_tick_final_lyr.rstrip("-=#+ ")
 
-                # Before adding lyrics events, check if the syllable has actual lyrics
+                # 2. Manejo de VACÍOS (Melisma implícito)
                 if len(this_tick_final_lyr) == 0:
-                    continue
+                    if last_syll_had_hyphen:
+                        # Si estaba vacío pero veníamos de un guion, es un melisma (+)
+                        this_tick_final_lyr = "+"
+                        current_clean_text = "+" # Actualizamos para que no rompa lógica abajo
+                    else:
+                        continue # Es basura real, saltar.
+
+                # 3. Manejo de REPETICIONES (Melisma explícito: u- -> u-)
+                # Si no es un + ya asignado, y el texto es igual al anterior...
+                elif (this_tick_final_lyr != "+" and 
+                      last_clean_text != "" and 
+                      current_clean_text.lower() == last_clean_text.lower()):
+                    # Es la misma vocal extendida
+                    this_tick_final_lyr = "+"
+
+                # 4. Actualización de ESTADO para la siguiente vuelta
+                if this_tick_final_lyr == "+":
+                    # Si es +, hereda la conexión de la sílaba anterior (sigue unida)
+                    last_syll_had_hyphen = True
+                else:
+                    # Si es texto normal, miramos si tiene guion al final
+                    last_syll_had_hyphen = this_tick_final_lyr.endswith("-") or this_tick_final_lyr.endswith("=")
+                    # Guardamos el texto limpio solo si no es un +
+                    last_clean_text = current_clean_text
+
+                # ##############################################
 
                 this_tick_midi_note = 0
                 this_tick_unpitched = False
