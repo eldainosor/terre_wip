@@ -147,8 +147,10 @@ class Song(object):
         self.inst_num = chart_band_record.instr_num
         self.inst_mask = chart_band_record.instr_mask
         self.track_info = int.from_bytes(chart_band_record.header_padding)
-        self.delay = 3000   #TODO: remove 3sec delay
-        #self.delay = 0.0   #TODO: remove 3sec delay
+        #self.delay = 3000   #TODO: remove 3sec delay
+        self.delay = 0.0
+        # BOOL INTERNO: True = BPM falso, False = Desplazar Offset
+        self.compensate_with_bpm = False
 
         # Read band file
         kaitai = cfg.dir_bands
@@ -366,7 +368,9 @@ class Song(object):
         self.chart_file += "notes.chart"
         
         inst_pulse = self.Tracks[2].pulse
-        bmp_data, res, delay = analize_pulse(inst_pulse, debug)
+        offset_real, _ = analyze_structure(inst_pulse)
+        self.t_shift = 0 if self.compensate_with_bpm else offset_real
+        bmp_data, res, delay = analize_pulse(inst_pulse, debug, use_fake_bpm=self.compensate_with_bpm)
         self.delay += delay
 
         self.save_charts_meta(res, debug)
@@ -392,7 +396,7 @@ class Song(object):
         chart_file.write("\n  Charter = \"Next Level\"")
         chart_file.write("\n  Album = \"" + self.disc + "\"")
         chart_file.write("\n  Year = \", " + str(self.year) + "\"")
-        chart_file.write("\n  Offset = " + str(int(self.delay / 1000)) )    #TODO: remove 3sec delay
+        chart_file.write("\n  Offset = " + str(round(self.delay, 3)))    #TODO: remove 3sec delay
         #chart_file.write("\n  Offset = 0")    #TODO: remove 3sec delay
         chart_file.write("\n  Resolution = " + str(int(res)))
         chart_file.write("\n  Player2 = bass")
@@ -464,27 +468,22 @@ class Song(object):
         chart_file.write("[Events]")
         chart_file.write("\n{")
         for this_phrase in self.Tracks[3].Lyrics.verses:
-            this_tick = SwapTimeForDis(this_phrase.time, bpm_data)
-            event_line = "\n  "
-            #event_line += str(this_phrase.time)
-            event_line += str(int(this_tick))
-            event_line += " = E \"phrase_start\""
-            chart_file.write(event_line)
+            # RESTAMOS el desplazamiento al tiempo de la frase
+            rel_time = this_phrase.time - self.t_shift
+            if rel_time < 0: continue # Ignorar si está en la basura
+            
+            this_tick = SwapTimeForDis(rel_time, bpm_data)
+            chart_file.write(f"\n  {int(this_tick)} = E \"phrase_start\"")
+            
             for this_syll in this_phrase.syllables:
-                this_tick = SwapTimeForDis(this_syll['time'], bpm_data)
-                event_line = "\n  "
-                #event_line += str(this_syll['time'])
-                event_line += str(int(this_tick))
-                event_line += " = E \"lyric "
-                event_line += str(this_syll['note'])
-                event_line += "\""
-                chart_file.write(event_line)
-            event_line = "\n  "
-            this_tick = SwapTimeForDis(this_phrase.time + this_phrase.len, bpm_data)
-            #event_line += str(this_phrase.time + this_phrase.len)
-            event_line += str(int(this_tick))
-            event_line += " = E \"phrase_end\""
-            chart_file.write(event_line)
+                # RESTAMOS el desplazamiento a cada sílaba
+                rel_syll_time = this_syll['time'] - self.t_shift
+                this_tick = SwapTimeForDis(rel_syll_time, bpm_data)
+                chart_file.write(f"\n  {int(this_tick)} = E \"lyric {this_syll['note']}\"")
+            
+            rel_end_time = (this_phrase.time + this_phrase.len) - self.t_shift
+            this_tick = SwapTimeForDis(rel_end_time, bpm_data)
+            chart_file.write(f"\n  {int(this_tick)} = E \"phrase_end\"")
         chart_file.write("\n}\n")
         chart_file.close()
 
@@ -507,7 +506,7 @@ class Song(object):
                     this_diff_name = this_diff.name
                     chart_file.write("[" + this_diff_name.capitalize() + this_inst_name + "]")
                     chart_file.write("\n{")
-                    chart_data = analize_charts(this_diff.notes, bmp_data, debug)
+                    chart_data = analize_charts(this_diff.notes, bmp_data, debug, time_shift=self.t_shift)
                     for data in chart_data:
                         line_data = "\n  "
                         #line_data += str(data['time'])
