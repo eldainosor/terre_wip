@@ -126,32 +126,27 @@ class Song(object):
         chart_band_record = cbr.Cbr.from_file(kaitai)
 
         # Extract metadata
-        self.song_id = self.HexIDtoString(chart_band_record.song_id)
-        if debug:
-            if file != self.song_id:
-                print("<WARN>: File and ID are diferent")
-        self.band_id = self.HexIDtoString(chart_band_record.band_id)
-        self.disc_id = self.HexIDtoString(chart_band_record.disc_id)
-        self.name = str(chart_band_record.song_name).rstrip('\x00')
-        self.year = int(chart_band_record.year)
+        self.song_id = self.HexIDtoString(chart_band_record.apidata_song_id)
+        self.band_id = self.HexIDtoString(chart_band_record.apidata_banda)
+        self.disc_id = self.HexIDtoString(chart_band_record.apidata_disco)
+        self.name = str(chart_band_record.apidata_cancion).rstrip('\x00')
+        self.year = int(chart_band_record.apidata_anio)
         
         # Extract Difficulty Level
         self.diffs = []
-        band_diff = int(0)
-        i = 0
-        for instrument in chart_band_record.diff_level:
-            if instrument > 0:
-                band_diff += instrument
-                self.diffs.append(instrument)
-                i += 1
-            #else:
-            #    print("<WARN>: Diff is ZERO")
-        self.diffs.append(int(band_diff / i))
-        
-        # Unused metadata
+        raw_diffs = [
+            chart_band_record.apidata_diff_guitarra,
+            chart_band_record.apidata_diff_bajo,
+            chart_band_record.apidata_diff_bateria,
+            chart_band_record.apidata_diff_voz,
+            chart_band_record.apidata_extra_1
+        ]
+        valid_diffs = [d for d in raw_diffs if d > 0]
+        self.diffs = raw_diffs + [int(sum(valid_diffs)/len(valid_diffs)) if valid_diffs else 0]
+                # Unused metadata
         self.inst_num = chart_band_record.instr_num
         self.inst_mask = chart_band_record.instr_mask
-        self.track_info = int.from_bytes(chart_band_record.meta_end)
+        self.track_info = int.from_bytes(chart_band_record.header_padding)
         self.delay = 3000   #TODO: remove 3sec delay
         #self.delay = 0.0   #TODO: remove 3sec delay
 
@@ -696,12 +691,12 @@ class Track(object):
     def __init__(self, cbr_chart:cbr.Cbr.Charts, debug = False):
         self.id_num = cbr_chart.inst_id.value
         self.name = cbr_chart.inst_id.name
-        self.info = int.from_bytes(cbr_chart.chart_info)   #Unknown usage
+        self.info = int.from_bytes(cbr_chart.chart_section_padding)   #Unknown usage
         pulse = []
-        for this_pulse in cbr_chart.pulse:
+        for this_pulse in cbr_chart.beatmap_data:
             pulse_dict = {
-                "time": this_pulse.time,
-                "type": this_pulse.type
+                "time": this_pulse.tick,
+                "type": this_pulse.beat_count
             }
             pulse.append(pulse_dict)
         self.pulse = sorted(pulse, key=lambda item: item['time'])
@@ -745,24 +740,24 @@ class Chart(object):
         self.name = cbr_diff.diff.name
         self.info = cbr_diff.diff_info  #Unknown usage
 
-        self.max_note = cbr_diff.num_frets_pts
+        self.max_note = cbr_diff.lane_count
         if debug:
             if self.max_note != 5:  #DEBUG
                 print("<WARN>: Frets number is", self.max_note)
         notes = []
 
-        for i, this_color in enumerate(cbr_diff.frets_on_fire):
-            for this_note in this_color.frets_wave:
+        for i, this_color in enumerate(cbr_diff.lane_data):
+            for this_note in this_color.lane_notes:
                 if inst_id_num < 2:
                     fixed_note = 4 - i
                 else:   #TODO Double check if drums ok
                     fixed_note = i
 
                 note_dict = {
-                    "time": this_note.time,
-                    "len": this_note.len,
+                    "time": this_note.tick,
+                    "len": this_note.length,
                     "note": fixed_note,
-                    "mods": this_note.mods
+                    "mods": this_note.modifiers
                 }
                 notes.append(note_dict)
         self.notes = sorted(notes, key=lambda item: item['time'])
@@ -781,26 +776,26 @@ class Lyrics(object):
         pitch = []
         harms = []
         verses = []
-        self.info = int.from_bytes(cbr_vocal.vocal_info)  #Unknown usage
+        self.info = int.from_bytes(cbr_vocal.vocal_padding)  #Unknown usage
 
-        for verse_raw in cbr_vocal.lyrics:
+        for verse_raw in cbr_vocal.phrase_data:
             verse_clean = Verse(verse_raw, debug)
             verses.append(verse_clean)
         
-        for this_wave in cbr_vocal.wave_form:
+        for this_wave in cbr_vocal.pitch_note_data:
             pitch_dict = {
-                "time": this_wave.start,
-                "len": (this_wave.end - this_wave.start),
+                "time": this_wave.tick_start,
+                "len": (this_wave.tick_end - this_wave.tick_start),
                 "note": this_wave.note,
-                "mods": this_wave.mod,
+                "mods": this_wave.modifiers,
                 "scale": this_wave.scale,
             }
 
             harm_dict = {
-                "time": this_wave.start_harm,
-                "len": (this_wave.end_harm - this_wave.start_harm),
-                "note": this_wave.note_harm,
-                "mods": this_wave.mod,
+                "time": this_wave.tick_start_copy,
+                "len": (this_wave.tick_end_copy - this_wave.tick_start_copy),
+                "note": this_wave.note_copy,
+                "mods": this_wave.modifiers,
                 "scale": this_wave.scale,
             }
 
@@ -881,18 +876,18 @@ class Lyrics(object):
 
 class Verse(object):
     def __init__(self, cbr_verse:cbr.Cbr.Verse, debug = False):
-        self.time = cbr_verse.time_start
-        self.mods = cbr_verse.mods
-        self.len = cbr_verse.time_end - cbr_verse.time_start
+        self.time = cbr_verse.tick_start
+        self.mods = cbr_verse.overdrive_flag
+        self.len = cbr_verse.length
         
         dur_sum = 0
         syllables = []
-        for this_syll in cbr_verse.text_block:
+        for this_syll in cbr_verse.syllables_text:
             syll_dict = {
-                "time": this_syll.time_start,
-                "len": (this_syll.time_end - this_syll.time_start),
+                "time": this_syll.tick_start,
+                "len": (this_syll.tick_end - this_syll.tick_start),
                 "note": this_syll.text,
-                "mods": this_syll.type
+                "mods": this_syll.spoken_flag
             }
             dur_sum += syll_dict['len']
             syllables.append(syll_dict)
