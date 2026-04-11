@@ -75,9 +75,7 @@ def analize_pulse(inst_pulse, debug=False, use_fake_bpm=True):
     pulses_to_process = inst_pulse[start_idx:]
     prev_bpm_value = sync_track_data[0]['value']
     prev_bpm_time = offset_real
-    prev_bpm_tick = current_tick # Importante: Guardar el tick de referencia
-    prev_ts_n = 4
-    
+    prev_bpm_tick = current_tick
     start_pulse_time = offset_real
     beats = 2
 
@@ -91,27 +89,16 @@ def analize_pulse(inst_pulse, debug=False, use_fake_bpm=True):
                 this_ts_n = int(beats / 2)
                 this_bpm_scaled = TimeToBpm(start_pulse_time, this_pulse['time'], this_ts_n)
                 
-                # CAMBIO CLAVE: Calculamos el tick del SyncTrack usando la misma fórmula que las notas
-                # Esto elimina el drift acumulado.
+                # CAMBIO: Calculamos el tick exacto basándonos en el tiempo real
+                # para que coincida perfectamente con SwapTimeForDis
                 current_tick = TimeToDis(prev_bpm_time, this_pulse['time'], prev_bpm_value) + prev_bpm_tick
 
-                if this_ts_n != prev_ts_n:
-                    sync_track_data.append({
-                        "time": relative_time,
-                        "tick": int(current_tick),
-                        "type": "TS",
-                        "value": this_ts_n
-                    })
-                    prev_ts_n = this_ts_n
+                if this_ts_n != (sync_track_data[-1]['value'] if sync_track_data else 4):
+                    sync_track_data.append({"time": relative_time, "tick": int(current_tick), "type": "TS", "value": this_ts_n})
                 
                 if abs(this_bpm_scaled - prev_bpm_value) > 100:
-                    sync_track_data.append({
-                        "time": relative_time,
-                        "tick": int(current_tick),
-                        "type": "B",
-                        "value": this_bpm_scaled
-                    })
-                    # Actualizamos referencias para el siguiente tramo de interpolación
+                    sync_track_data.append({"time": relative_time, "tick": int(current_tick), "type": "B", "value": this_bpm_scaled})
+                    # Actualizamos anclas de tiempo y tick
                     prev_bpm_value = this_bpm_scaled
                     prev_bpm_time = this_pulse['time']
                     prev_bpm_tick = current_tick
@@ -153,9 +140,10 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
         #TODO: note modes is:   0x00 NOTE "N", 0x01 "S LEN" STAR, 0x10 HOPO "N 5", 0x20 UP,  0x30 DOWN, 0x02 ???
         #                                                         0x11 HOPO+STAR "N 5", 0x21 UP+STAR,  0x31 DOWN+STAR
         note_in = {
-            "time":     int(this_tick),
+            "tick":     int(this_tick),
             "type":     "N " + str(this_note['note']),
-            "value":    int(note_len)
+            "len":    int(note_len),
+            "mods": this_note['mods']
         }
         notes_list.append(note_in)
         
@@ -166,43 +154,47 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
 
         if has_sp:
             note_in = {
-                "time":     int(this_tick),
+                "tick":     int(this_tick),
                 "type":     "S " + str(this_note['note']),
-                "value":    int(note_len)
+                "len":    int(note_len),
+                "mods": this_note['mods']
             }
             sp_list.append(note_in)
         if has_hopo:
             note_in = {
-                "time":     int(this_tick),
+                "tick":     int(this_tick),
                 #"type":     "N 5",
                 "type":     "W " + str(this_note['note']),
-                "value":    int(note_len)
+                "len":    int(note_len),
+                "mods": this_note['mods']
             }
             hopo_list.append(note_in)
         if has_strum:
             # TODO: What kind of modifier is this?
             note_in = {
-                "time":     int(this_tick),
+                "tick":     int(this_tick),
                 #"type":     "N 9",
                 "type":     "K " + str(this_note['note']),
-                "value":    int(note_len)
+                "len":    int(note_len),
+                "mods": this_note['mods']
             }
             strum_list.append(note_in)
         if has_other:
             # TODO: What other kind of modifier are there?
             note_in = {
-                "time":     int(this_tick),
+                "tick":     int(this_tick),
                 "type":     "N 10",
-                "value":    int(note_len)
+                "len":    int(note_len),
+                "mods": this_note['mods']
             }
             print("<WARN>: Other fret mod found: " + str(has_other))   #DEBUG
             mods_list.append(note_in)
     sp_list.extend(notes_list)
-    sp_list = sorted(sp_list, key=lambda item: item['time'])
+    sp_list = sorted(sp_list, key=lambda item: item['tick'])
     hopo_list.extend(notes_list)
-    hopo_list = sorted(hopo_list, key=lambda item: item['time'])
+    hopo_list = sorted(hopo_list, key=lambda item: item['tick'])
     strum_list.extend(notes_list)
-    strum_list = sorted(strum_list, key=lambda item: item['time'])
+    strum_list = sorted(strum_list, key=lambda item: item['tick'])
 
     first_timing = 0
     last_timing = 0
@@ -235,9 +227,9 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
 
     #TODO: Star Power works OK on CH and Moonscraper... not YARG, why?
     for this_star in sp_list:
-        this_time = this_star['time']
+        this_time = this_star['tick']
         this_type = this_star['type']
-        this_value = this_star['value']
+        this_value = this_star['len']
 
         match sp_counting:
             case 0:     #Waiting for S
@@ -263,9 +255,10 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
                 sp_len -= first_timing 
                 sp_len += last_len
                 note_in = {
-                    "time":     int(first_timing),
+                    "tick":     int(first_timing),
                     "type":     "S 2",
-                    "value":    int(sp_len)
+                    "len":    int(sp_len),
+                    "mods":     this_star['mods']
                 }
                 sp_list_clean.append(note_in)
                 sp_counting = 0
@@ -279,9 +272,9 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
 
     #TODO: Implement a way less hacky of considering these events.
     for this_hopo in hopo_list:
-        this_hopo_time = this_hopo['time']
+        this_hopo_time = this_hopo['tick']
         this_hopo_type = this_hopo['type']
-        this_hopo_value = this_hopo['value']
+        this_hopo_value = this_hopo['len']
 
         match hopo_counting:
             case 0:     #Waiting for H
@@ -307,9 +300,10 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
                 hopo_len -= first_hopo_timing 
                 hopo_len += last_hopo_len
                 note_hopo_in = {
-                    "time":     int(first_hopo_timing),
+                    "tick":     int(first_hopo_timing),
                     "type":     "W 2",
-                    "value":    int(hopo_len)
+                    "len":    int(hopo_len),
+                    "mods":     this_hopo['mods']
                 }
                 hopo_list_clean.append(note_hopo_in)
                 hopo_counting = 0
@@ -323,9 +317,9 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
     notes_list.extend(hopo_list_clean)
 
     for this_strum in strum_list:
-        this_strum_time = this_strum['time']
+        this_strum_time = this_strum['tick']
         this_strum_type = this_strum['type']
-        this_strum_value = this_strum['value']
+        this_strum_value = this_strum['len']
 
         match strum_counting:
             case 0:     #Waiting for S
@@ -351,9 +345,10 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
                 strum_len -= first_strum_timing 
                 strum_len += last_strum_len
                 note_strum_in = {
-                    "time":     int(first_strum_timing),
+                    "tick":     int(first_strum_timing),
                     "type":     "K 2",
-                    "value":    int(strum_len)
+                    "len":    int(strum_len),
+                    "mods":     this_strum['mods']
                 }
                 strum_list_clean.append(note_strum_in)
                 strum_counting = 0
@@ -366,21 +361,10 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
         
     notes_list.extend(strum_list_clean)
 
-    for i, this_note in enumerate(notes_list):
-        this_tick = SwapTimeForDis(this_note['time'], bpm_data)
-
-        notes_list[i].update({'tick': int(this_tick)})
-        if this_note['value'] > 2000:
-            base_bpm = FindBpm(bpm_data, this_note['time'])
-            len = TimeToDis(0, this_note['value'], base_bpm['value'])
-        else:
-            len = 0
-        notes_list[i].update({'len': int(len)})
-
     #notes_list.extend(hopo_list)
     #notes_list.extend(strum_list)
     notes_list = sorted(notes_list, key=lambda item: item['type'])
     #notes_list = sorted(notes_list, key=lambda item: item['time'])
     notes_list = sorted(notes_list, key=lambda item: item['tick'])
 
-    return notes_list
+    return sorted(notes_list, key=lambda item: (item['tick'], item['type']))
