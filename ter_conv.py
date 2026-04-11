@@ -152,6 +152,8 @@ def analize_charts(charts:dict, bpm_data:list, debug=False, time_shift=0):
         has_strum = this_note['mods'] & 0x20
         has_other = this_note['mods'] & 0x0E  #DEBUG
 
+        has_hopo = has_hopo and not has_strum
+
         if has_sp:
             note_in = {
                 "tick":     int(this_tick),
